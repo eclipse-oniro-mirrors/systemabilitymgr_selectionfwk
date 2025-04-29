@@ -1,0 +1,40 @@
+{
+    "name": "@ohos/word_selection",
+    "description": "Provide word selection capabilities",
+    "version": "1.0",
+    "license": "Apache License 2.0",
+    "segment": {
+      "destPath": "base/word_selection"
+    },
+    "component": {
+      "name": "word_selection",
+      "subsystem": "word_selection_system",
+      "syscap": [],
+      "features": [],
+      "adapted_system_type": [
+        "standard"
+      ],
+      "rom": "5120KB",
+      "ram": "5120KB",
+      "deps": {
+        "components": [
+          "c_utils",
+          "ipc",
+          "safwk",
+          "hilog",
+          "samgr",
+          "input"
+        ],
+        "third_party": [
+        ]
+      },
+      "build": {
+        "sub_component": [
+          "//base/word_selection/etc/init:word_selection_cfg",
+          "//base/word_selection/service:word_selection_base",
+          "//base/word_selection/sa_profile:word_selection_sa_profile"
+        ],
+        "inner_kits": []
+      }
+    }
+  }

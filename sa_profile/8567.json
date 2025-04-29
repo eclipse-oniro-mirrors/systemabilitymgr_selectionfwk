@@ -1,0 +1,44 @@
+{
+    "process": "word_selection",
+    "systemability": [
+        {
+            "name": 8567,
+            "libpath": "libword_selection_base.z.so",
+            "run-on-create": false,
+            "distributed": false,
+            "bootphase": "BootStartPhase",
+            "dump_level": 1,
+            "auto-restart" : true,
+            "start-on-demand": {
+                "allow-update": true,
+                "commonevent": [
+                    {
+                        "name": "usual.event.SCREEN_ON",
+                        "conditions": [
+                            {
+                                "eventId": "param",
+                                "name": "persist.sys.sa.word_selection.enable",
+                                "value": "1"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "stop-on-demand": {
+                "allow-update": true,
+                "commonevent": [
+                  {
+                    "name": "usual.event.SCREEN_ON",
+                    "conditions": [
+                        {
+                            "eventId": "param",
+                            "name": "persist.sys.sa.word_selection.enable",
+                            "value": "0"
+                        }
+                    ]
+                  }
+                ]
+            }
+        }
+    ]
+}
