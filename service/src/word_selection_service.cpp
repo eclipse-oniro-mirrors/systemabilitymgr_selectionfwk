@@ -21,6 +21,7 @@
 #include <input_manager.h>
 
 using namespace OHOS;
+using namespace OHOS::SelectionFwk;
 REGISTER_SYSTEM_ABILITY_BY_ID(WordSelectionService, WORD_SELECTION_SA_ID, true);
 
 WordSelectionService::WordSelectionService(int32_t saId, bool runOnCreate) : SystemAbility(saId, runOnCreate)
@@ -33,7 +34,7 @@ WordSelectionService::~WordSelectionService()
     LOG_INFO("[YMZ][~WordSelectionService]");
 }
 
-int WordSelectionService::AddVolume(int volume)
+ErrCode WordSelectionService::AddVolume(int32_t volume, int32_t& funcResult)
 {
     LOG_INFO("[YMZ][WordSelectionService][AddVolume]begin");
     return (volume + 1);
@@ -59,7 +60,6 @@ void WordSelectionService::OnStop()
     InputMonitorCancel();
     LOG_INFO("[YMZ][WordSelectionService][OnStop]end");
 }
-
 
 void WordSelectionService::InputMonitorInit()
 {

@@ -18,21 +18,21 @@
 
 #include <string>
 
-#include "word_selection_stub.h"
+#include "word_selection_service_stub.h"
 #include "refbase.h"
 #include "system_ability.h"
 #include <i_input_event_consumer.h>
 
-namespace OHOS {
+namespace OHOS::SelectionFwk {
 using namespace MMI;
-class WordSelectionService : public SystemAbility, public WordSelectionStub {
+class WordSelectionService : public SystemAbility, public WordSelectionServiceStub {
     DECLARE_SYSTEM_ABILITY(WordSelectionService);
 
 public:
     WordSelectionService(int32_t saId, bool runOnCreate);
     ~WordSelectionService();
 
-    int AddVolume(int volume) override;
+    ErrCode AddVolume(int32_t volume, int32_t& funcResult) override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;
 protected:
     void OnStart() override;

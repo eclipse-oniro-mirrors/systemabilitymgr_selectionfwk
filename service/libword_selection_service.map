@@ -1,0 +1,8 @@
+{
+  global:
+    extern "C++" {
+      OHOS::SelectionFwk::WordSelectionService::AddVolume*;
+    };
+  local:
+    *;
+};

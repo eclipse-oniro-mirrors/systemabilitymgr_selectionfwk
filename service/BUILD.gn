@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/test.gni")
+import("//build/ohos.gni")
 import("//build/config/components/idl_tool/idl.gni")
 
 config("word_selection_sa_config") {
@@ -19,20 +19,31 @@ config("word_selection_sa_config") {
   include_dirs = [
     "include",
     "../utils/include",
+    "${target_gen_dir}",
   ]
 }
 
-ohos_shared_library("word_selection_base") {
-  sources = [
-    "src/word_selection_proxy.cpp",
-    "src/word_selection_service.cpp",
-    "src/word_selection_stub.cpp",
-  ]
-  configs = [
-    ":word_selection_sa_config",
-  ]
+idl_interface_sources = [
+  "${target_gen_dir}/word_selection_service_proxy.cpp",
+  "${target_gen_dir}/word_selection_service_stub.cpp",
+]
 
-  deps = [ ]
+idl_gen_interface("word_selection_service_interface") {
+  src_idl = rebase_path("IWordSelectionService.idl")
+  dst_file = string_join(",", idl_interface_sources)
+}
+
+ohos_shared_library("word_selection_base") {
+  configs = [ ":word_selection_sa_config", ]
+  shlib_type = "sa"
+  version_script = "libword_selection_service.map"
+  output_values = get_target_outputs(":word_selection_service_interface")
+
+  sources = [
+    "src/word_selection_service.cpp",
+  ]
+  sources += filter_include(output_values, [ "*.cpp" ])
+  deps = [ ":word_selection_service_interface" ]
 
   external_deps = [
     "c_utils:utils",
