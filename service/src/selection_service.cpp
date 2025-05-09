@@ -19,6 +19,7 @@
 #include "system_ability_definition.h"
 #include "selection_log.h"
 #include <input_manager.h>
+#include "parameter.h"
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
@@ -66,11 +67,23 @@ int32_t SelectionService::Dump(int32_t fd, const std::vector<std::u16string> &ar
     return OHOS::NO_ERROR;
 }
 
+static void WatchParameterFunc(const char *key, const char *value, void *context)
+{
+    (void)context;
+    SELECTION_HILOGI("sys.selection.switch.username, value=%{public}s", value);
+}
+
+void WatchParams()
+{
+    WatchParameter("sys.selection.switch.username", WatchParameterFunc, nullptr);
+}
+
 void SelectionService::OnStart()
 {
     SELECTION_HILOGI("[SelectionService][OnStart]begin");
     Publish(this);
     InputMonitorInit();
+    WatchParams();
     SELECTION_HILOGI("[SelectionService][OnStart]end");
 }
 

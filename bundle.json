@@ -23,6 +23,7 @@
         "safwk",
         "hilog",
         "samgr",
+        "init",
         "input"
       ],
       "third_party": [

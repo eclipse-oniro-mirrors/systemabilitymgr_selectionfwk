@@ -48,6 +48,7 @@ ohos_shared_library("selection_service") {
   external_deps = [
     "c_utils:utils",
     "ipc:ipc_single",
+    "init:libbeget_proxy",
     "hilog:libhilog",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
