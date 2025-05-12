@@ -11,6 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sys.selection.switch.username = off
-sys.selection.trigger.username = ctrl
-sys.selection.app.username = com.hm.youdao
+persist.sys.selection.switch.username = off
+persist.sys.selection.trigger.username = ctrl
+persist.sys.selection.app.username = com.hm.youdao

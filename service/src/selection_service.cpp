@@ -40,7 +40,7 @@ sptr<SelectionService> SelectionService::GetInstance()
     return instance_;
 }
 
-SelectionService::SelectionService() : SystemAbility(SELECTION_SA_ID, true)
+SelectionService::SelectionService() : SystemAbility(SELECTION_FWK_SA_ID, true)
 {
     SELECTION_HILOGI("[SelectionService] SelectionService()");
 }
