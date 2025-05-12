@@ -1,41 +1,30 @@
-# Word Selection<a name="EN-US_TOPIC_0000001115047353"></a>
+## 划词服务代码环境搭建
 
-
-## Introduction<a name="section11660541593"></a>
-
-The Word Selection module provides the following functions:
-
-1.  A
-2.  B
-3.  C
-
-## Directory Structure<a name="section19472752217"></a>
-
-Copied from powermgr:
+### 代码结构
 
 ```
-/base/word_selection
-├── figures                  	# Architecture
-├── frameworks                  # Framework layer
-│   ├── napi                  	# NAPI layer
-│   └── native                  # Native layer
-├── interfaces                  # API layer
-│   └── inner_api               # Internal APIs
-├── power_dialog                # Power dialog
-├── sa_profile                  # SA profile
-└── services                    # Service layer
-│   ├── native                  # Native layer
-│   └── zidl                    # Zidl API layer
-├── test                        # Test cases
-│   ├── fuzztest                # Fuzz test
-│   ├── unittest                # Unit test
-│   ├── systemtest              # System test
-│   └── utils                   # Test tools
-└── utils                       # Utilities
+│   ├── base
+│   │   ├── startup
+│   │   │   └── init            => 代码提交仓: https://gitee.com/sinall/startup_init.git, selection_fwk分支
+│   │   └── security
+│   │       └── selinux_adapter => 代码提交仓: https://gitee.com/sinall/security_selinux_adapter.git, selection_fwk分支
+│   ├── foundation
+│   │   └── systemabilitymgr
+│   │       ├── samgr           => 代码提交仓: https://gitee.com/sinall/systemabilitymgr_samgr.git, selection_fwk分支
+│   │       └── selection_fwk   => 代码提交仓: https://gitee.com/sinall/selection_fwk.git, master分支
+│   ├── productdefine
+│   │   	└── common          => 代码提交仓: https://gitee.com/sinall/productdefine_common.git, selection_fwk分支
 ```
 
+更新命令：
 
-
-## Repositories Involved<a name="section63151229062"></a>
-
-Repositories Involved
+```
+在代码仓库对应目录下执行以下命令
+1. selection_fwk仓库：
+git clone https://gitee.com/sinall/selection_fwk.git 
+2. 其余仓库
+$ cd foundation/systemabilitymgr/samgr（修改为对应仓库路径）
+$ git remote add sinall https://gitee.com/sinall/systemabilitymgr_samgr.git（修改为对应仓库的网址）
+$ git fetch sinall selection_fwk
+$ git checkout -b selection_fwk sinall/selection_fwk
+```
