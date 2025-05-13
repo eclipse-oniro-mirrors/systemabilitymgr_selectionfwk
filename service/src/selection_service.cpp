@@ -70,12 +70,17 @@ int32_t SelectionService::Dump(int32_t fd, const std::vector<std::u16string> &ar
 static void WatchParameterFunc(const char *key, const char *value, void *context)
 {
     (void)context;
-    SELECTION_HILOGI("sys.selection.switch.username, value=%{public}s", value);
+    SELECTION_HILOGI("WatchParameterFunc begin");
+    SELECTION_HILOGI("%{public}s: value=%{public}s", key, value);
 }
 
 void WatchParams()
 {
-    WatchParameter("sys.selection.switch.username", WatchParameterFunc, nullptr);
+    SELECTION_HILOGI("WatchParams begin");
+    WatchParameter("persist.sys.selection.switch.username", WatchParameterFunc, nullptr);
+    WatchParameter("persist.sys.selection.trigger.username", WatchParameterFunc, nullptr);
+    WatchParameter("persist.sys.selection.app.username", WatchParameterFunc, nullptr);
+    SELECTION_HILOGI("WatchParams end");
 }
 
 void SelectionService::OnStart()

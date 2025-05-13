@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 #undef LOG_TAG
-#define LOG_TAG "SELETION_SERVICE"
+#define LOG_TAG "SELECTION_SERVICE"
 #undef LOG_DOMAIN
 #define LOG_DOMAIN 0xD002901
 
