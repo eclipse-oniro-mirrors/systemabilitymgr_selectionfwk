@@ -77,12 +77,26 @@ static void WatchParameterFunc(const char *key, const char *value, void *context
     SELECTION_HILOGI("%{public}s: value=%{public}s", key, value);
 }
 
-void WatchParams()
+static void WatchTriggerMode(const char *key, const char *value, void *context)
+{
+    (void)context;
+    SELECTION_HILOGI("WatchParameterFunc begin");
+    SELECTION_HILOGI("%{public}s: value=%{public}s", key, value);
+}
+
+static void WatchAppSwitch(const char *key, const char *value, void *context)
+{
+    (void)context;
+    SELECTION_HILOGI("WatchParameterFunc begin");
+    SELECTION_HILOGI("%{public}s: value=%{public}s", key, value);
+}
+
+void SelectionService::WatchParams()
 {
     SELECTION_HILOGI("WatchParams begin");
     WatchParameter("persist.sys.selection.switch.username", WatchParameterFunc, nullptr);
-    WatchParameter("persist.sys.selection.trigger.username", WatchParameterFunc, nullptr);
-    WatchParameter("persist.sys.selection.app.username", WatchParameterFunc, nullptr);
+    WatchParameter("persist.sys.selection.trigger.username", WatchTriggerMode, nullptr);
+    WatchParameter("persist.sys.selection.app.username", WatchAppSwitch, nullptr);
     SELECTION_HILOGI("WatchParams end");
 }
 

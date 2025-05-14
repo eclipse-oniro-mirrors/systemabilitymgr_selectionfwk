@@ -43,6 +43,7 @@ typedef enum SelectInputState {
     SELECT_INPUT_WAIT_CTRL
 
 } SelectInputState;
+
 class SelectionService : public SystemAbility, public SelectionServiceStub {
     DECLARE_SYSTEM_ABILITY(SelectionService);
 
@@ -60,10 +61,11 @@ protected:
     void HandleKeyEvent(int32_t keyCode);
     void HandlePointEvent(int32_t type);
 private:
-    int32_t inputMonitorId_ {-1};
     void InputMonitorInit();
     void InputMonitorCancel();
+    void WatchParams();
 
+    int32_t inputMonitorId_ {-1};
     static sptr<SelectionService> instance_;
     static std::shared_mutex adminLock_;
 };
@@ -81,7 +83,6 @@ private:
     void InjectCtrlC() const;
     static uint32_t curSelectState;
 };
-
 }
 
 #endif // SELECTION_SERVICE_H
