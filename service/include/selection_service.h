@@ -43,8 +43,6 @@ typedef enum {
     SELECT_INPUT_WAIT_TRIBLE_CLICK = 5,
     SELECT_INPUT_DOUBLE_CLICKED = 6,
 
-    SELECT_INPUT_WAIT_CTRL
-
 } SelectInputState;
 
 typedef enum {
@@ -52,6 +50,7 @@ typedef enum {
     SUB_WAIT_PRESS_DOWN = 1,
     SUB_WAIT_PRESS_MOVE = 2,
     SUB_WAIT_PRESS_UP   = 3,
+    SUB_WAIT_CTRL = 4,
 } SelectInputSubState;
 
 class SelectionService : public SystemAbility, public SelectionServiceStub {
