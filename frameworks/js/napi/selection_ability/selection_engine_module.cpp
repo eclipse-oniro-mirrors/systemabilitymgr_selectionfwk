@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "js_selection_ability.h"
+#include "js_selection_engine_setting.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
@@ -23,7 +23,7 @@ EXTERN_C_START
  */
 static napi_value Init(napi_env env, napi_value exports)
 {
-    OHOS::SelectionFwk::JsSelectionAbility::Init(env, exports);
+    OHOS::SelectionFwk::JsSelectionEngineSetting::Init(env, exports);
     return exports;
 }
 EXTERN_C_END
@@ -36,7 +36,7 @@ static napi_module _module = {
     .nm_flags = 0,
     .nm_filename = nullptr,
     .nm_register_func = Init,
-    .nm_modname = "selectionAbility",
+    .nm_modname = "selectionEngine",
     .nm_priv = ((void *)0),
     .reserved = { 0 } };
 /*

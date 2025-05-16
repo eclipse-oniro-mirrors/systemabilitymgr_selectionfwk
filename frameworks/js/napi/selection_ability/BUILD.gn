@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//foundation/systemabilitymgr/selection_fwk/selection_service.gni")
 
-ohos_shared_library("selectionability_napi") {
+ohos_shared_library("selectionengine_napi") {
   branch_protector_ret = "pac_ret"
   sanitize = {
     boundary_sanitize = true
@@ -25,8 +25,8 @@ ohos_shared_library("selectionability_napi") {
     ubsan = true
   }
   sources = [
-    "js_selection_ability.cpp",
-    "selection_ability_module.cpp",
+    "js_selection_engine_setting.cpp",
+    "selection_engine_module.cpp",
   ]
 
   include_dirs = [
