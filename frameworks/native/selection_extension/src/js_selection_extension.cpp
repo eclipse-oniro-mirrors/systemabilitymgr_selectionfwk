@@ -40,6 +40,7 @@ void JsSelectionExtension::Init(const std::shared_ptr<AbilityLocalRecord>& recor
                                 std::shared_ptr<AbilityHandler>& handler,
                                 const sptr<IRemoteObject>& token)
 {
+    HILOG_INFO("JsSelectionExtension Init begin.");
     SelectionExtension::Init(record, application, handler, token);
     std::string srcPath;
     GetSrcPath(srcPath);
@@ -59,6 +60,7 @@ void JsSelectionExtension::Init(const std::shared_ptr<AbilityLocalRecord>& recor
         return;
     }
     BindContext();
+    HILOG_INFO("JsSelectionExtension Init end.");
 }
 
 void JsSelectionExtension::OnStart(const AAFwk::Want& want)

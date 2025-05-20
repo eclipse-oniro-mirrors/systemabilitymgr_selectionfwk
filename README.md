@@ -9,9 +9,13 @@
 │   │   └── security
 │   │       └── selinux_adapter => 代码提交仓: https://gitee.com/sinall/security_selinux_adapter.git, selection_fwk分支
 │   ├── foundation
-│   │   └── systemabilitymgr
-│   │       ├── samgr           => 代码提交仓: https://gitee.com/sinall/systemabilitymgr_samgr.git, selection_fwk分支
-│   │       └── selection_fwk   => 代码提交仓: https://gitee.com/sinall/selection_fwk.git, master分支
+│   │   ├──systemabilitymgr
+│   │   │   ├── samgr           => 代码提交仓: https://gitee.com/sinall/systemabilitymgr_samgr.git, selection_fwk分支
+│   │   │   └── selection_fwk   => 代码提交仓: https://gitee.com/sinall/selection_fwk.git, master分支
+│   │   ├──bundlemanager
+│   │   │   └── bundle_framework =>代码提交仓: https://gitee.com/sinall/bundlemanager_bundle_framework.git selection_fwk分支
+│   │   └──ability
+│   │       └── ability_runtime => 代码提交仓: https://gitee.com/sinall/ability_ability_runtime.git, selection_fwk分支
 │   ├── productdefine
 │   │   	└── common          => 代码提交仓: https://gitee.com/sinall/productdefine_common.git, selection_fwk分支
 ```
