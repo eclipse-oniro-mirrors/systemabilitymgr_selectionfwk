@@ -457,13 +457,6 @@ void SelectionInputMonitor::JudgeTripleClick() const
 void SelectionInputMonitor::InputWordWaitDoubleClickProcess(std::shared_ptr<PointerEvent> pointerEvent) const
 {
     int32_t action = pointerEvent->GetPointerAction();
-    int32_t buttonId = pointerEvent->GetButtonId();
-    if (buttonId != PointerEvent::MOUSE_BUTTON_LEFT) {
-        curSelectState = SELECT_INPUT_INITIAL;
-        subSelectState = SUB_INITIAL;
-        SELECTION_HILOGI("set curSelectState to SELECT_INPUT_INITIAL.");
-        return;
-    }
     if (subSelectState == SUB_WAIT_POINTER_ACTION_BUTTON_DOWN && action == PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
         auto curTime = GetCurrentTimeMillis();
         if (curTime - lastClickTime < DOUBLE_CLICK_TIME) {
@@ -514,13 +507,6 @@ void SelectionInputMonitor::InputWordJudgeTripleClickProcess(std::shared_ptr<Poi
 void SelectionInputMonitor::InputWordWaitTripleClickProcess(std::shared_ptr<PointerEvent> pointerEvent) const
 {
     int32_t action = pointerEvent->GetPointerAction();
-    int32_t buttonId = pointerEvent->GetButtonId();
-    if (buttonId != PointerEvent::MOUSE_BUTTON_LEFT) {
-        curSelectState = SELECT_INPUT_INITIAL;
-        subSelectState = SUB_INITIAL;
-        SELECTION_HILOGI("set curSelectState to SELECT_INPUT_INITIAL.");
-        return;
-    }
     if (subSelectState == SUB_WAIT_POINTER_ACTION_BUTTON_UP) {
         if (action == PointerEvent::POINTER_ACTION_BUTTON_UP) {
             if (ctrlSelectFlag) {
@@ -531,7 +517,10 @@ void SelectionInputMonitor::InputWordWaitTripleClickProcess(std::shared_ptr<Poin
                 subSelectState = SUB_INITIAL;
                 SELECTION_HILOGI("set curSelectState to SELECT_INPUT_TRIPLE_CLICKED.");
             }
-        } else if (action != PointerEvent::POINTER_ACTION_MOVE) {
+        } else if (action == PointerEvent::POINTER_ACTION_MOVE) {
+            curSelectState = SELECT_INPUT_WAIT_LEFT_MOVE;
+            SELECTION_HILOGI("set curSelectState to SELECT_INPUT_WAIT_LEFT_MOVE.");
+        } else {
             SELECTION_HILOGI("Action reset. subSelectState is %{public}d, action is %{public}d.", subSelectState, action);
             ResetProcess(pointerEvent);
         }
