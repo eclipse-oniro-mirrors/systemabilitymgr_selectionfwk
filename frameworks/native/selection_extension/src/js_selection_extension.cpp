@@ -18,6 +18,7 @@
 #include "js_runtime_utils.h"
 #include "napi/native_api.h"
 #include "napi_common_want.h"
+#include "napi_remote_object.h"
 
 namespace OHOS::AbilityRuntime {
 namespace {
@@ -40,7 +41,7 @@ void JsSelectionExtension::Init(const std::shared_ptr<AbilityLocalRecord>& recor
                                 std::shared_ptr<AbilityHandler>& handler,
                                 const sptr<IRemoteObject>& token)
 {
-    HILOG_INFO("JsSelectionExtension Init begin.");
+    HILOG_INFO("%{public}s start.", __func__);
     SelectionExtension::Init(record, application, handler, token);
     std::string srcPath;
     GetSrcPath(srcPath);
@@ -60,12 +61,12 @@ void JsSelectionExtension::Init(const std::shared_ptr<AbilityLocalRecord>& recor
         return;
     }
     BindContext();
-    HILOG_INFO("JsSelectionExtension Init end.");
+    HILOG_INFO("%{public}s end.", __func__);
 }
 
 void JsSelectionExtension::OnStart(const AAFwk::Want& want)
 {
-    HILOG_INFO("JsSelectionExtension OnStart begin.");
+    HILOG_INFO("%{public}s start.", __func__);
     Extension::OnStart(want);
     napi_env env = jsRuntime_.GetNapiEnv();
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
@@ -76,12 +77,32 @@ void JsSelectionExtension::OnStart(const AAFwk::Want& want)
 
 sptr<IRemoteObject> JsSelectionExtension::OnConnect(const AAFwk::Want& want)
 {
-    HILOG_INFO("JsSelectionExtension OnConnect begin.");
+    HILOG_INFO("%{public}s start.", __func__);
+    HandleScope handleScope(jsRuntime_);
     Extension::OnConnect(want);
-    return nullptr;
+    napi_env env = jsRuntime_.GetNapiEnv();
+    napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
+    napi_value argv[] = {napiWant};
+    napi_value result = CallObjectMethod("onConnect", argv, ARGC_ONE);
+    auto remoteObj = NAPI_ohos_rpc_getNativeRemoteObject(env, result);
+    if (remoteObj == nullptr) {
+        HILOG_ERROR("remoteObj nullptr.");
+    }
+    HILOG_INFO("%{public}s end.", __func__);
+    return remoteObj;
 }
 
-void JsSelectionExtension::OnDisconnect(const AAFwk::Want& want) {}
+void JsSelectionExtension::OnDisconnect(const AAFwk::Want& want)
+{
+    HILOG_INFO("%{public}s start.", __func__);
+    HandleScope handleScope(jsRuntime_);
+    Extension::OnDisconnect(want);
+    napi_env env = jsRuntime_.GetNapiEnv();
+    napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
+    napi_value argv[] = {napiWant};
+    CallObjectMethod("onDisconnect", argv, ARGC_ONE);
+    HILOG_INFO("%{public}s end.", __func__);
+}
 
 void JsSelectionExtension::OnStop() {}
 
@@ -94,7 +115,6 @@ napi_value JsSelectionExtension::CallObjectMethod(const char* methodName, const 
         return nullptr;
     }
 
-    HandleScope handleScope(jsRuntime_);
     napi_env env = jsRuntime_.GetNapiEnv();
     napi_value obj = jsObj_->GetNapiValue();
     if (obj == nullptr) {
@@ -108,11 +128,12 @@ napi_value JsSelectionExtension::CallObjectMethod(const char* methodName, const 
         HILOG_ERROR("failed to get '%{public}s' from JsSelectionExtension object!", methodName);
         return nullptr;
     }
-    HILOG_INFO("JsSelectionExtension::CallFunction(%{public}s), success.", methodName);
     napi_value result = nullptr;
     if (napi_call_function(env, obj, method, argc, argv, &result) != napi_ok) {
+        HILOG_ERROR("JsSelectionExtension::CallFunction(%{public}s), failed.", methodName);
         return nullptr;
     }
+    HILOG_INFO("JsSelectionExtension::CallFunction(%{public}s), success.", methodName);
     return result;
 }
 
