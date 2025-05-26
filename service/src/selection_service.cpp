@@ -88,6 +88,7 @@ ErrCode SelectionService::AddVolume(int32_t volume, int32_t& funcResult)
 
 ErrCode SelectionService::UnregisterListener(const sptr<IRemoteObject> &listener)
 {
+    listenerStub_ = nullptr;
     return 0;
 }
 

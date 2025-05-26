@@ -178,6 +178,14 @@ void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::stri
     if (jsCbMap_[type].empty()) {
         jsCbMap_.erase(type);
     }
+
+    auto proxy = GetSelectionSystemAbility();
+    if (proxy == nullptr || listenerStub_ == nullptr) {
+        SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
+        return;
+    }
+    proxy->UnregisterListener(listenerStub_->AsObject());
+    listenerStub_ = nullptr;
 }
 
 napi_value JsSelectionEngineSetting::GetSEInstance(napi_env env, napi_callback_info info)
