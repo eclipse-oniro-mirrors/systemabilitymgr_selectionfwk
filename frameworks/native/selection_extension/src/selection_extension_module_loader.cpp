@@ -29,7 +29,7 @@ Extension* SelectionExtensionModuleLoader::Create(const std::unique_ptr<Runtime>
 std::map<std::string, std::string> SelectionExtensionModuleLoader::GetParams()
 {
     // type means extension type in ExtensionAbilityType of extension_ability_info.h
-    return {{"type", "29"}, {"name", "SelectionExtensionAbility"}};
+    return {{"type", "46"}, {"name", "SelectionExtensionAbility"}};
 }
 
 extern "C" __attribute__((visibility("default"))) void* OHOS_EXTENSION_GetExtensionModule()
