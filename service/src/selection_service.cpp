@@ -221,7 +221,7 @@ void SelectionService::WatchParams()
 void SelectionService::OnStart()
 {
     SELECTION_HILOGI("[SelectionService][OnStart]begin");
-    Publish(this);
+    Publish(SelectionService::GetInstance());
     InputMonitorInit();
     WatchParams();
     SELECTION_HILOGI("[SelectionService][OnStart]end");
@@ -550,6 +550,7 @@ void SelectionInputMonitor::FinishedWordSelection() const
         sptr<ISelectionListener> listener = SelectionService::GetInstance()->GetListener();
         if (listener == nullptr) {
             SELECTION_HILOGE("get listener is null");
+            return;
         }
         listener->OnSelectionChange("HELLO FANZHE");
     }
