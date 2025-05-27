@@ -16,6 +16,7 @@
 #include "selection_extension.h"
 #include "js_selection_extension.h"
 #include "runtime.h"
+#include "selection_extension_hilog.h"
 
 namespace OHOS::AbilityRuntime {
 using namespace OHOS::AppExecFwk;
@@ -27,6 +28,7 @@ SelectionExtension* SelectionExtension::Create(const std::unique_ptr<Runtime>& r
     }
     switch (runtime->GetLanguage()) {
         case Runtime::Language::JS:
+            HILOG_INFO("Create JsSelectionExtension");
             return JsSelectionExtension::Create(runtime);
         default:
             return new SelectionExtension();

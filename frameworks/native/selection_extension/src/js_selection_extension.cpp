@@ -16,13 +16,56 @@
 #include "js_selection_extension.h"
 #include "js_runtime.h"
 #include "js_runtime_utils.h"
+#include "js_selection_extension_context.h"
 #include "napi/native_api.h"
 #include "napi_common_want.h"
 #include "napi_remote_object.h"
+#include "selection_extension_hilog.h"
 
 namespace OHOS::AbilityRuntime {
 namespace {
 constexpr size_t ARGC_ONE = 1;
+}
+
+napi_value AttachSelectionExtensionContext(napi_env env, void* value, void*)
+{
+    HILOG_INFO("AttachSelectionExtensionContext start.");
+    if (value == nullptr) {
+        HILOG_WARN("parameter is invalid.");
+        return nullptr;
+    }
+    auto ptr = reinterpret_cast<std::weak_ptr<SelectionExtensionContext>*>(value)->lock();
+    if (ptr == nullptr) {
+        HILOG_WARN("context is invalid.");
+        return nullptr;
+    }
+    napi_value object = CreateJsSelectionExtensionContext(env, ptr);
+    auto systemModule = JsRuntime::LoadSystemModuleByEngine(env, "SelectionExtensionContext", &object, 1);
+    if (systemModule == nullptr) {
+        HILOG_ERROR("failed to load system module by engine!");
+        return nullptr;
+    }
+    auto contextObj = systemModule->GetNapiValue();
+    napi_coerce_to_native_binding_object(env, contextObj, DetachCallbackFunc, AttachSelectionExtensionContext, value,
+                                         nullptr);
+    auto workContext = new (std::nothrow) std::weak_ptr<SelectionExtensionContext>(ptr);
+    if (workContext == nullptr) {
+        HILOG_ERROR("workContext is nullptr!");
+        return nullptr;
+    }
+    napi_status status = napi_wrap(
+        env, contextObj, workContext,
+        [](napi_env, void* data, void*) {
+            HILOG_INFO("finalizer for weak_ptr input method extension context is called.");
+            delete static_cast<std::weak_ptr<SelectionExtensionContext>*>(data);
+        },
+        nullptr, nullptr);
+    if (status != napi_ok) {
+        HILOG_ERROR("SelectionExtensionContext wrap failed: %{public}d!", status);
+        delete workContext;
+        return nullptr;
+    }
+    return object;
 }
 
 JsSelectionExtension::JsSelectionExtension(JsRuntime& jsRuntime) : jsRuntime_(jsRuntime) {}
@@ -60,7 +103,14 @@ void JsSelectionExtension::Init(const std::shared_ptr<AbilityLocalRecord>& recor
         HILOG_ERROR("failed to init jsObj_!");
         return;
     }
-    BindContext();
+
+    napi_env env = jsRuntime_.GetNapiEnv();
+    napi_value obj = jsObj_->GetNapiValue();
+    if (obj == nullptr) {
+        HILOG_ERROR("failed to get JsSelectionExtension object!");
+        return;
+    }
+    BindContext(env, obj);
     HILOG_INFO("%{public}s end.", __func__);
 }
 
@@ -86,7 +136,7 @@ sptr<IRemoteObject> JsSelectionExtension::OnConnect(const AAFwk::Want& want)
     napi_value result = CallObjectMethod("onConnect", argv, ARGC_ONE);
     auto remoteObj = NAPI_ohos_rpc_getNativeRemoteObject(env, result);
     if (remoteObj == nullptr) {
-        HILOG_ERROR("remoteObj nullptr.");
+        HILOG_ERROR("remoteObj is nullptr.");
     }
     HILOG_INFO("%{public}s end.", __func__);
     return remoteObj;
@@ -158,9 +208,49 @@ void JsSelectionExtension::GetSrcPath(std::string& srcPath)
     }
 }
 
-void JsSelectionExtension::BindContext()
+void JsSelectionExtension::BindContext(napi_env env, napi_value obj)
 {
-    // TODO:
+    HILOG_INFO("%{public}s start.", __func__);
+    auto context = GetContext();
+    if (context == nullptr) {
+        HILOG_ERROR("failed to get context!");
+        return;
+    }
+    HILOG_DEBUG("JsSelectionExtension::Init CreateJsSelectionExtensionContext.");
+    napi_value contextObj = CreateJsSelectionExtensionContext(env, context);
+    auto shellContextRef = jsRuntime_.LoadSystemModule("SelectionExtensionContext", &contextObj, ARGC_ONE);
+    if (shellContextRef == nullptr) {
+        HILOG_ERROR("shellContextRef is nullptr!");
+        return;
+    }
+    contextObj = shellContextRef->GetNapiValue();
+    if (contextObj == nullptr) {
+        HILOG_ERROR("failed to get input method extension native object!");
+        return;
+    }
+    auto workContext = new (std::nothrow) std::weak_ptr<SelectionExtensionContext>(context);
+    if (workContext == nullptr) {
+        HILOG_ERROR("workContext is nullptr!");
+        return;
+    }
+    napi_coerce_to_native_binding_object(env, contextObj, DetachCallbackFunc, AttachSelectionExtensionContext,
+                                         workContext, nullptr);
+    HILOG_DEBUG("JsSelectionExtension::Init Bind.");
+    context->Bind(jsRuntime_, shellContextRef.release());
+    HILOG_DEBUG("JsSelectionExtension::SetProperty.");
+    napi_set_named_property(env, obj, "context", contextObj);
+    napi_status status = napi_wrap(
+        env, contextObj, workContext,
+        [](napi_env, void* data, void*) {
+            HILOG_INFO("Finalizer for weak_ptr input method extension context is called.");
+            delete static_cast<std::weak_ptr<SelectionExtensionContext>*>(data);
+        },
+        nullptr, nullptr);
+    if (status != napi_ok) {
+        HILOG_ERROR("SelectionExtensionContext wrap failed: %{public}d", status);
+        delete workContext;
+    }
+    HILOG_INFO("%{public}s end.", __func__);
 }
 
 } // namespace OHOS::AbilityRuntime

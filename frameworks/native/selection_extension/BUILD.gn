@@ -32,7 +32,8 @@ ohos_shared_library("selection_extension_ability_native") {
   ]
 
   include_dirs = [
-    "include"
+    "include",
+    "${selection_fwk_root_path}/utils/include",
   ]
 
   sources = [
@@ -40,11 +41,12 @@ ohos_shared_library("selection_extension_ability_native") {
     "src/selection_extension_context.cpp",
     "src/selection_extension_module_loader.cpp",
     "src/js_selection_extension.cpp",
+    "src/js_selection_extension_context.cpp",
   ]
 
 
   deps = [
-    
+    "${selection_fwk_root_path}/common:selection_common"
   ]
 
   external_deps = [
@@ -52,6 +54,7 @@ ohos_shared_library("selection_extension_ability_native") {
     "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
+    "ability_runtime:ability_start_options",
     "ability_runtime:abilitykit_native",
     "ability_runtime:app_context",
     "ability_runtime:extensionkit_native",

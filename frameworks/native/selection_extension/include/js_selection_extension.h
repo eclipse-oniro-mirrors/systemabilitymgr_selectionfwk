@@ -82,12 +82,11 @@ public:
 private:
     napi_value CallObjectMethod(const char* methodName, const napi_value* argv = nullptr, size_t argc = 0);
     void GetSrcPath(std::string& srcPath);
-    void BindContext();
+    void BindContext(napi_env env, napi_value obj);
 
 private:
     JsRuntime& jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
-    std::shared_ptr<NativeReference> shellContextRef_ = nullptr;
 };
 } // namespace OHOS::AbilityRuntime
 
