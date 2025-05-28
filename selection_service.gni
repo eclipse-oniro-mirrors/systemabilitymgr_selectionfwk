@@ -27,4 +27,6 @@ word_selection_part_name = "word_selection"
 
 selection_fwk_root_path = "//foundation/systemabilitymgr/selection_fwk"
 
+selection_path = "//commonlibrary/c_utils"
+
 system_type = "default"

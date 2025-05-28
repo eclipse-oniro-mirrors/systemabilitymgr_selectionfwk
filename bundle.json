@@ -36,7 +36,6 @@
         "graphic_2d",
         "bundle_framework",
         "ffrt",
-
         "config_policy"
       ],
       "third_party": [

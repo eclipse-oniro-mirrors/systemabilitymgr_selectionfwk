@@ -39,7 +39,7 @@ ohos_static_library("selection_common") {
     "callback_object.cpp",
     "util.cpp",
     "selectionmethod_trace.cpp",
-    "js_utils.cpp"
+    "js_utils.cpp",
   ]
 
   ldflags = [ "-Wl,--exclude-libs=ALL" ]
@@ -59,6 +59,7 @@ ohos_static_library("selection_common") {
     "ability_base:want",
     "ability_runtime:abilitykit_native",
     "ability_runtime:extensionkit_native",
+    "ffrt:libffrt",
   ]
   part_name = "selectionfwk"
   subsystem_name = "systemabilitymgr"

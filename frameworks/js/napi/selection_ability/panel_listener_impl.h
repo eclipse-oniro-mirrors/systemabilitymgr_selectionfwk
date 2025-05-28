@@ -13,63 +13,70 @@
  * limitations under the License.
  */
 
-#ifndef SELECTON_FWK_PANEL_LISTENER_IMPL_H
-#define SELECTON_FWK_PANEL_LISTENER_IMPL_H
+#ifndef SELECTION_IMF_PANEL_LISTENER_IMPL_H
+#define SELECTION_IMF_PANEL_LISTENER_IMPL_H
 
 #include <mutex>
+#include <shared_mutex>
 #include <thread>
 #include <tuple>
 #include <uv.h>
 
-// #include "concurrent_map.h"
+#include "concurrent_map.h"
 #include "event_handler.h"
 #include "selection_panel.h"
-// #include "js_callback_object.h"
+#include "callback_object.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-// #include "panel_status_listener.h"
+#include "panel_status_listener.h"
+
 
 namespace OHOS {
 namespace SelectionFwk {
-// struct JsWindowSize {
-//     static napi_value Write(napi_env env, const WindowSize &nativeObject);
-//     static bool Read(napi_env env, napi_value jsObject, WindowSize &nativeObject);
-// };
-// struct JsKeyboardArea {
-//     static napi_value Write(napi_env env, const PanelAdjustInfo &nativeObject);
-//     static bool Read(napi_env env, napi_value jsObject, PanelAdjustInfo &nativeObject);
-// };
-// class PanelListenerImpl : public PanelStatusListener {
-class PanelListenerImpl {
+
+struct JsWindowSize {
+    static napi_value Write(napi_env env, const WindowSize &nativeObject);
+    static bool Read(napi_env env, napi_value jsObject, WindowSize &nativeObject);
+};
+
+struct JsKeyboardArea {
+    static napi_value Write(napi_env env, const PanelAdjustInfo &nativeObject);
+    static bool Read(napi_env env, napi_value jsObject, PanelAdjustInfo &nativeObject);
+};
+
+class PanelListenerImpl : public PanelStatusListener {
 public:
-    // struct UvEntry {
-    //     WindowSize size;
-    //     PanelAdjustInfo keyboardArea;
-    //     std::shared_ptr<JSCallbackObject> cbCopy;
-    //     explicit UvEntry(const std::shared_ptr<JSCallbackObject> &cb) : cbCopy(cb)
-    //     {
-    //     }
-    // };
-    // using EntrySetter = std::function<void(UvEntry &)>;
+
+struct UvEntry {
+        WindowSize size;
+        PanelAdjustInfo keyboardArea;
+        std::shared_ptr<SelectionFwk::JSCallbackObject> cbCopy;
+        explicit UvEntry(const std::shared_ptr<SelectionFwk::JSCallbackObject> &cb) : cbCopy(cb)
+        {
+        }
+    };
+
     static std::shared_ptr<PanelListenerImpl> GetInstance();
     ~PanelListenerImpl();
-    // void OnPanelStatus(uint32_t windowId, bool isShow) override;
-    // void OnSizeChange(uint32_t windowId, const WindowSize &size) override;
-    // void OnSizeChange(uint32_t windowId, const WindowSize &size, const PanelAdjustInfo &keyboardArea,
-    //     const std::string &event) override;
-    // void Subscribe(uint32_t windowId, const std::string &type, std::shared_ptr<JSCallbackObject> cbObject);
-    // void RemoveInfo(const std::string &type, uint32_t windowId);
-    void SetEventHandler(std::shared_ptr<AppExecFwk::EventHandler> handler);
-    // std::shared_ptr<JSCallbackObject> GetCallback(uint32_t windowId, const std::string &type);
-    // std::shared_ptr<AppExecFwk::EventHandler> GetEventHandler();
 
-    // ConcurrentMap<uint32_t, std::map<std::string, std::shared_ptr<JSCallbackObject>>> callbacks_;
+    void SetEventHandler(std::shared_ptr<AppExecFwk::EventHandler> handler);
+    std::shared_ptr<AppExecFwk::EventHandler> GetEventHandler();
+
+    void OnPanelStatus(uint32_t windowId, bool isShow) override;
+    void OnSizeChange(uint32_t windowId, const WindowSize &size) override;
+    void OnSizeChange(uint32_t windowId, const WindowSize &size, const PanelAdjustInfo &keyboardArea,
+        const std::string &event) override;
+
+    std::shared_ptr<SelectionFwk::JSCallbackObject> GetCallback(uint32_t windowId, const std::string &type);
+
     static std::mutex listenerMutex_;
     static std::shared_ptr<PanelListenerImpl> instance_;
     mutable std::shared_mutex eventHandlerMutex_;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
+
+    ConcurrentMap<uint32_t, std::map<std::string, std::shared_ptr<SelectionFwk::JSCallbackObject>>> callbacks_;
 };
 } // namespace SelectionFwk
 } // namespace OHOS
 
-#endif //SELECTON_FWK_PANEL_LISTENER_IMPL_H
+#endif //SELECTION_IMF_PANEL_LISTENER_IMPL_H

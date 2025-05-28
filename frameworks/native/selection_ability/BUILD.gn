@@ -21,7 +21,7 @@ config("selection_listener_config") {
     "../../../utils/include",
     "${target_gen_dir}",
     "${selection_fwk_root_path}/common",
-    "../../common",
+    "${selection_fwk_root_path}/frameworks/common",
   ]
 }
 
@@ -59,6 +59,15 @@ ohos_source_set("selection_listener_proxy") {
 }
 
 ohos_shared_library("selection_ability") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
   configs = [ ":selection_listener_config", ]
   output_values = get_target_outputs(":selection_listener_interface")
 
@@ -71,6 +80,7 @@ ohos_shared_library("selection_ability") {
   ]
   sources += filter_include(output_values, [ "*.cpp" ])
   deps = [
+    "${selection_fwk_root_path}/common:selection_common",
     ":selection_listener_interface",
   ]
 

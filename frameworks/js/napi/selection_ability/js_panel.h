@@ -19,10 +19,9 @@
 #include "napi/native_api.h"
 #include "selection_panel.h"
 #include "async_call.h"
-// #include "panel_common.h"
+#include "panel_common.h"
 #include "panel_info.h"
-// #include "ffrt_block_queue.h"
-#include "event_checker.h"
+#include "ffrt_block_queue.h"
 
 
 #include <string>
@@ -62,58 +61,61 @@ public:
     JsPanel() = default;
     ~JsPanel();
     static napi_value Init(napi_env env);
+    static napi_value SetUiContent(napi_env env, napi_callback_info info);
     static napi_value Show(napi_env env, napi_callback_info info);
+    static napi_value Hide(napi_env env, napi_callback_info info);
+    // static napi_value StartMoving(napi_env env, napi_callback_info info);
     void SetNative(const std::shared_ptr<SelectionPanel> &panel);
     std::shared_ptr<SelectionPanel> GetNative();
 private:
-    // struct PanelContentContext : public AsyncCall::Context {
-    //     LayoutParams layoutParams = { { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
-    //     EnhancedLayoutParams enhancedLayoutParams;
-    //     HotAreas hotAreas;
-    //     std::vector<Rosen::Rect> hotArea;
-    //     bool isEnhancedCall{ false };
-    //     PanelFlag panelFlag = PanelFlag::FLG_FIXED;
-    //     std::string path = "";
-    //     uint32_t width = 0;
-    //     uint32_t height = 0;
-    //     int32_t x = 0;
-    //     int32_t y = 0;
-    //     uint64_t displayId = 0;
-    //     std::shared_ptr<SelectionPanel> selectionPanel = nullptr;
-    //     std::shared_ptr<NativeReference> contentStorage = nullptr;
-    //     JsEventInfo info;
-    //     PanelContentContext(napi_env env, napi_callback_info info) : Context(nullptr, nullptr)
-    //     {
-    //         napi_value self = nullptr;
-    //         napi_status status = napi_get_cb_info(env, info, 0, nullptr, &self, nullptr);
-    //         CHECK_RETURN_VOID((status == napi_ok) && (self != nullptr), "get callback info failed.");
-    //         void *native = nullptr;
-    //         status = napi_unwrap(env, self, &native);
-    //         CHECK_RETURN_VOID((status == napi_ok) && (native != nullptr), "get jsPanel failed.");
-    //         selectionPanel = reinterpret_cast<JsPanel *>(native)->GetNative();
-    //     };
-    //     PanelContentContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)){};
-    //     napi_status operator()(napi_env env, size_t argc, napi_value *argv, napi_value self) override
-    //     {
-    //         CHECK_RETURN(self != nullptr, "self is nullptr", napi_invalid_arg);
-    //         return Context::operator()(env, argc, argv, self);
-    //     }
-    //     napi_status operator()(napi_env env, napi_value *result) override
-    //     {
-    //         if (status_ != napi_ok) {
-    //             output_ = nullptr;
-    //             return status_;
-    //         }
-    //         return Context::operator()(env, result);
-    //     }
-    // };
+    struct PanelContentContext : public AsyncCall::Context {
+        LayoutParams layoutParams = { { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
+        EnhancedLayoutParams enhancedLayoutParams;
+        HotAreas hotAreas;
+        std::vector<Rosen::Rect> hotArea;
+        bool isEnhancedCall{ false };
+        PanelFlag panelFlag = PanelFlag::FLG_FIXED;
+        std::string path = "";
+        uint32_t width = 0;
+        uint32_t height = 0;
+        int32_t x = 0;
+        int32_t y = 0;
+        uint64_t displayId = 0;
+        std::shared_ptr<SelectionPanel> selectionPanel = nullptr;
+        std::shared_ptr<NativeReference> contentStorage = nullptr;
+        JsEventInfo info;
+        PanelContentContext(napi_env env, napi_callback_info info) : Context(nullptr, nullptr)
+        {
+            napi_value self = nullptr;
+            napi_status status = napi_get_cb_info(env, info, 0, nullptr, &self, nullptr);
+            CHECK_RETURN_VOID((status == napi_ok) && (self != nullptr), "get callback info failed.");
+            void *native = nullptr;
+            status = napi_unwrap(env, self, &native);
+            CHECK_RETURN_VOID((status == napi_ok) && (native != nullptr), "get jsPanel failed.");
+            selectionPanel = reinterpret_cast<JsPanel *>(native)->GetNative();
+        };
+        PanelContentContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)){};
+        napi_status operator()(napi_env env, size_t argc, napi_value *argv, napi_value self) override
+        {
+            CHECK_RETURN(self != nullptr, "self is nullptr", napi_invalid_arg);
+            return Context::operator()(env, argc, argv, self);
+        }
+        napi_status operator()(napi_env env, napi_value *result) override
+        {
+            if (status_ != napi_ok) {
+                output_ = nullptr;
+                return status_;
+            }
+            return Context::operator()(env, result);
+        }
+    };
 
     static napi_value JsNew(napi_env env, napi_callback_info info);
     static const std::string CLASS_NAME;
     static thread_local napi_ref panelConstructorRef_;
     std::shared_ptr<SelectionPanel> selectionPanel_ = nullptr;
     static std::mutex panelConstructorMutex_;
-    // static FFRTBlockQueue<JsEventInfo> jsQueue_;
+    static FFRTBlockQueue<JsEventInfo> jsQueue_;
 };
 } // namespace SelectionFwk
 } // namespace OHOS

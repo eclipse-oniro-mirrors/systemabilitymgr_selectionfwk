@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,8 +19,8 @@
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory> 
 #include <string>
-
 #include <atomic>
 
 #include "panel_info.h"
@@ -29,6 +29,8 @@
 #include "wm_common.h"
 #include "window.h"
 #include "ui/rs_surface_node.h"
+#include "selection_window_info.h"
+#include "panel_status_listener.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -40,6 +42,12 @@ public:
     ~SelectionPanel();
     int32_t CreatePanel(const std::shared_ptr<AbilityRuntime::Context> &context, const PanelInfo &panelInfo);
     // void SetPanelHeightCallback(CallbackFunc heightCallback);
+    int32_t SetUiContent(const std::string &contentInfo, napi_env env);
+    int32_t ShowPanel();
+    int32_t HidePanel();
+    // int32_t StartMoving();
+    bool IsShowing();
+    bool IsHidden();
 
     uint32_t windowId_ = INVALID_WINDOW_ID;
 
@@ -47,18 +55,20 @@ private:
     std::string GeneratePanelName();
     int32_t SetPanelProperties();
     static uint32_t GenerateSequenceId();
+    void PanelStatusChange(const SelectionWindowStatus &status);
+
     PanelType panelType_ = PanelType::STATUS_BAR;//待修改
     PanelFlag panelFlag_ = PanelFlag::FLG_FIXED;//待修改
-
     sptr<OHOS::Rosen::Window> window_ = nullptr;
     sptr<OHOS::Rosen::WindowOption> winOption_ = nullptr;
-
     bool isScbEnable_ { false };
-
     Rosen::KeyboardLayoutParams keyboardLayoutParams_;
     static std::atomic<uint32_t> sequenceId_;
     uint32_t invalidGravityPercent = 0;
-
+    std::atomic<bool> isWaitSetUiContent_ { true };
+    std::shared_ptr<PanelStatusListener> panelStatusListener_ = nullptr;
+    bool showRegistered_ = false;
+    bool hideRegistered_ = false;
     // CallbackFunc panelHeightCallback_ = nullptr;
 };
 } // namespace SelectionFwk

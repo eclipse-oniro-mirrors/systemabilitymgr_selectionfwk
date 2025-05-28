@@ -49,6 +49,8 @@ ohos_shared_library("selectionengine_napi") {
     "${selection_fwk_root_path}/frameworks/native/selection_ability:selection_ability",
   ]
 
+  cflags_cc = [ "-std=c++17" ]
+
   external_deps = [
     "ability_base:configuration",
     "ability_runtime:ability_context_native",

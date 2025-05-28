@@ -13,19 +13,27 @@
  * limitations under the License.
  */
 
-#include "scene_board_judgement.h"
-
 #include "selection_panel.h"
-#include "selection_log.h"
+
+#include <tuple>
+#include <thread> 
+#include <chrono>
 
 #include "display_manager.h"
+#include "scene_board_judgement.h"
+#include "selection_log.h"
+#include "selectionmethod_trace.h"
 
 namespace OHOS {
 namespace SelectionFwk {
 using WMError = OHOS::Rosen::WMError;
+using WindowState = OHOS::Rosen::WindowState;
+using namespace Rosen;
 using WindowGravity = OHOS::Rosen::WindowGravity;
 using WindowState = OHOS::Rosen::WindowState;
 std::atomic<uint32_t> SelectionPanel::sequenceId_ { 0 };
+constexpr int32_t MAXWAITTIME = 30;
+constexpr int32_t WAITTIME = 10;
 
 SelectionPanel::~SelectionPanel() = default;
 int32_t SelectionPanel::CreatePanel(
@@ -170,6 +178,183 @@ uint32_t SelectionPanel::GenerateSequenceId()
 // void SelectionPanel::SetPanelHeightCallback(CallbackFunc heightCallback)
 // {
 //     panelHeightCallback_ = std::move(heightCallback);
+// }
+
+int32_t SelectionPanel::SetUiContent(const std::string &contentInfo, napi_env env)
+{
+    if (window_ == nullptr) {
+        SELECTION_HILOGE("window_ is nullptr, can not SetUiContent!");
+        return ErrorCode::ERROR_NULL_POINTER;
+    }
+    WMError ret = WMError::WM_OK;
+
+    window_->NapiSetUIContent(contentInfo, env, nullptr);//调用napi接口设置UI内容
+    // if (storage == nullptr) {
+    //     ret = window_->NapiSetUIContent(contentInfo, env, nullptr);
+    // } else {
+    //     ret = window_->NapiSetUIContent(contentInfo, env, storage->GetNapiValue());
+    // }
+    WMError wmError = window_->SetTransparent(true);
+    if (isWaitSetUiContent_) {
+        isWaitSetUiContent_ = false;
+    }
+    SELECTION_HILOGI("SetTransparent ret: %{public}u.", wmError);
+    SELECTION_HILOGI("NapiSetUIContent ret: %{public}d.", ret);
+    return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
+}
+
+int32_t SelectionPanel::ShowPanel()
+{
+    SELECTION_HILOGD("SelectionPanel start.");
+    int32_t waitTime = 0;
+    while (isWaitSetUiContent_ && waitTime < MAXWAITTIME) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(WAITTIME));
+        waitTime += WAITTIME;
+        SELECTION_HILOGI("SelectionPanel show pannel waitTime %{public}d.", waitTime);
+    }
+    if (window_ == nullptr) {
+        SELECTION_HILOGE("window_ is nullptr!");
+        return ErrorCode::ERROR_IMA_NULLPTR;
+    }
+    if (IsShowing()) {
+        SELECTION_HILOGI("panel already shown.");
+        return ErrorCode::NO_ERROR;
+    }
+    auto ret = WMError::WM_OK;
+    {
+        SelectionMethodSyncTrace tracer("SelectionPanel_ShowPanel");
+        ret = window_->Show();
+    }
+    if (ret != WMError::WM_OK) {
+        SELECTION_HILOGE("ShowPanel error, err = %{public}d", ret);
+        return ErrorCode::ERROR_OPERATE_PANEL;
+    }
+    SELECTION_HILOGI("Selection panel shown successfully.");
+    PanelStatusChange(SelectionWindowStatus::SHOW);
+    // if (!isScbEnable_) {
+    //     PanelStatusChangeToImc(SelectionWindowStatus::SHOW, window_->GetRect());//通知输入法管理器或其他监听者
+    // }
+    return ErrorCode::NO_ERROR;
+}
+
+
+bool SelectionPanel::IsShowing()
+{
+    if (window_ == nullptr) {
+        SELECTION_HILOGE("window_ is nullptr!");
+        return ErrorCode::ERROR_NULL_POINTER;
+    }
+    auto windowState = window_->GetWindowState();
+    if (windowState == WindowState::STATE_SHOWN) {
+        return true;
+    }
+    SELECTION_HILOGD("windowState: %{public}d.", static_cast<int>(windowState));
+    return false;
+}
+
+void SelectionPanel::PanelStatusChange(const SelectionWindowStatus &status)
+{
+    if (status == SelectionWindowStatus::SHOW && showRegistered_ && panelStatusListener_ != nullptr) {
+        SELECTION_HILOGD("ShowPanel panelStatusListener_ is not nullptr.");
+        panelStatusListener_->OnPanelStatus(windowId_, true);
+    }
+    if (status == SelectionWindowStatus::HIDE && hideRegistered_ && panelStatusListener_ != nullptr) {
+        SELECTION_HILOGD("HidePanel panelStatusListener_ is not nullptr.");
+        panelStatusListener_->OnPanelStatus(windowId_, false);
+    }
+}
+// 用于处理输入法面板状态变化，并将相关信息通知给输入法服务代理。（当输入法面板的状态或位置发生变化时，当函数会被调用）
+// void SelectionPanel::PanelStatusChangeToImc(const SelectionWindowStatus &status, const Rosen::Rect &rect)
+// {
+//     ImeWindowInfo info;
+//     info.panelInfo.panelType = panelType_;
+//     info.panelInfo.panelFlag = panelFlag_;
+//     if (info.panelInfo.panelType != SOFT_KEYBOARD || info.panelInfo.panelFlag == FLG_CANDIDATE_COLUMN) {
+//         SELECTION_HILOGD("no need to deal.");
+//         return;
+//     }
+//     auto proxy = ImaUtils::GetImsaProxy();//通过IMSA（Input Method Service Agent）代理对象获取输入法系统能力==》OnDemandStartStopSa(涉及到与系统能力管理器的交互)
+//     if (proxy == nullptr) {
+//         SELECTION_HILOGE("proxy is nullptr!");
+//         return;
+//     }
+//     std::string name = window_->GetWindowName() + "/" + std::to_string(window_->GetWindowId());
+//     info.windowInfo.name = std::move(name);
+//     info.windowInfo.left = rect.posX_;
+//     info.windowInfo.top = rect.posY_;
+//     info.windowInfo.width = rect.width_;
+//     info.windowInfo.height = rect.height_;
+//     SELECTION_HILOGD("rect[%{public}d, %{public}d, %{public}u, %{public}u], status: %{public}d, "
+//                 "panelFlag: %{public}d.",
+//         rect.posX_, rect.posY_, rect.width_, rect.height_, status, info.panelInfo.panelFlag);
+//     proxy->PanelStatusChange(static_cast<uint32_t>(status), info);
+// }
+
+
+int32_t SelectionPanel::HidePanel()
+{
+    SELECTION_HILOGD("SelectionPanel start");
+    if (window_ == nullptr) {
+        SELECTION_HILOGE("window_ is nullptr!");
+        return ErrorCode::ERROR_NULL_POINTER;
+    }
+    if (IsHidden()) {
+        SELECTION_HILOGI("panel already hidden.");
+        return ErrorCode::NO_ERROR;
+    }
+    auto ret = WMError::WM_OK;
+    {
+        SelectionMethodSyncTrace tracer("SelectionPanel_HidePanel");
+        ret = window_->Hide();
+    }
+    if (ret != WMError::WM_OK) {
+        SELECTION_HILOGE("HidePanel error, err: %{public}d!", ret);
+        return ErrorCode::ERROR_OPERATE_PANEL;
+    }
+    SELECTION_HILOGI("success, type/flag: %{public}d/%{public}d.", static_cast<int32_t>(panelType_),
+        static_cast<int32_t>(panelFlag_));
+    PanelStatusChange(SelectionWindowStatus::HIDE);
+    // if (!isScbEnable_) {
+    //     PanelStatusChangeToImc(InputWindowStatus::HIDE, { 0, 0, 0, 0 });
+    // }
+    return ErrorCode::NO_ERROR;
+}
+
+bool SelectionPanel::IsHidden()
+{
+    auto windowState = window_->GetWindowState();
+    if (windowState == WindowState::STATE_HIDDEN) {
+        return true;
+    }
+    SELECTION_HILOGD("windowState: %{public}d.", static_cast<int>(windowState));
+    return false;
+}
+
+// int32_t SelectionPanel::StartMoving()
+// {
+//     if (window_ == nullptr) {
+//         SELECTION_HILOGE("window_ is nullptr!");
+//         return ErrorCode::ERROR_IME;
+//     }
+//     // if (panelType_ != STATUS_BAR) {
+//     //     IMSA_HILOGE("SOFT_KEYBOARD panel can not move!");
+//     //     return ErrorCode::ERROR_INVALID_PANEL_TYPE;
+//     // }
+//     // if (panelFlag_ != FLG_FLOATING) {
+//     //     IMSA_HILOGE("invalid panel flag: %{public}d", panelFlag_);
+//     //     return ErrorCode::ERROR_INVALID_PANEL_FLAG;
+//     // }
+//     auto ret = window_->StartMoveWindow();
+//     if (ret == WmErrorCode::WM_ERROR_DEVICE_NOT_SUPPORT) {
+//         SELECTION_HILOGE("window manager service not support error ret = %{public}d.", ret);
+//         return ErrorCode::ERROR_DEVICE_UNSUPPORTED;
+//     }
+//     if (ret != WmErrorCode::WM_OK) {
+//         SELECTION_HILOGE("window manager service error ret = %{public}d.", ret);
+//         return ErrorCode::ERROR_WINDOW_MANAGER;
+//     }
+//     SELECTION_HILOGI("StartMoving  success!");
+//     return ErrorCode::NO_ERROR;
 // }
 
 } // namespace SelectionFwk

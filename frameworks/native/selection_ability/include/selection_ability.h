@@ -34,24 +34,20 @@ public:
     static sptr<SelectionAbility> GetInstance();
     int32_t CreatePanel(const std::shared_ptr<AbilityRuntime::Context> &context, const PanelInfo &panelInfo,
         std::shared_ptr<SelectionPanel> &selectionPanel);
-    void NotifyKeyboardHeight(uint32_t panelHeight, PanelFlag panelFlag);
+    int32_t ShowPanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
+    int32_t HidePanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
+    // void NotifyKeyboardHeight(uint32_t panelHeight, PanelFlag panelFlag);
 
 private:
     static std::mutex instanceLock_;
     static sptr<SelectionAbility> instance_;
 
     std::mutex dataChannelLock_;
-    // std::shared_ptr<InputDataChannelProxy> dataChannelProxy_ = nullptr;
-
-
-    // std::shared_ptr<InputDataChannelProxy> GetInputDataChannelProxy();
+    std::recursive_mutex keyboardCmdLock_;
 
     void Initialize();
 
     ConcurrentMap<PanelType, std::shared_ptr<SelectionPanel>> panels_ {};
-    // sptr<ISelectionCore> coreStub_ { nullptr };
-    // sptr<ISelectionAgent> agentStub_ { nullptr };
-
     std::atomic_bool isShowAfterCreate_ { false };
 
 };
