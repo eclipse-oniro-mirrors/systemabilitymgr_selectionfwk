@@ -43,8 +43,6 @@ private:
     static sptr<SelectionAbility> instance_;
 
     std::mutex dataChannelLock_;
-    std::recursive_mutex keyboardCmdLock_;
-
     void Initialize();
 
     ConcurrentMap<PanelType, std::shared_ptr<SelectionPanel>> panels_ {};

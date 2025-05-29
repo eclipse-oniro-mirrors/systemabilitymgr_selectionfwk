@@ -119,33 +119,18 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
 //     std::lock_guard<std::mutex> lock(dataChannelLock_);
 //     return dataChannelProxy_;
 // }
+
 int32_t SelectionAbility::ShowPanel(const std::shared_ptr<SelectionPanel> &selectionpanel)
 {
-    std::lock_guard<std::recursive_mutex> lock(keyboardCmdLock_);
     if (selectionpanel == nullptr) {
         return ErrorCode::ERROR_BAD_PARAMETERS;
     }
-
-    //面板标志flag（固定/浮动） trigger触发显示的原因（应用请求/输入法框架请求）不涉及
-    // if (trigger == Trigger::IME_APP && GetInputDataChannelProxy() == nullptr) {
-    //     IMSA_HILOGE("channel is nullptr!");
-    //     return ErrorCode::ERROR_IMA_CHANNEL_NULLPTR;
-    // }
-    // if (flag == FLG_FIXED && selectionpanel->GetPanelType() == SOFT_KEYBOARD) {
-    //     auto ret = selectionpanel->SetTextFieldAvoidInfo(positionY_, height_);
-    //     if (ret != ErrorCode::NO_ERROR) {
-    //         IMSA_HILOGE("failed to set keyBoard, ret: %{public}d!", ret);
-    //     }
-    // }
-    // auto keyboardSize = selectionpanel->GetKeyboardSize();
-    // SysPanelStatus sysPanelStatus = { inputType_, flag, keyboardSize.width, keyboardSize.height };
-    // NotifyPanelStatus(selectionpanel->GetPanelType(), sysPanelStatus);
     auto ret = selectionpanel->ShowPanel();
-    // if (ret == ErrorCode::NO_ERROR) {
-    //     PanelInfo info;
-    //     info = selectionPanel;
-    // }
-    return ret;
+    if (ret != ErrorCode::NO_ERROR) {
+        SELECTION_HILOGD("failed, ret: %{public}d", ret);
+        return ret;
+    }
+    return ErrorCode::NO_ERROR;
 }
 
 int32_t SelectionAbility::HidePanel(const std::shared_ptr<SelectionPanel> &selectionpanel)
@@ -158,18 +143,7 @@ int32_t SelectionAbility::HidePanel(const std::shared_ptr<SelectionPanel> &selec
         SELECTION_HILOGD("failed, ret: %{public}d", ret);
         return ret;
     }
-    // PanelStatusInfo info;
-    // info.panelInfo.panelType = selectionpanel->GetPanelType();
-    // info.panelInfo.panelFlag = flag;
-    // info.visible = false;
-    // info.trigger = trigger;
-    // info.sessionId = sessionId;
-    // NotifyPanelStatusInfo(info);
-    // if (trigger == Trigger::IMF && selectionpanel->GetPanelType() == PanelType::SOFT_KEYBOARD) {
-    //     FinishTextPreview(true);
-    // }
     return ErrorCode::NO_ERROR;
 }
-
 } // namespace SelectionFwk
 } // namespace OHOS

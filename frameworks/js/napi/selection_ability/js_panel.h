@@ -23,13 +23,11 @@
 #include "panel_info.h"
 #include "ffrt_block_queue.h"
 
-
 #include <string>
 #include <mutex>
 
 namespace OHOS {
 namespace SelectionFwk {
-
 enum class JsEvent : uint32_t {
     RESIZE = 0,
     MOVE_TO,
@@ -53,9 +51,6 @@ struct JsEventInfo {
     }
 };
 
-
-
-
 class JsPanel {
 public:
     JsPanel() = default;
@@ -64,7 +59,7 @@ public:
     static napi_value SetUiContent(napi_env env, napi_callback_info info);
     static napi_value Show(napi_env env, napi_callback_info info);
     static napi_value Hide(napi_env env, napi_callback_info info);
-    // static napi_value StartMoving(napi_env env, napi_callback_info info);
+    static napi_value StartMoving(napi_env env, napi_callback_info info);
     void SetNative(const std::shared_ptr<SelectionPanel> &panel);
     std::shared_ptr<SelectionPanel> GetNative();
 private:
