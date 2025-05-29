@@ -42,7 +42,7 @@ typedef enum {
     SELECT_INPUT_WAIT_LEFT_MOVE = 2,
     SELECT_INPUT_LEFT_MOVE = 3,
     SELECT_INPUT_WAIT_DOUBLE_CLICK = 4,
-    SELECT_INPUT_WAIT_TRIBLE_CLICK = 5,
+    SELECT_INPUT_WAIT_TRIPLE_CLICK = 5,
     SELECT_INPUT_DOUBLE_CLICKED = 6,
     SELECT_INPUT_TRIPLE_CLICKED = 7,
 } SelectInputState;
@@ -100,14 +100,40 @@ private:
     sptr<SelectionExtensionAbilityConnection> connectInner_ {nullptr};
 };
 
+class SelectionEventListener {
+public:
+    virtual void OnTextSelected() {
+    };
+    virtual ~SelectionEventListener() = default;
+};
+
+class DefaultSelectionEventListener : public SelectionEventListener {
+public:
+    virtual void OnTextSelected();
+
+private:
+    void InjectCtrlC() const;
+};
+
 class SelectionInputMonitor : public IInputEventConsumer {
 public:
+    SelectionInputMonitor()
+        : selectionEventListener_(std::make_shared<SelectionEventListener>()) {
+    }
+
+    SelectionInputMonitor(std::shared_ptr<SelectionEventListener> selectionEventListener)
+        : selectionEventListener_(selectionEventListener) {
+    }
+
+    bool IsTextSelected() const;
+
     virtual void OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const;
     virtual void OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const;
     virtual void OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const;
 
 public:
     static bool ctrlSelectFlag;
+
 private:
     void InputInitialProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void InputWordBeginProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
@@ -116,12 +142,14 @@ private:
     void InputWordJudgeTripleClickProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void InputWordWaitTripleClickProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void FinishedWordSelection() const;
-    void InjectCtrlC() const;
     void ResetProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void JudgeTripleClick() const;
+
     static uint32_t curSelectState;
     static uint32_t subSelectState;
     static int64_t lastClickTime;
+
+    std::shared_ptr<SelectionEventListener> selectionEventListener_;
 };
 }
 
