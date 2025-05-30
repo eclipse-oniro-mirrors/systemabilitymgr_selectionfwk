@@ -23,6 +23,7 @@
 #include <string>
 #include <atomic>
 
+#include "panel_common.h"
 #include "panel_info.h"
 #include "refbase.h"
 #include "context.h"
@@ -37,16 +38,16 @@ namespace SelectionFwk {
 class SelectionPanel {
 public:
     static constexpr uint32_t INVALID_WINDOW_ID = 0;
-    // using CallbackFunc = std::function<void(uint32_t, PanelFlag)>;
     SelectionPanel() = default;
     ~SelectionPanel();
     int32_t CreatePanel(const std::shared_ptr<AbilityRuntime::Context> &context, const PanelInfo &panelInfo);
-    // void SetPanelHeightCallback(CallbackFunc heightCallback);
+    int32_t DestroyPanel();
     int32_t SetUiContent(const std::string &contentInfo, napi_env env);
     int32_t ShowPanel();
     int32_t HidePanel();
     int32_t StartMoving();
     int32_t MoveTo(int32_t x, int32_t y);
+    PanelType GetPanelType();
     bool IsShowing();
     bool IsHidden();
 
@@ -58,8 +59,8 @@ private:
     static uint32_t GenerateSequenceId();
     void PanelStatusChange(const SelectionWindowStatus &status);
 
-    PanelType panelType_ = PanelType::STATUS_BAR;//待修改
-    PanelFlag panelFlag_ = PanelFlag::FLG_FIXED;//待修改
+    PanelType panelType_ = PanelType::STATUS_BAR;
+    PanelFlag panelFlag_ = PanelFlag::FLG_FIXED;
     sptr<OHOS::Rosen::Window> window_ = nullptr;
     sptr<OHOS::Rosen::WindowOption> winOption_ = nullptr;
     bool isScbEnable_ { false };
@@ -70,7 +71,7 @@ private:
     std::shared_ptr<PanelStatusListener> panelStatusListener_ = nullptr;
     bool showRegistered_ = false;
     bool hideRegistered_ = false;
-    // CallbackFunc panelHeightCallback_ = nullptr;
+
 };
 } // namespace SelectionFwk
 } // namespace OHOS

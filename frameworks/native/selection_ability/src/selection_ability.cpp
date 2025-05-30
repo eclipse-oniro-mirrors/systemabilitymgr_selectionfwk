@@ -69,19 +69,12 @@ void SelectionAbility::Initialize()
 int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Context> &context,
     const PanelInfo &panelInfo, std::shared_ptr<SelectionPanel> &selectionPanel)
 {
-    // SELECTION_HILOGI("SelectionAbility start.");
     SELECTION_HILOGI("SelectionAbility CreatePanel start.");
-//设置面板高度回调(可暂设定为固定高度)
-    // auto panelHeightCallback = [this](uint32_t panelHeight, PanelFlag panelFlag) {
-    //     NotifyKeyboardHeight(panelHeight, panelFlag);//NotifyKeyboardHeight()待实现
-    // };
 
     auto flag = panels_.ComputeIfAbsent(panelInfo.panelType,
         [&panelInfo, &context, &selectionPanel](
-        // [panelHeightCallback, &panelInfo, &context, &selectionPanel](
             const PanelType &panelType, std::shared_ptr<SelectionPanel> &panel) {
             selectionPanel = std::make_shared<SelectionPanel>();
-            // selectionPanel->SetPanelHeightCallback(panelHeightCallback);
             auto ret = selectionPanel->CreatePanel(context, panelInfo);
             if (ret == ErrorCode::NO_ERROR) {
                 panel = selectionPanel;
@@ -89,36 +82,24 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
             }
             selectionPanel = nullptr;
             return false;
-        });//前期测试可以指定flag为true，并调用CreatePanel，感觉还是得实现相关类和方法
-    // if (flag && isShowAfterCreate_.load() && panelInfo.panelType == SOFT_KEYBOARD &&//SOFT_KEYBOARD是输入法的键盘类型，划词键盘应该怎么设置？？
-    //     panelInfo.panelFlag != FLG_CANDIDATE_COLUMN) {//FLG_CANDIDATE_COLUMN候选列表框
-    //     isShowAfterCreate_.store(false);
-    //     auto task = std::make_shared<TaskSsaShowKeyboard>();//TaskImsaShowKeyboard待添加
-    //     TaskManager::GetInstance().PostTask(task);//同级目录待实现
-    // }
+        });
     return flag ? ErrorCode::NO_ERROR : ErrorCode::ERROR_OPERATE_PANEL;
 }
 
-// void SelectionAbility::NotifyKeyboardHeight(uint32_t panelHeight, PanelFlag panelFlag)
-// {
-//     auto channel = GetInputDataChannelProxy();
-//     if (channel == nullptr) {
-//         SELECTION_HILOGE("channel is nullptr!");
-//         return;
-//     }
-//     SELECTION_HILOGD("notify panel height: %{public}u, flag: %{public}d.", panelHeight, static_cast<int32_t>(panelFlag));
-//     if (panelFlag != PanelFlag::FLG_FIXED) {
-//         channel->NotifyKeyboardHeight(0);
-//         return;
-//     }
-//     channel->NotifyKeyboardHeight(panelHeight);
-// }
-
-// std::shared_ptr<InputDataChannelProxy> SelectionAbility::GetInputDataChannelProxy()
-// {
-//     std::lock_guard<std::mutex> lock(dataChannelLock_);
-//     return dataChannelProxy_;
-// }
+int32_t SelectionAbility::DestroyPanel(const std::shared_ptr<SelectionPanel> &selectionPanel)
+{
+    SELECTION_HILOGI("SelectionAbility DestroyPanel start.");
+    if (selectionPanel == nullptr) {
+        SELECTION_HILOGE("panel is nullptr!");
+        return ErrorCode::ERROR_BAD_PARAMETERS;
+    }
+    auto ret = selectionPanel->DestroyPanel();
+    if (ret == ErrorCode::NO_ERROR) {
+        PanelType panelType = selectionPanel->GetPanelType();
+        panels_.Erase(panelType);
+    }
+    return ret;
+}
 
 int32_t SelectionAbility::ShowPanel(const std::shared_ptr<SelectionPanel> &selectionpanel)
 {

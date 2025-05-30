@@ -34,9 +34,9 @@ public:
     static sptr<SelectionAbility> GetInstance();
     int32_t CreatePanel(const std::shared_ptr<AbilityRuntime::Context> &context, const PanelInfo &panelInfo,
         std::shared_ptr<SelectionPanel> &selectionPanel);
+    int32_t DestroyPanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
     int32_t ShowPanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
     int32_t HidePanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
-    // void NotifyKeyboardHeight(uint32_t panelHeight, PanelFlag panelFlag);
 
 private:
     static std::mutex instanceLock_;

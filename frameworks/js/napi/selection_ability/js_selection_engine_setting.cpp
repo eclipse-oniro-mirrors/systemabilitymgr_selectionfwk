@@ -101,15 +101,15 @@ napi_value JsSelectionEngineSetting::UnSubscribe(napi_env env, napi_callback_inf
 }
 
 napi_status JsSelectionEngineSetting::GetContext(napi_env env, napi_value in,
-    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)//namespace AbilityRuntime待补充
+    std::shared_ptr<OHOS::AbilityRuntime::Context> &context)
 {
     bool stageMode = false;
-    napi_status status = OHOS::AbilityRuntime::IsStageContext(env, in, stageMode);//IsStageContext()待补充
+    napi_status status = OHOS::AbilityRuntime::IsStageContext(env, in, stageMode);
     if (status != napi_ok || (!stageMode)) {
         SELECTION_HILOGE("it's not in stage mode.");
         return status;
     }
-    context = OHOS::AbilityRuntime::GetStageModeContext(env, in);//GetStageModeContext()待补充
+    context = OHOS::AbilityRuntime::GetStageModeContext(env, in);
     if (context == nullptr) {
         SELECTION_HILOGE("context is nullptr.");
         return napi_generic_failure;
@@ -122,7 +122,6 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
     SELECTION_HILOGI("SelectionEngineSetting CreatePanel start.");
 
     auto ctxt = std::make_shared<PanelContext>();
-//处理从JavaScript传入的参数验证和转换
     auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PARAM_CHECK_RETURN(env, argc >= 2, "at least two parameters is required.", TYPE_NONE, napi_invalid_arg);
         napi_valuetype valueType = napi_undefined;
@@ -137,23 +136,23 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
         napi_typeof(env, argv[1], &valueType);
         PARAM_CHECK_RETURN(env, valueType == napi_object, "param info type must be PanelInfo.", TYPE_NONE,
             napi_invalid_arg);
-        status = OHOS::SelectionFwk::JsSelectionUtils::GetValue(env, argv[1], ctxt->panelInfo);//参数解析失败，这个需要看下！！！
+        status = OHOS::SelectionFwk::JsSelectionUtils::GetValue(env, argv[1], ctxt->panelInfo);
         SELECTION_HILOGD(
         "output js param panelInfo covert , type/flag: %{public}d/%{public}d.", static_cast<int32_t>(ctxt->panelInfo.panelType), static_cast<int32_t>(ctxt->panelInfo.panelFlag));
         PARAM_CHECK_RETURN(env, status == napi_ok, "js param info covert failed!", TYPE_NONE, napi_invalid_arg);
         return status;
     };
-//执行实际的面板创建操作
+
     auto exec = [ctxt](AsyncCall::Context *ctx) {
         auto ret = SelectionAbility::GetInstance()->CreatePanel(ctxt->context, ctxt->panelInfo, ctxt->panel);
         ctxt->SetErrorCode(ret);
         CHECK_RETURN_VOID(ret == ErrorCode::NO_ERROR, "JsSelectionEngineSetting CreatePanel failed!");
         ctxt->SetState(napi_ok);
     };
-//处理返回结果，创建JavaScript层的面板对象,
+
     auto output = [ctxt](napi_env env, napi_value *result) -> napi_status {
-        JsPanel *jsPanel = nullptr;//JsPanel类在Js_panel.h中声明定义
-        napi_value constructor = JsPanel::Init(env);// 初始化JsPanel构造函数
+        JsPanel *jsPanel = nullptr;
+        napi_value constructor = JsPanel::Init(env);
         CHECK_RETURN(constructor != nullptr, "failed to get panel constructor!", napi_generic_failure);
 
         napi_status status = napi_new_instance(env, constructor, 0, nullptr, result);
@@ -161,15 +160,57 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
 
         status = napi_unwrap(env, *result, (void **)(&jsPanel));
         CHECK_RETURN((status == napi_ok) && (jsPanel != nullptr), "get jsPanel unwrap failed!", napi_generic_failure);
-        jsPanel->SetNative(ctxt->panel);//SetNative() 在js_panel.cpp实现
+        jsPanel->SetNative(ctxt->panel);
         return napi_ok;
     };
 
-    ctxt->SetAction(std::move(input), std::move(output));// 设置上下文的操作函数SetAction()
+    ctxt->SetAction(std::move(input), std::move(output));
     // 3 means JsAPI:createPanel has 3 params at most.
-    AsyncCall asyncCall(env, info, ctxt, 3);// 创建异步调用对象（最多3个参数）AsyncCall
-    return asyncCall.Call(env, exec, "createPanel");// 执行异步调用asyncCall.Call()
-    // return nullptr;//测试时临时使用
+    AsyncCall asyncCall(env, info, ctxt, 3);
+    return asyncCall.Call(env, exec, "createPanel");
+}
+
+napi_value JsSelectionEngineSetting::DestroyPanel(napi_env env, napi_callback_info info)
+{
+    SELECTION_HILOGI("SelectionEngineSetting DestroyPanel start.");
+    auto ctxt = std::make_shared<PanelContext>();
+    auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        PARAM_CHECK_RETURN(env, argc >= 1, "at least one parameter is required!", TYPE_NONE, napi_invalid_arg);
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[0], &valueType);
+        PARAM_CHECK_RETURN(env, valueType == napi_object, "param panel type must be SelectionPanel.", TYPE_NONE,
+            napi_invalid_arg);
+        bool isPanel = false;
+        napi_value constructor = JsPanel::Init(env);
+        CHECK_RETURN(constructor != nullptr, "failed to get panel constructor.", napi_invalid_arg);
+        napi_status status = napi_instanceof(env, argv[0], constructor, &isPanel);
+        CHECK_RETURN((status == napi_ok) && isPanel, "param verification failed, it's not expected panel instance!",
+            status);
+        JsPanel *jsPanel = nullptr;
+        status = napi_unwrap(env, argv[0], (void **)(&jsPanel));
+        CHECK_RETURN((status == napi_ok) && (jsPanel != nullptr), "failed to unwrap JsPanel!", status);
+        ctxt->panel = jsPanel->GetNative();
+        CHECK_RETURN((ctxt->panel != nullptr), "panel is nullptr!", napi_invalid_arg);
+        return status;
+    };
+
+    auto exec = [ctxt](AsyncCall::Context *ctx) { ctxt->SetState(napi_ok); };
+
+    auto output = [ctxt](napi_env env, napi_value *result) -> napi_status {
+        CHECK_RETURN((ctxt->panel != nullptr), "panel is nullptr!", napi_generic_failure);
+        auto errCode = SelectionAbility::GetInstance()->DestroyPanel(ctxt->panel);
+        if (errCode != ErrorCode::NO_ERROR) {
+            SELECTION_HILOGE("DestroyPanel failed, errCode: %{public}d!", errCode);
+            return napi_generic_failure;
+        }
+        ctxt->panel = nullptr;
+        return napi_ok;
+    };
+
+    ctxt->SetAction(std::move(input), std::move(output));
+    // 2 means JsAPI:destroyPanel has 2 params at most.
+    AsyncCall asyncCall(env, info, ctxt, 2);
+    return asyncCall.Call(env, exec, "destroyPanel");
 }
 
 sptr<ISelectionService> JsSelectionEngineSetting::GetSelectionSystemAbility()
@@ -333,6 +374,7 @@ napi_value JsSelectionEngineSetting::InitProperty(napi_env env, napi_value expor
         DECLARE_NAPI_FUNCTION("on", Subscribe),
         DECLARE_NAPI_FUNCTION("off", UnSubscribe),
         DECLARE_NAPI_FUNCTION("createPanel", CreatePanel),
+        DECLARE_NAPI_FUNCTION("destroyPanel", DestroyPanel),
     };
 
     napi_value cons = nullptr;

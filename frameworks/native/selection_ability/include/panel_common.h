@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef INPUTMETHOD_IMF_PANEL_COMMON_H
-#define INPUTMETHOD_IMF_PANEL_COMMON_H
+#ifndef SELECTION_FWK_PANEL_COMMON_H
+#define SELECTION_FWK_PANEL_COMMON_H
 
 #include <cstdint>
 
@@ -93,4 +93,4 @@ struct FullPanelAdjustInfo {
 };
 } // namespace SelectionFwk
 } // namespace OHOS
-#endif //INPUTMETHOD_IMF_PANEL_COMMON_H
+#endif //SELECTION_FWK_PANEL_COMMON_H

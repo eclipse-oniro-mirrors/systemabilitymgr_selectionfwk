@@ -40,20 +40,15 @@ int32_t SelectionPanel::CreatePanel(
     const std::shared_ptr<AbilityRuntime::Context> &context, const PanelInfo &panelInfo)
 {
     SELECTION_HILOGI("SelectionPanel CreatePanel start.");
+    panelType_ = panelInfo.panelType;
+    panelFlag_ = panelInfo.panelFlag;
     SELECTION_HILOGD(
         "start, type/flag: %{public}d/%{public}d.", static_cast<int32_t>(panelType_), static_cast<int32_t>(panelFlag_));
-    // panelType_ = panelInfo.panelType;
-    // panelFlag_ = panelInfo.panelFlag;
     // winOption_ = new (std::nothrow) OHOS::Rosen::WindowOption();
     // if (winOption_ == nullptr) {
     //     return ErrorCode::ERROR_NULL_POINTER;
     // }
-    // if (panelInfo.panelType == PanelType::STATUS_BAR) {//状态栏面板
-    //     winOption_->SetWindowType(OHOS::Rosen::WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR);//窗口类型需要添加WINDOW_TYPE_SELECTION_FLOAT
-    // } else {
-    //     winOption_->SetWindowType(OHOS::Rosen::WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);//窗口类型需要添加WINDOW_TYPE_SELECTION_FLOAT
-    // }
-    // winOption_->SetWindowType(OHOS::Rosen::WindowType::WINDOW_TYPE_DIALOG);//窗口类型需要确认
+    // winOption_->SetWindowType(OHOS::Rosen::WindowType::WINDOW_TYPE_DYNAMIC);
     // winOption_->SetWindowRect(OHOS::Rosen::Rect{10, 10, 80, 50});
     // WMError wmError = WMError::WM_OK;
     // window_ = OHOS::Rosen::Window::Create(GeneratePanelName(), winOption_, context, wmError);
@@ -74,7 +69,7 @@ int32_t SelectionPanel::CreatePanel(
     // windowId_ = window_->GetWindowId();
     // SELECTION_HILOGI("success, type/flag/windowId/isScbEnable_: %{public}d/%{public}d/%{public}u/%{public}d.",
     //     static_cast<int32_t>(panelType_), static_cast<int32_t>(panelFlag_), windowId_, isScbEnable_);
-    // // if (panelInfo.panelType == SOFT_KEYBOARD && isScbEnable_) {//软键盘+可用
+    // // if (panelInfo.panelType == SOFT_KEYBOARD && isScbEnable_) {
     // //     RegisterKeyboardPanelInfoChangeListener();
     // // }
     // window_->RaiseToAppTop();
@@ -87,51 +82,42 @@ int32_t SelectionPanel::CreatePanel(
     // SELECTION_HILOGI("selectionPanel show.");
     OHOS::Rosen::Rect baseWindowRect = { 150, 150, 400, 600 };
     sptr<Rosen::WindowOption> baseOp = new Rosen::WindowOption();
-    baseOp->SetWindowType(Rosen::WindowType::WINDOW_TYPE_DYNAMIC);
-    baseOp->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
+    baseOp->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    baseOp->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FULLSCREEN);
     baseOp->SetWindowRect(baseWindowRect);
     baseOp->SetZIndex(1980);
     auto displayId = Rosen::DisplayManager::GetInstance().GetDefaultDisplayId();
     baseOp->SetDisplayId(displayId);
-    // baseOp->SetWindowZOrder(Rosen::WindowZOrder::TOP_MOST);
-    // baseOp->SetVisible(true);
-    SELECTION_HILOGE("After SetWindowRect");
 
     sptr<Rosen::Window> window = Rosen::Window::Create("Demo_SSW_BaseWindow", baseOp, nullptr);
     if (!window) {
         SELECTION_HILOGE("Window creation failed");
         return ErrorCode::NO_ERROR;
     }
-    SELECTION_HILOGE("After Window::Create");
-    auto error = window->Show();
-    if (error != WMError::WM_OK) {
-        SELECTION_HILOGE("After Window::Show, error=%{public}d, WM_ERROR_INVALID_PARAM=%d", error, WM_ERROR_INVALID_PARAM);
-    }
-    // window->SetWindowFocus();
-    // window->RaiseToTop();
-    SELECTION_HILOGE("After Window::Show");
-    return ErrorCode::NO_ERROR;
+    window_ = window;
+    SELECTION_HILOGI("Window::Create Success");
+    return 0;
 }
 
 std::string SelectionPanel::GeneratePanelName()
 {
     uint32_t sequenceId = GenerateSequenceId();
-    std::string windowName = panelType_ == SOFT_KEYBOARD ? "softKeyboard" + std::to_string(sequenceId) ://panelType类型：softKeyboard、statusBar
+    std::string windowName = panelType_ == SOFT_KEYBOARD ? "softKeyboard" + std::to_string(sequenceId) :
                                                            "statusBar" + std::to_string(sequenceId);
     SELECTION_HILOGD("SelectionPanel, windowName: %{public}s.", windowName.c_str());
     return windowName;
 }
 
-int32_t SelectionPanel::SetPanelProperties()//设置输入面板属性，根据面板类型和标志来配置窗口的位置属性
+int32_t SelectionPanel::SetPanelProperties()
 {
     if (window_ == nullptr) {
         SELECTION_HILOGE("window is nullptr!");
         return ErrorCode::ERROR_OPERATE_PANEL;
     }
-    WindowGravity gravity = WindowGravity::WINDOW_GRAVITY_FLOAT;//浮动位置
-    if (panelType_ == SOFT_KEYBOARD && panelFlag_ == FLG_FIXED) {//软键盘+固定
+    WindowGravity gravity = WindowGravity::WINDOW_GRAVITY_FLOAT;
+    if (panelType_ == SOFT_KEYBOARD && panelFlag_ == FLG_FIXED) {
         gravity = WindowGravity::WINDOW_GRAVITY_BOTTOM;
-    } else if (panelType_ == SOFT_KEYBOARD && panelFlag_ == FLG_FLOATING) {//软键盘+浮动
+    } else if (panelType_ == SOFT_KEYBOARD && panelFlag_ == FLG_FLOATING) {
         auto surfaceNode = window_->GetSurfaceNode();
         if (surfaceNode == nullptr) {
             SELECTION_HILOGE("surfaceNode is nullptr!");
@@ -139,7 +125,7 @@ int32_t SelectionPanel::SetPanelProperties()//设置输入面板属性，根据�
         }
         surfaceNode->SetFrameGravity(Rosen::Gravity::TOP_LEFT);
         Rosen::RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
-    } else if (panelType_ == STATUS_BAR) {//状态栏面板
+    } else if (panelType_ == STATUS_BAR) {
         auto surfaceNo = window_->GetSurfaceNode();
         if (surfaceNo == nullptr) {
             SELECTION_HILOGE("surfaceNo is nullptr!");
@@ -149,7 +135,7 @@ int32_t SelectionPanel::SetPanelProperties()//设置输入面板属性，根据�
         Rosen::RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
         return ErrorCode::NO_ERROR;
     }
-    if (!isScbEnable_) {//非场景模式的重力设置------是什么东西，划词需要吗
+    if (!isScbEnable_) {
         WMError wmError = window_->SetWindowGravity(gravity, invalidGravityPercent);
         if (wmError != WMError::WM_OK) {
             SELECTION_HILOGE("failed to set window gravity, wmError is %{public}d, start destroy window!", wmError);
@@ -157,12 +143,27 @@ int32_t SelectionPanel::SetPanelProperties()//设置输入面板属性，根据�
         }
         return ErrorCode::NO_ERROR;
     }
-    keyboardLayoutParams_.gravity_ = gravity;//场景模式
+    keyboardLayoutParams_.gravity_ = gravity;
     auto ret = window_->AdjustKeyboardLayout(keyboardLayoutParams_);
     if (ret != WMError::WM_OK) {
         SELECTION_HILOGE("SetWindowGravity failed, wmError is %{public}d, start destroy window!", ret);
         return ErrorCode::ERROR_OPERATE_PANEL;
     }
+    return ErrorCode::NO_ERROR;
+}
+
+int32_t SelectionPanel::DestroyPanel()
+{
+    auto ret = HidePanel();
+    if (ret != ErrorCode::NO_ERROR) {
+        SELECTION_HILOGE("SelectionPanel, hide panel failed, ret: %{public}d!", ret);
+    }
+    if (window_ == nullptr) {
+        SELECTION_HILOGE("window_ is nullptr!");
+        return ErrorCode::ERROR_NULL_POINTER;
+    }
+    auto result = window_->Destroy();
+    SELECTION_HILOGI("destroy ret: %{public}d", result);
     return ErrorCode::NO_ERROR;
 }
 
@@ -174,11 +175,6 @@ uint32_t SelectionPanel::GenerateSequenceId()
     }
     return seqId;
 }
-
-// void SelectionPanel::SetPanelHeightCallback(CallbackFunc heightCallback)
-// {
-//     panelHeightCallback_ = std::move(heightCallback);
-// }
 
 int32_t SelectionPanel::SetUiContent(const std::string &contentInfo, napi_env env)
 {
@@ -196,6 +192,11 @@ int32_t SelectionPanel::SetUiContent(const std::string &contentInfo, napi_env en
     SELECTION_HILOGI("SetTransparent ret: %{public}u.", wmError);
     SELECTION_HILOGI("NapiSetUIContent ret: %{public}d.", ret);
     return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
+}
+
+PanelType SelectionPanel::GetPanelType()
+{
+    return panelType_;
 }
 
 int32_t SelectionPanel::ShowPanel()

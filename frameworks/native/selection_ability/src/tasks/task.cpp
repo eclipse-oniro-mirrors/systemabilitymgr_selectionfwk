@@ -14,8 +14,6 @@
  */
 
 #include "tasks/task.h"
-
-// #include "global.h"
 #include "selection_log.h"
 
 namespace OHOS {
