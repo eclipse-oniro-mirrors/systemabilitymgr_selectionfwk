@@ -47,6 +47,7 @@ napi_value JsPanel::Init(napi_env env)
         DECLARE_NAPI_FUNCTION("show", Show),
         DECLARE_NAPI_FUNCTION("hide", Hide),
         DECLARE_NAPI_FUNCTION("startMoving", StartMoving),
+        DECLARE_NAPI_FUNCTION("moveTo", MoveTo),
     };
     NAPI_CALL(env, napi_define_class(env, CLASS_NAME.c_str(), CLASS_NAME.size(), JsNew, nullptr,
                        sizeof(properties) / sizeof(napi_property_descriptor), properties, &constructor));
@@ -230,6 +231,7 @@ napi_value JsPanel::StartMoving(napi_env env, napi_callback_info info)
 
 napi_value JsPanel::MoveTo(napi_env env, napi_callback_info info)
 {
+    SELECTION_HILOGD("moveto start!");
     auto ctxt = std::make_shared<PanelContentContext>(env, info);
     auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         napi_status status = napi_generic_failure;

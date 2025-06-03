@@ -313,6 +313,7 @@ int32_t SelectionPanel::StartMoving()
 
 int32_t SelectionPanel::MoveTo(int32_t x, int32_t y)
 {
+    SELECTION_HILOGD("moveto start!");
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
         return ErrorCode::ERROR_NULL_POINTER;
