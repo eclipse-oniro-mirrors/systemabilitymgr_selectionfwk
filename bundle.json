@@ -56,7 +56,10 @@
         "//foundation/systemabilitymgr/selection_fwk/frameworks/js/napi/selection_ability:selectionengine_napi",
         "//foundation/systemabilitymgr/selection_fwk/frameworks/native/selection_ability:selection_ability"
       ],
-      "inner_kits": []
+      "inner_kits": [],
+      "test": [
+        "//foundation/systemabilitymgr/selection_fwk/test/unittest:selection_service_unit_test"
+      ]
     }
   }
 }

@@ -59,12 +59,11 @@ ohos_source_set("selection_service_proxy") {
 
 ohos_shared_library("selection_service") {
   configs = [ ":selection_sa_config", ]
-  shlib_type = "sa"
-  version_script = "libselection_service.map"
   output_values = get_target_outputs(":selection_service_interface")
 
   sources = [
     "src/selection_service.cpp",
+    "src/selection_input_monitor.cpp",
   ]
   sources += filter_include(output_values, [ "*.cpp" ])
   deps = [
