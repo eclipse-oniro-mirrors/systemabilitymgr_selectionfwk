@@ -154,7 +154,11 @@ void JsSelectionExtension::OnDisconnect(const AAFwk::Want& want)
     HILOG_INFO("%{public}s end.", __func__);
 }
 
-void JsSelectionExtension::OnStop() {}
+void JsSelectionExtension::OnStop()
+{
+    HILOG_INFO("%{public}s start.", __func__);
+    SelectionExtension::OnStop();
+}
 
 napi_value JsSelectionExtension::CallObjectMethod(const char* methodName, const napi_value* argv, size_t argc)
 {

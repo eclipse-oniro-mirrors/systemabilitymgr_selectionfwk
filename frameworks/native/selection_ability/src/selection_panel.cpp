@@ -327,5 +327,41 @@ int32_t SelectionPanel::MoveTo(int32_t x, int32_t y)
     return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
 }
 
+bool SelectionPanel::SetPanelStatusListener(std::shared_ptr<PanelStatusListener> statusListener, const std::string &type)
+{
+    if (!MarkListener(type, true)) {
+        return false;
+    }
+    SELECTION_HILOGD("type: %{public}s.", type.c_str());
+    if (type == "show" || type == "hide") {
+        if (panelStatusListener_ == nullptr) {
+            SELECTION_HILOGD("panelStatusListener_ is nullptr, need to be set");
+            panelStatusListener_ = std::move(statusListener);
+        }
+        if (window_ != nullptr) {
+            if (type == "show" && IsShowing()) {
+                panelStatusListener_->OnPanelStatus(windowId_, true);
+            }
+            if (type == "hide" && IsHidden()) {
+                panelStatusListener_->OnPanelStatus(windowId_, false);
+            }
+        }
+    }
+    return true;
+}
+
+bool SelectionPanel::MarkListener(const std::string &type, bool isRegister)
+{
+    if (type == "show") {
+        showRegistered_ = isRegister;
+    } else if (type == "hide") {
+        hideRegistered_ = isRegister;
+    } else {
+        SELECTION_HILOGE("type error!");
+        return false;
+    }
+    return true;
+}
+
 } // namespace SelectionFwk
 } // namespace OHOS

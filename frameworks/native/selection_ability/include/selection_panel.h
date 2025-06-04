@@ -50,6 +50,7 @@ public:
     PanelType GetPanelType();
     bool IsShowing();
     bool IsHidden();
+    bool SetPanelStatusListener(std::shared_ptr<PanelStatusListener> statusListener, const std::string &type);
 
     uint32_t windowId_ = INVALID_WINDOW_ID;
 
@@ -58,6 +59,7 @@ private:
     int32_t SetPanelProperties();
     static uint32_t GenerateSequenceId();
     void PanelStatusChange(const SelectionWindowStatus &status);
+    bool MarkListener(const std::string &type, bool isRegister);
 
     PanelType panelType_ = PanelType::STATUS_BAR;
     PanelFlag panelFlag_ = PanelFlag::FLG_FIXED;

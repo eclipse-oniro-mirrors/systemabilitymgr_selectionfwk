@@ -22,6 +22,7 @@
 #include "js_utils.h"
 #include "selectionmethod_trace.h"
 #include "selection_ability.h"
+#include "event_checker.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -31,6 +32,7 @@ const std::string JsPanel::CLASS_NAME = "Panel";
 thread_local napi_ref JsPanel::panelConstructorRef_ = nullptr;
 std::mutex JsPanel::panelConstructorMutex_;
 FFRTBlockQueue<JsEventInfo> JsPanel::jsQueue_{ MAX_WAIT_TIME };
+constexpr size_t ARGC_MAX = 6;
 
 napi_value JsPanel::Init(napi_env env)
 {
@@ -48,6 +50,7 @@ napi_value JsPanel::Init(napi_env env)
         DECLARE_NAPI_FUNCTION("hide", Hide),
         DECLARE_NAPI_FUNCTION("startMoving", StartMoving),
         DECLARE_NAPI_FUNCTION("moveTo", MoveTo),
+        DECLARE_NAPI_FUNCTION("on", Subscribe)
     };
     NAPI_CALL(env, napi_define_class(env, CLASS_NAME.c_str(), CLASS_NAME.size(), JsNew, nullptr,
                        sizeof(properties) / sizeof(napi_property_descriptor), properties, &constructor));
@@ -252,7 +255,7 @@ napi_value JsPanel::MoveTo(napi_env env, napi_callback_info info)
         jsQueue_.Wait(ctxt->info);
         PrintEditorQueueInfoIfTimeout(start, ctxt->info);
         if (ctxt->selectionPanel == nullptr) {
-            SELECTION_HILOGE("inputMethodPanel_ is nullptr!");
+            SELECTION_HILOGE("selectionPanel is nullptr!");
             jsQueue_.Pop();
             return;
         }
@@ -281,6 +284,56 @@ void JsPanel::PrintEditorQueueInfoIfTimeout(int64_t start, const JsEventInfo &cu
         SELECTION_HILOGI("ret:%{public}d,front[%{public}" PRId64 ",%{public}d],current[%{public}" PRId64 ",%{public}d]", ret,
             frontTime, static_cast<int32_t>(frontInfo.event), currentTime, static_cast<int32_t>(currentInfo.event));
     }
+}
+
+napi_value JsPanel::Subscribe(napi_env env, napi_callback_info info)
+{
+    SELECTION_HILOGD("JsPanel start.");
+    size_t argc = ARGC_MAX;
+    napi_value argv[ARGC_MAX] = {nullptr};
+    napi_value thisVar = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr));
+    std::string type;
+    // 2 means least param num.
+    if (argc < 2 || !JsUtil::GetValue(env, argv[0], type) ||
+        !EventChecker::IsValidEventType(EventSubscribeModule::PANEL, type) ||
+        JsUtil::GetType(env, argv[1]) != napi_function) {
+        SELECTION_HILOGE("subscribe failed, type: %{public}s!", type.c_str());
+        return nullptr;
+    }
+    SELECTION_HILOGD("subscribe type: %{public}s.", type.c_str());
+    std::shared_ptr<PanelListenerImpl> observer = PanelListenerImpl::GetInstance();
+    auto selectionPanel = UnwrapPanel(env, thisVar);
+    if (selectionPanel == nullptr) {
+        SELECTION_HILOGE("selectionPanel is nullptr!");
+        return nullptr;
+    }
+    // 1 means the second param callback.
+    std::shared_ptr<JSCallbackObject> cbObject = std::make_shared<JSCallbackObject>(
+        env, argv[1], std::this_thread::get_id(), AppExecFwk::EventHandler::Current());
+    observer->Subscribe(selectionPanel->windowId_, type, cbObject);
+    bool ret = selectionPanel->SetPanelStatusListener(observer, type);
+    if (!ret) {
+        SELECTION_HILOGE("failed to subscribe %{public}s!", type.c_str());
+        observer->RemoveInfo(type, selectionPanel->windowId_);
+    }
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+std::shared_ptr<SelectionPanel> JsPanel::UnwrapPanel(napi_env env, napi_value thisVar)
+{
+    void *native = nullptr;
+    napi_status status = napi_unwrap(env, thisVar, &native);
+    CHECK_RETURN((status == napi_ok && native != nullptr), "failed to unwrap!", nullptr);
+    auto jsPanel = reinterpret_cast<JsPanel *>(native);
+    if (jsPanel == nullptr) {
+        return nullptr;
+    }
+    auto selectionPanel = jsPanel->GetNative();
+    CHECK_RETURN(selectionPanel != nullptr, "SelectionPanel is nullptr", nullptr);
+    return selectionPanel;
 }
 
 } // namespace SelectionFwk

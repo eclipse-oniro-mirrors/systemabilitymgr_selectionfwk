@@ -22,6 +22,7 @@ namespace SelectionFwk {
 enum class EventSubscribeModule : uint32_t {
     MODULE_BEGIN = 0,
     SELECTION_METHOD_ABILITY,
+    PANEL,
     MODULE_END,
 };
 class EventChecker {

@@ -66,6 +66,8 @@ struct UvEntry {
     void OnSizeChange(uint32_t windowId, const WindowSize &size) override;
     void OnSizeChange(uint32_t windowId, const WindowSize &size, const PanelAdjustInfo &keyboardArea,
         const std::string &event) override;
+    void Subscribe(uint32_t windowId, const std::string &type, std::shared_ptr<JSCallbackObject> cbObject);
+    void RemoveInfo(const std::string &type, uint32_t windowId);
 
     std::shared_ptr<SelectionFwk::JSCallbackObject> GetCallback(uint32_t windowId, const std::string &type);
 

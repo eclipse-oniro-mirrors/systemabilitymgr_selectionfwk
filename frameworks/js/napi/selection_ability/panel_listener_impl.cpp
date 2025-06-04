@@ -188,5 +188,30 @@ bool JsKeyboardArea::Read(napi_env env, napi_value jsObject, PanelAdjustInfo &na
     ret = ret && SelectionFwk::JsUtil::Object::ReadProperty(env, jsObject, "right", nativeObject.right);
     return ret;
 }
+
+void PanelListenerImpl::Subscribe(uint32_t windowId, const std::string &type,
+    std::shared_ptr<JSCallbackObject> cbObject)
+{
+    callbacks_.Compute(windowId,
+        [cbObject, &type](auto windowId, std::map<std::string, std::shared_ptr<JSCallbackObject>> &cbs) {
+            auto [it, insert] = cbs.try_emplace(type, cbObject);
+            if (insert) {
+                SELECTION_HILOGI("start to subscribe type: %{public}s of windowId: %{public}u.", type.c_str(), windowId);
+            } else {
+                SELECTION_HILOGD("type: %{public}s of windowId: %{public}u already subscribed.", type.c_str(), windowId);
+            }
+            return !cbs.empty();
+        });
+}
+
+void PanelListenerImpl::RemoveInfo(const std::string &type, uint32_t windowId)
+{
+    callbacks_.ComputeIfPresent(windowId,
+        [&type](auto windowId, std::map<std::string, std::shared_ptr<JSCallbackObject>> &cbs) {
+            cbs.erase(type);
+            return !cbs.empty();
+        });
+}
+
 } // namespace SelectionFwk
 } // namespace OHOS
