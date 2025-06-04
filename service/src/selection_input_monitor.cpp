@@ -40,7 +40,7 @@ static int64_t GetCurrentTimeMillis() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 }
 
-void DefaultSelectionEventListener::OnTextSelected()
+void DefaultSelectionEventListener::OnTextSelected(std::shared_ptr<SelectionDataInner> selectionData)
 {
     SELECTION_HILOGI("End word selection action.");
     InjectCtrlC();
@@ -51,9 +51,12 @@ void DefaultSelectionEventListener::OnTextSelected()
         return;
     }
     SelectionDataInner data;
+    data.selectionType = MOVE_SELECTION;
     data.text = "Hello, world!";
-    data.cursorStartPos = 0;
-    data.cursorEndPos = 13;
+    data.startPosX = 0;
+    data.startPosY = 13;
+    data.endPosX = 0;
+    data.endPosY = 13;
     data.windowId = 1001;
     data.bundleID = 2002;
     listener->OnSelectionChange(data);
@@ -120,14 +123,14 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEv
         SELECTION_HILOGD("It is not screen on.");
         return;
     }
-    // SELECTION_HILOGI("pointerEvent->windowId: %{public}d", pointerEvent->GetTargetWindowId());
+    SELECTION_HILOGI("pointerEvent->windowId: %{public}d", pointerEvent->GetTargetWindowId());
     int32_t pointerId = pointerEvent->GetPointerId();
     PointerEvent::PointerItem pointerItem;
     pointerEvent->GetPointerItem(pointerId, pointerItem);
     // SELECTION_HILOGI("pointerItem, display: %{public}d, %{public}d, \
     //     RawDxy: %{public}d, %{public}d. \
     //     windows: %{public}d, %{public}d, windowId: %{public}d, deviceId: %{public}d",
-    //     pointerItem.GetDisplayX(),pointerItem.GetDisplayY(),
+        // pointerItem.GetDisplayX(),pointerItem.GetDisplayY(),
     //     pointerItem.GetRawDx(),pointerItem.GetRawDy(),
     //     pointerItem.GetWindowX(), pointerItem.GetWindowY(),
     //     pointerItem.GetTargetWindowId(), pointerItem.GetDeviceId());
@@ -333,7 +336,9 @@ void SelectionInputMonitor::FinishedWordSelection() const
         SELECTION_HILOGI("set curSelectState to SELECT_INPUT_INITIAL");
     }
 
-    selectionEventListener_->OnTextSelected();
+    std::shared_ptr<SelectionDataInner> selectionData = std::make_shared<SelectionDataInner>();
+
+    selectionEventListener_->OnTextSelected(selectionData);
 }
 
 void DefaultSelectionEventListener::SimulateKeyWithCtrl(int32_t keyCode, int32_t keyAction)

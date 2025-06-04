@@ -43,16 +43,18 @@ typedef enum {
     SUB_WAIT_KEY_CTRL_UP = 4,
 } SelectInputSubState;
 
+struct SelectionDataInner;
+
 class SelectionEventListener {
 public:
-    virtual void OnTextSelected() {
+    virtual void OnTextSelected(std::shared_ptr<SelectionDataInner> selectionData) {
     };
     virtual ~SelectionEventListener() = default;
 };
 
 class DefaultSelectionEventListener : public SelectionEventListener {
 public:
-    virtual void OnTextSelected();
+    virtual void OnTextSelected(std::shared_ptr<SelectionDataInner> selectionData);
 
 private:
     void InjectCtrlC();
