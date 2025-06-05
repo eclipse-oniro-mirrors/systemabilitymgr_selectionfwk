@@ -117,8 +117,8 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEv
         SELECTION_HILOGD("It is not screen on.");
         return;
     }
-    SELECTION_HILOGI("pointerEvent->windowId: %{public}d, displayId: %{public}d",
-        pointerEvent->GetTargetWindowId(), pointerEvent->GetTargetDisplayId());
+    // SELECTION_HILOGD("pointerEvent->windowId: %{public}d, displayId: %{public}d",
+    //     pointerEvent->GetTargetWindowId(), pointerEvent->GetTargetDisplayId());
     int32_t pointerId = pointerEvent->GetPointerId();
     PointerEvent::PointerItem pointerItem;
     pointerEvent->GetPointerItem(pointerId, pointerItem);
