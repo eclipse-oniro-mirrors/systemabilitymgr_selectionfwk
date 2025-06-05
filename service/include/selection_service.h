@@ -64,6 +64,9 @@ public:
     int32_t ConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName);
     void DisconnectCurrentExtAbility();
     sptr<ISelectionListener> GetListener();
+    int GetUserId();
+    bool IsExistUid();
+
 protected:
     void OnStart() override;
     void OnStop() override;
@@ -75,7 +78,8 @@ private:
     void WatchParams();
     void InitFocusChangedMonitor();
     void HandleFocusChanged(bool isOnFocused, uint32_t windowId, uint32_t windowType);
-
+    void SynchronizeSelectionConfig();
+    void GetAccountLocalId();
 
     int32_t inputMonitorId_ {-1};
     static sptr<SelectionService> instance_;
@@ -83,6 +87,8 @@ private:
     mutable std::mutex mutex_;
     static sptr<ISelectionListener> listenerStub_;
     sptr<SelectionExtensionAbilityConnection> connectInner_ {nullptr};
+    int userId_ = -1;
+    bool isExistUid_ = false;
 };
 }
 

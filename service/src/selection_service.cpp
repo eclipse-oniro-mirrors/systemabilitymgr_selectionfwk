@@ -16,20 +16,25 @@
 #include "selection_service.h"
 
 #include "ability_manager_client.h"
+#include "db_selection_config_repository.h"
 #include "iremote_object.h"
 #include "callback_handler.h"
 #include "system_ability_definition.h"
+#include "selection_errors.h"
 #include "selection_log.h"
 #include <input_manager.h>
 #include "parameter.h"
 #include <chrono>
 #include "common_event_manager.h"
+#include "selection_config_comparator.h"
 #include "selection_input_monitor.h"
 #include "selection_interface.h"
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
 #include "screenlock_manager.h"
 #include "focus_monitor_manager.h"
+#include "os_account_manager.h"
+#include "sys_selection_config_repository.h"
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
@@ -130,19 +135,66 @@ int32_t SelectionService::Dump(int32_t fd, const std::vector<std::u16string> &ar
 
 static void WatchEnableSwitch(const char *key, const char *value, void *context)
 {
-    (void)context;
-    SELECTION_HILOGI("WatchParameterFunc begin");
-    SELECTION_HILOGI("%{public}s: value=%{public}s", key, value);
+    SelectionService *selectionService = static_cast<SelectionService *>(context);
+    SELECTION_HILOGI("WatchEnableSwitch begin");
+    SELECTION_HILOGI("%{public}s: value=[%{public}s], DEFAULT_SWITCH =[%{public}s]", key, value, DEFAULT_SWITCH);
+    int isEnabledValue = strcmp(value, DEFAULT_SWITCH) == 0 ? 1 : 0;
+    SELECTION_HILOGI("isEnabledValue is %{public}d", isEnabledValue);
+    MemSelectionConfig::GetInstance().SetEnabled(isEnabledValue);
+    auto &selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
+    SELECTION_HILOGI("selectionConfig.selectionConfig is %{public}d", selectionConfig.IsEnabled());
+    int ret = DbSelectionConfigRepository::GetInstance()->Save(selectionService->GetUserId(), selectionConfig);
+    SELECTION_HILOGI("ADD Database ret = %{public}d", ret);
 }
 
 static void WatchTriggerMode(const char *key, const char *value, void *context)
 {
-    (void)context;
-    SELECTION_HILOGI("WatchParameterFunc begin");
+    SelectionService *selectionService = static_cast<SelectionService *>(context);
+    SELECTION_HILOGI("WatchTriggerMode begin");
     SELECTION_HILOGI("%{public}s: value=%{public}s", key, value);
     int triggerCmpResult = strcmp(value, DEFAULT_TRIGGER);
     BaseSelectionInputMonitor::ctrlSelectFlag = (triggerCmpResult == 0);
     SELECTION_HILOGI("ctrlSelectFlag is %{public}d", BaseSelectionInputMonitor::ctrlSelectFlag);
+
+    int triggerValue = triggerCmpResult == 0 ? 1 : 0;
+    MemSelectionConfig::GetInstance().SetTriggered(triggerValue);
+    auto &selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
+    int ret = DbSelectionConfigRepository::GetInstance()->Save(selectionService->GetUserId(), selectionConfig);
+    SELECTION_HILOGI("ADD Database ret = %{public}d", ret);
+}
+
+static void WatchAppSwitch(const char *key, const char *value, void *context)
+{
+    SELECTION_HILOGD("WatchAppSwitch begin");
+    SELECTION_HILOGD("%{public}s: value=%{public}s", key, value);
+    SelectionService *selectionService = static_cast<SelectionService *>(context);
+    if (selectionService == nullptr) {
+        SELECTION_HILOGE("selectionService is nullptr");
+        return;
+    }
+
+    const std::string appInfo = value;
+    auto pos = appInfo.find('/');
+    if (appInfo.empty() || pos == std::string::npos || pos + 1 >= appInfo.size()) {
+        SELECTION_HILOGE("app info: %{public}s is invalid!", appInfo.c_str());
+        return;
+    }
+    const std::string bundleName = appInfo.substr(0, pos);
+    const std::string extName = appInfo.substr(pos + 1);
+    SELECTION_HILOGD("bundleName: %{public}s, extName: %{public}s", bundleName.c_str(), extName.c_str());
+    selectionService->DisconnectCurrentExtAbility();
+    auto ret = selectionService->ConnectNewExtAbility(bundleName, extName);
+    SELECTION_HILOGD("StartExtensionAbility ret = %{public}d", ret);
+
+    MemSelectionConfig::GetInstance().SetBundleName(appInfo);
+    auto &selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
+    ret = DbSelectionConfigRepository::GetInstance()->Save(selectionService->GetUserId(), selectionConfig);
+    SELECTION_HILOGI("ADD Database ret = %{public}d", ret);
+}
+
+bool SelectionService::IsExistUid()
+{
+    return isExistUid_;
 }
 
 void SelectionService::DisconnectCurrentExtAbility()
@@ -177,37 +229,63 @@ int32_t SelectionService::ConnectNewExtAbility( const std::string& bundleName, c
     return 0;
 }
 
-static void WatchAppSwitch(const char *key, const char *value, void *context)
-{
-    SELECTION_HILOGD("WatchAppSwitch begin");
-    SELECTION_HILOGD("%{public}s: value=%{public}s", key, value);
-    SelectionService *selectionService = static_cast<SelectionService *>(context);
-    if (selectionService == nullptr) {
-        SELECTION_HILOGE("selectionService is nullptr");
-        return;
-    }
-
-    const std::string appInfo = value;
-    auto pos = appInfo.find('/');
-    if (pos == std::string::npos || pos + 1 >= appInfo.size()) {
-        SELECTION_HILOGE("app info: %{public}s is abnormal!", appInfo.c_str());
-        return;
-    }
-    const std::string bundleName = appInfo.substr(0, pos);
-    const std::string extName = appInfo.substr(pos + 1);
-    SELECTION_HILOGD("bundleName: %{public}s, extName: %{public}s", bundleName.c_str(), extName.c_str());
-    selectionService->DisconnectCurrentExtAbility();
-    auto ret = selectionService->ConnectNewExtAbility(bundleName, extName);
-    SELECTION_HILOGD("StartExtensionAbility ret = %{public}d", ret);
-}
-
 void SelectionService::WatchParams()
 {
     SELECTION_HILOGI("WatchParams begin");
-    WatchParameter(SYS_SELECTION_SWITCH, WatchEnableSwitch, nullptr);
-    WatchParameter(SYS_SELECTION_TRIGGER, WatchTriggerMode, nullptr);
+    WatchParameter(SYS_SELECTION_SWITCH, WatchEnableSwitch, this);
+    WatchParameter(SYS_SELECTION_TRIGGER, WatchTriggerMode, this);
     WatchParameter(SYS_SELECTION_APP, WatchAppSwitch, this);
     SELECTION_HILOGI("WatchParams end");
+}
+
+int SelectionService::GetUserId()
+{
+    return userId_;
+}
+
+void SelectionService::GetAccountLocalId()
+{
+    int32_t userId = -1;
+    int32_t ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(userId);
+    while (ret != 0) {
+        sleep(1);
+        ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(userId);
+    }
+    SELECTION_HILOGI("GetForegroundOsAccountLocalId userId = %{public}d", userId);
+    userId_ = userId;
+}
+
+void SelectionService::SynchronizeSelectionConfig()
+{
+    GetAccountLocalId();
+    SelectionConfig sysSelectionConfig = SysSelectionConfigRepository::GetInstance()->GetSysParameters();
+    SELECTION_HILOGI("sysSelectionConfig: uid=%{public}d enable=%{public}d trigger=%{public}d bundleName=%{public}s",
+        sysSelectionConfig.GetUid(), sysSelectionConfig.IsEnabled(), sysSelectionConfig.IsTriggered(), sysSelectionConfig.GetBundleName().c_str());
+    auto dbSelectionConfig = DbSelectionConfigRepository::GetInstance()->GetOneByUserId(userId_);
+    auto result = SelectionConfigComparator::Compare(userId_, sysSelectionConfig, dbSelectionConfig);
+    MemSelectionConfig::GetInstance().SetSelectionConfig(result.selectionConfig);
+
+    if (result.shouldCreate) {
+        SELECTION_HILOGI("result.shouldCreate");
+        DbSelectionConfigRepository::GetInstance()->Save(userId_, result.selectionConfig);
+        SELECTION_HILOGI("result.selectionConfig.isEnable = %{public}d", result.selectionConfig.IsEnabled());
+        SysSelectionConfigRepository::GetInstance()->SetSysParameters(result.selectionConfig);
+        return;
+    }
+
+    if (result.direction == SyncDirection::FromDbToSys) {
+        SELECTION_HILOGI("result.direction == SyncDirection::FromDbToSys");
+        SELECTION_HILOGI("FromDbToSys result: %{public}s", result.ToString().c_str());
+        SysSelectionConfigRepository::GetInstance()->SetSysParameters(result.selectionConfig);
+    } else if (result.direction == SyncDirection::FromSysToDb) {
+        SELECTION_HILOGI("result.direction == SyncDirection::FromSysToDb");
+        DbSelectionConfigRepository::GetInstance()->Save(userId_, result.selectionConfig);
+    }
+
+    if (result.shouldStop) {
+        SELECTION_HILOGI("result.shouldStop");
+        SysSelectionConfigRepository::GetInstance()->DisableSAService();
+    }
 }
 
 void SelectionService::OnStart()
@@ -215,6 +293,7 @@ void SelectionService::OnStart()
     SELECTION_HILOGI("[SelectionService][OnStart]begin");
     Publish(SelectionService::GetInstance());
     InputMonitorInit();
+    SynchronizeSelectionConfig();
     WatchParams();
     InitFocusChangedMonitor();
     SELECTION_HILOGI("[SelectionService][OnStart]end");

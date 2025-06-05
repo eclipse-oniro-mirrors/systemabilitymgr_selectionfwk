@@ -17,6 +17,7 @@ import("//foundation/systemabilitymgr/selectionfwk/selection_service.gni")
 module_out_path = "selectionfwk/selectionfwk"
 ohos_unittest("selection_service_unit_test") {
   module_out_path = module_out_path
+  cflags_cc = [ "-std=c++17" ]
   include_dirs = [
     "./",
     "${selection_fwk_root_path}/service/include",
@@ -24,7 +25,8 @@ ohos_unittest("selection_service_unit_test") {
   ]
 
   sources = [
-        "selection_input_monitor_test.cpp",
+    "selection_config_comparator_test.cpp",
+    "selection_input_monitor_test.cpp",
   ]
   deps = [
     "${selection_fwk_root_path}/service:selection_service",

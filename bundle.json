@@ -33,11 +33,13 @@
         "ability_runtime",
         "window_manager",
         "pasteboard",
+        "relational_store",
         "resource_management",
         "graphic_2d",
         "bundle_framework",
         "ffrt",
         "config_policy",
+        "os_account",
         "screenlock_mgr"
       ],
       "third_party": [

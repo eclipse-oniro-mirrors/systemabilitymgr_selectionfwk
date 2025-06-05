@@ -73,6 +73,7 @@ ohos_shared_library("selection_service") {
     "-fdata-sections",
     "-ffunction-sections",
     "-Oz",
+    "-std=c++17",
   ]
   configs = [ ":selection_sa_config", ]
   output_values = get_target_outputs(":selection_service_interface")
@@ -82,10 +83,15 @@ ohos_shared_library("selection_service") {
   ]
 
   sources = [
+    "src/db_selection_config_repository.cpp",
     "src/selection_service.cpp",
     "src/selection_input_monitor.cpp",
-    "./focus_monitor/src/focus_change_listener.cpp",
-    "./focus_monitor/src/focus_monitor_manager.cpp",
+    "focus_monitor/src/focus_change_listener.cpp",
+    "focus_monitor/src/focus_monitor_manager.cpp",
+    "src/selection_config.cpp",
+    "src/selection_config_database.cpp",
+    "src/sys_selection_config_repository.cpp",
+    "src/selection_config_comparator.cpp",
   ]
   sources += filter_include(output_values, [ "*.cpp" ])
   deps = [
@@ -110,6 +116,8 @@ ohos_shared_library("selection_service") {
     "input:libmmi-client",
     "window_manager:libdm_lite",
     "window_manager:libwsutils",
+    "os_account:os_account_innerkits",
+    "relational_store:native_rdb",
   ]
 
   defines = []
