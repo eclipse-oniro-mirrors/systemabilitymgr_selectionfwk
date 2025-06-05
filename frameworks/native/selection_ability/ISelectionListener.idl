@@ -17,4 +17,5 @@ sequenceable selection_data_inner..OHOS.SelectionFwk.SelectionDataInner;
 
 interface OHOS.SelectionFwk.ISelectionListener {
     void OnSelectionChange([in] SelectionDataInner selectionDataInner);
+    void FocusChange([in] int windowID);
 }

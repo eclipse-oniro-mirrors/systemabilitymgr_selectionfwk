@@ -13,23 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef SELECTION_LISTENER_IMPL_H
-#define SELECTION_LISTENER_IMPL_H
-#include "refbase.h"
-#include "selection_listener_stub.h"
-#include "selection_interface.h"
+#ifndef SELECTION_FOCUS_MONITOR_MANAGER_H
+#define SELECTION_FOCUS_MONITOR_MANAGER_H
+
+#include <functional>
 
 namespace OHOS {
 namespace SelectionFwk {
-class SelectionListenerImpl : public SelectionListenerStub {
+using FocusHandle = std::function<void(bool, int32_t)>;
+class FocusMonitorManager {
 public:
-    SelectionListenerImpl(std::shared_ptr<SelectionInterface> selectionI) : selectionI_(selectionI) {}
-    ~SelectionListenerImpl() override = default;
-    ErrCode OnSelectionChange(const SelectionDataInner& selectionDataInner) override;
-    ErrCode FocusChange(int32_t windowID)override;
+    static FocusMonitorManager &GetInstance();
+    void RegisterFocusChangedListener(const FocusHandle &handle);
+
 private:
-    std::shared_ptr<SelectionInterface> selectionI_;
+    FocusMonitorManager() = default;
 };
-}
-}
-#endif // SELECTION_LISTENER_IMPL_H
+} // namespace SelectionFwk
+} // namespace OHOS
+
+#endif // SELECTION_FOCUS_MONITOR_MANAGER_H

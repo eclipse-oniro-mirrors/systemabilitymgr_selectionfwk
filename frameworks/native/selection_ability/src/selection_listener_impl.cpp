@@ -16,6 +16,8 @@
 #include "selection_listener_impl.h"
 #include "selection_log.h"
 #include "selection_data_inner.h"
+#include "selection_panel.h"
+
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -37,5 +39,27 @@ ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionDataInner& selec
     selectionI_->OnSelectionEvent(selectionData);
     return 0;
 }
+
+ErrCode SelectionListenerImpl::FocusChange(int32_t windowID)
+{
+    SELECTION_HILOGI("Recveive windowID: %{public}d", windowID);
+    if (selectionI_ == nullptr) {
+        SELECTION_HILOGI("selectionI_ is nullptr");
+        return 1;
+    }
+
+    auto selectionPanel = std::make_shared<SelectionPanel>();
+    if (selectionPanel == nullptr) {
+        SELECTION_HILOGE("selectionPanel is nullptr");
+        return 1;
+    }
+    int32_t panelWindowID = selectionPanel->GetWindowId();
+    if (windowID != panelWindowID) {
+        SELECTION_HILOGI("selectionPanel is UnFocus");
+        selectionPanel->HidePanel();
+    }
+    return 0;
+}
+
 } // namespace SelectionFramework
 } // namespace OHOS

@@ -28,6 +28,9 @@
 #include "selection_interface.h"
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
+#include "screenlock_manager.h"
+#include "focus_monitor_manager.h"
+
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
@@ -218,6 +221,7 @@ void SelectionService::OnStart()
     Publish(SelectionService::GetInstance());
     InputMonitorInit();
     WatchParams();
+    InitFocusChangedMonitor();
     SELECTION_HILOGI("[SelectionService][OnStart]end");
 }
 
@@ -256,6 +260,23 @@ void SelectionService::InputMonitorCancel()
     if (inputMonitorId_ >= 0) {
         inputManager->RemoveMonitor(inputMonitorId_);
         inputMonitorId_ = -1;
+    }
+}
+
+void SelectionService::InitFocusChangedMonitor()
+{
+    SELECTION_HILOGI("[SelectionService] init focus changed monitor");
+    FocusMonitorManager::GetInstance().RegisterFocusChangedListener(
+        [this](bool isOnFocused, uint32_t windowId) {
+            HandleFocusChanged(isOnFocused, windowId);
+        });
+}
+
+void SelectionService::HandleFocusChanged(bool isOnFocused, uint32_t windowId)
+{
+    SELECTION_HILOGI("[SelectionService] handle focus changed");
+    if (!isOnFocused) {
+        listenerStub_->FocusChange(windowId);
     }
 }
 

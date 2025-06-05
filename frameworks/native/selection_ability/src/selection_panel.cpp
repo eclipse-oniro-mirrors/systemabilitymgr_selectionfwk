@@ -34,6 +34,8 @@ using WindowState = OHOS::Rosen::WindowState;
 std::atomic<uint32_t> SelectionPanel::sequenceId_ { 0 };
 constexpr int32_t MAXWAITTIME = 30;
 constexpr int32_t WAITTIME = 10;
+sptr<OHOS::Rosen::Window> SelectionPanel::window_ {nullptr};
+std::mutex SelectionPanel::windowMutex_;
 
 SelectionPanel::~SelectionPanel() = default;
 int32_t SelectionPanel::CreatePanel(
@@ -362,7 +364,6 @@ bool SelectionPanel::MarkListener(const std::string &type, bool isRegister)
     }
     return true;
 }
-
 
 void SelectionPanel::ClearPanelListener(const std::string &type)
 {

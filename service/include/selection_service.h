@@ -71,6 +71,9 @@ private:
     void InputMonitorInit();
     void InputMonitorCancel();
     void WatchParams();
+    void InitFocusChangedMonitor();
+    void HandleFocusChanged(bool isOnFocused, uint32_t windowId);
+
 
     int32_t inputMonitorId_ {-1};
     static sptr<SelectionService> instance_;

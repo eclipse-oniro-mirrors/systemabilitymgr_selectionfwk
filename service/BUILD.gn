@@ -61,9 +61,15 @@ ohos_shared_library("selection_service") {
   configs = [ ":selection_sa_config", ]
   output_values = get_target_outputs(":selection_service_interface")
 
+  include_dirs = [
+    "./focus_monitor/include",
+  ]
+
   sources = [
     "src/selection_service.cpp",
     "src/selection_input_monitor.cpp",
+    "./focus_monitor/src/focus_change_listener.cpp",
+    "./focus_monitor/src/focus_monitor_manager.cpp",
   ]
   sources += filter_include(output_values, [ "*.cpp" ])
   deps = [
@@ -84,7 +90,17 @@ ohos_shared_library("selection_service") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "screenlock_mgr:screenlock_client",
+    "input:libmmi-client",
+    "window_manager:libdm_lite",
+    "window_manager:libwsutils",
   ]
+
+  if (window_manager_use_sceneboard) {
+    external_deps += [ "window_manager:libwm_lite" ]
+    defines += [ "SCENE_BOARD_ENABLE" ]
+  } else {
+    external_deps += [ "window_manager:libwm" ]
+  }
 
   part_name = "selectionfwk"
   subsystem_name = "systemabilitymgr"

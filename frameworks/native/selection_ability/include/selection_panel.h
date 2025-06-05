@@ -51,7 +51,6 @@ public:
     bool IsShowing();
     bool IsHidden();
     bool SetPanelStatusListener(std::shared_ptr<PanelStatusListener> statusListener, const std::string &type);
-
     void ClearPanelListener(const std::string &type);
     int32_t GetWindowId();
 
@@ -64,9 +63,11 @@ private:
     void PanelStatusChange(const SelectionWindowStatus &status);
     bool MarkListener(const std::string &type, bool isRegister);
 
-    PanelType panelType_ = PanelType::STATUS_BAR;
-    PanelFlag panelFlag_ = PanelFlag::FLG_FIXED;
-    sptr<OHOS::Rosen::Window> window_ = nullptr;
+
+    PanelType panelType_ = PanelType::STATUS_BAR;//待修改
+    PanelFlag panelFlag_ = PanelFlag::FLG_FIXED;//待修改
+    static std::mutex windowMutex_;
+    static sptr<OHOS::Rosen::Window> window_;
     sptr<OHOS::Rosen::WindowOption> winOption_ = nullptr;
     bool isScbEnable_ { false };
     Rosen::KeyboardLayoutParams keyboardLayoutParams_;
