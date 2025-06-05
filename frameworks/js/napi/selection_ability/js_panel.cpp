@@ -50,7 +50,8 @@ napi_value JsPanel::Init(napi_env env)
         DECLARE_NAPI_FUNCTION("hide", Hide),
         DECLARE_NAPI_FUNCTION("startMoving", StartMoving),
         DECLARE_NAPI_FUNCTION("moveTo", MoveTo),
-        DECLARE_NAPI_FUNCTION("on", Subscribe)
+        DECLARE_NAPI_FUNCTION("on", Subscribe),
+        DECLARE_NAPI_FUNCTION("off", UnSubscribe)
     };
     NAPI_CALL(env, napi_define_class(env, CLASS_NAME.c_str(), CLASS_NAME.size(), JsNew, nullptr,
                        sizeof(properties) / sizeof(napi_property_descriptor), properties, &constructor));
@@ -319,6 +320,39 @@ napi_value JsPanel::Subscribe(napi_env env, napi_callback_info info)
     }
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+    return result;
+}
+
+napi_value JsPanel::UnSubscribe(napi_env env, napi_callback_info info)
+{
+    size_t argc = ARGC_MAX;
+    napi_value argv[ARGC_MAX] = { nullptr };
+    napi_value thisVar = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr));
+    std::string type;
+    // 1 means least param num.
+    PARAM_CHECK_RETURN(env, argc >= 1, "at least one parameter is required!", TYPE_NONE, nullptr);
+    PARAM_CHECK_RETURN(env, JsUtil::GetValue(env, argv[0], type), "type must be string!", TYPE_NONE, nullptr);
+    PARAM_CHECK_RETURN(env, EventChecker::IsValidEventType(EventSubscribeModule::PANEL, type),
+        "type should be show/hide/sizeChange!", TYPE_NONE, nullptr);
+    // if the second param is not napi_function/napi_null/napi_undefined, return
+    auto paramType = JsUtil::GetType(env, argv[1]);
+    PARAM_CHECK_RETURN(env, (paramType == napi_function || paramType == napi_null || paramType == napi_undefined),
+        "callback should be function or null or undefined!", TYPE_NONE, nullptr);
+    // if the second param is napi_function, delete it, else delete all
+    argv[1] = paramType == napi_function ? argv[1] : nullptr;
+
+    SELECTION_HILOGD("unsubscribe type: %{public}s.", type.c_str());
+    std::shared_ptr<PanelListenerImpl> observer = PanelListenerImpl::GetInstance();
+    auto selectionPanel = UnwrapPanel(env, thisVar);
+    if (selectionPanel == nullptr) {
+        SELECTION_HILOGE("selectionPanel is nullptr!");
+        return nullptr;
+    }
+    observer->RemoveInfo(type, selectionPanel->windowId_);
+    selectionPanel->ClearPanelListener(type);
+    napi_value result = nullptr;
+    napi_get_null(env, &result);
     return result;
 }
 

@@ -363,5 +363,29 @@ bool SelectionPanel::MarkListener(const std::string &type, bool isRegister)
     return true;
 }
 
+
+void SelectionPanel::ClearPanelListener(const std::string &type)
+{
+    if (!MarkListener(type, false)) {
+        return;
+    }
+    SELECTION_HILOGD("type: %{public}s.", type.c_str());
+    if (panelStatusListener_ == nullptr) {
+        SELECTION_HILOGD("panelStatusListener_ not set, don't need to remove.");
+        return;
+    }
+    if (showRegistered_ || hideRegistered_) {
+        return;
+    }
+    panelStatusListener_ = nullptr;
+}
+
+int32_t SelectionPanel::GetWindowId()
+{
+    std::lock_guard<std::mutex> lock(windowMutex_);
+    return window_->GetWindowId();
+
+}
+
 } // namespace SelectionFwk
 } // namespace OHOS

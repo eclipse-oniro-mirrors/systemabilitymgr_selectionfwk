@@ -62,6 +62,7 @@ public:
     static napi_value StartMoving(napi_env env, napi_callback_info info);
     static napi_value MoveTo(napi_env env, napi_callback_info info);
     static napi_value Subscribe(napi_env env, napi_callback_info info);
+    static napi_value UnSubscribe(napi_env env, napi_callback_info info);
     void SetNative(const std::shared_ptr<SelectionPanel> &panel);
     std::shared_ptr<SelectionPanel> GetNative();
 private:

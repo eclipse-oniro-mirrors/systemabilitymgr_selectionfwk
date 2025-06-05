@@ -52,6 +52,9 @@ public:
     bool IsHidden();
     bool SetPanelStatusListener(std::shared_ptr<PanelStatusListener> statusListener, const std::string &type);
 
+    void ClearPanelListener(const std::string &type);
+    int32_t GetWindowId();
+
     uint32_t windowId_ = INVALID_WINDOW_ID;
 
 private:
