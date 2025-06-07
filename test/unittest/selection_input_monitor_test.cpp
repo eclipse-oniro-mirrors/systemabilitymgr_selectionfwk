@@ -25,7 +25,6 @@ namespace SelectionFwk {
 using namespace testing::ext;
 
 struct EventStruct {
-    int buttonId;
     int pointId;
     int action;
 };
@@ -68,15 +67,14 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor001, TestSize.Level1)
 {
     std::cout << " SelectInputMonitor001 start " << std::endl;
     vector<EventStruct> events = {
-        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_DOWN},
-        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_MOVE},
-        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_UP}
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_DOWN},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_MOVE},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_UP}
     };
 
     for (uint16_t i = 0; i < events.size(); i++) {
         auto event = events[i];
         std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
-        pointEvent->SetButtonId(event.buttonId);
         pointEvent->SetPointerId(event.pointId);
         pointEvent->SetPointerAction(event.action);
         inputMonitor->OnInputEvent(pointEvent);

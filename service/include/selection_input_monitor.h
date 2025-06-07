@@ -19,8 +19,10 @@
 #include <string>
 #include <i_input_event_consumer.h>
 #include "selection_interface.h"
+#include "PasteboardDisposableObserver.h"
 namespace OHOS::SelectionFwk {
 using namespace MMI;
+using namespace OHOS::MiscServices;
 
 constexpr const uint32_t DOUBLE_CLICK_TIME = 500;
 
@@ -78,12 +80,26 @@ private:
     mutable uint32_t curSelectState = SELECT_INPUT_INITIAL;
     mutable uint32_t subSelectState = SUB_INITIAL;
     mutable int64_t lastClickTime = 0;
-
     mutable bool isTextSelected_ = false;
     mutable SelectionInfo selectionInfo_;
 };
 
-class SelectionInputMonitor : public IInputEventConsumer {
+class SelectionInputMonitor;
+
+class SelectionPasteboardDisposableObserver : public PasteboardDisposableObserver {
+public:
+    SelectionPasteboardDisposableObserver(std::shared_ptr<const SelectionInputMonitor> pInputMonitor)
+        : pInputMonitor_(pInputMonitor) {
+    }
+    virtual ~SelectionPasteboardDisposableObserver() = default;
+
+    void OnTextReceived(const std::string &text, int32_t errCode) override;
+
+private:
+    std::shared_ptr<const SelectionInputMonitor> pInputMonitor_;
+};
+
+class SelectionInputMonitor : public IInputEventConsumer, public std::enable_shared_from_this<SelectionInputMonitor> {
 public:
     SelectionInputMonitor() {
         delegate_ = std::make_shared<BaseSelectionInputMonitor>();
@@ -92,15 +108,16 @@ public:
     virtual void OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const;
     virtual void OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const;
     virtual void OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const;
+    void OnSelectionTriggered(const std::string &text) const;
 
 private:
     void FinishedWordSelection() const;
-    void OnSelectionTriggered() const;
     void InjectCtrlC() const;
     void SimulateKeyWithCtrl(int32_t keyCode, int32_t keyAction) const;
 
 private:
     std::shared_ptr<BaseSelectionInputMonitor> delegate_;
+    mutable std::shared_ptr<SelectionPasteboardDisposableObserver> pasteboardObserver_;
 };
 
 }

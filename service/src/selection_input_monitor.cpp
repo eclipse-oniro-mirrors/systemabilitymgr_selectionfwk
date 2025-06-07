@@ -232,8 +232,8 @@ bool BaseSelectionInputMonitor::IsSelectionDone() const {
 void BaseSelectionInputMonitor::InputInitialProcess(std::shared_ptr<PointerEvent> pointerEvent) const
 {
     int32_t action = pointerEvent->GetPointerAction();
-    int32_t buttonId = pointerEvent->GetButtonId();
-    if (action == PointerEvent::POINTER_ACTION_BUTTON_DOWN && buttonId == PointerEvent::MOUSE_BUTTON_LEFT) {
+    int32_t pointerId = pointerEvent->GetPointerId();
+    if (action == PointerEvent::POINTER_ACTION_BUTTON_DOWN && pointerId == PointerEvent::MOUSE_BUTTON_LEFT) {
         curSelectState = SELECT_INPUT_WORD_BEGIN;
         subSelectState = SUB_INITIAL;
         lastClickTime = GetCurrentTimeMillis();
@@ -410,18 +410,28 @@ void SelectionInputMonitor::FinishedWordSelection() const
     if (!delegate_->IsTextSelected()) {
         return;
     }
-    OnSelectionTriggered();
-}
-
-void SelectionInputMonitor::OnSelectionTriggered() const
-{
     delegate_->ResetState();
-    auto selectionInfo = delegate_->GetSelectionInfo();
-
-    SELECTION_HILOGI("End word selection action.");
+    if (pasteboardObserver_ == nullptr) {
+        pasteboardObserver_ = std::make_shared<SelectionPasteboardDisposableObserver>(shared_from_this());
+    }
+    // TODO 调用剪贴板
+    // uint64_t tokenId = IPCSkeleton::GetCallingTokenID();
+    // int32_t ret = PasteboardClient::GetInstance()->SubscribeDisposableObserver(pasteboardObserver_,
+    //     static_cast<uint32_t>(tokenId), DisposableType::PLAIN_TEXT, 100);
+    // if (ret != ERR_OK) {
+    //     SELECTION_HILOGE("SubscribeDisposableObserver failed ret is %{public}d.", ret);
+    // }
     InjectCtrlC();
     SELECTION_HILOGI("End Inject Ctrl + C.");
-    selectionInfo.text = "Hello World."; // TODO modify
+    // TODO DELETE
+    std::string test = "Hello World eeee";
+    pasteboardObserver_->OnTextReceived(test, 0);
+}
+
+void SelectionInputMonitor::OnSelectionTriggered(const std::string &text) const
+{
+    auto selectionInfo = delegate_->GetSelectionInfo();
+    selectionInfo.text = text;
     SelectionInfoData dataInner;
     dataInner.data = selectionInfo;
     SELECTION_HILOGI("selectionInfo: %{public}s.", dataInner.ToString().c_str());
@@ -518,4 +528,16 @@ void SelectionInputMonitor::SimulateKeyWithCtrl(int32_t keyCode, int32_t keyActi
     KeyEvent->AddKeyItem(item1);
     KeyEvent->AddKeyItem(item2);
     InputManager::GetInstance()->SimulateInputEvent(KeyEvent);
+}
+
+void SelectionPasteboardDisposableObserver::OnTextReceived(const std::string &text, int32_t errCode)
+{
+    if (errCode == 0) {
+        SELECTION_HILOGI("Text received: %{public}s.", text.c_str());
+        if (pInputMonitor_) {
+            pInputMonitor_->OnSelectionTriggered(text);
+        }
+    } else {
+        SELECTION_HILOGI("Error receiving text: errCode: %{public}d", errCode);
+    }
 }
