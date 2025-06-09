@@ -54,7 +54,7 @@ public:
     virtual void OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const;
     virtual void OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const;
 
-    void ResetState() const;
+    void ResetFinishedState() const;
     bool IsTextSelected() const;
     const SelectionInfo& GetSelectionInfo() const;
 
@@ -70,6 +70,7 @@ private:
     void InputWordWaitTripleClickProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
     void FinishedWordSelection() const;
     void ResetProcess(std::shared_ptr<PointerEvent> pointerEvent) const;
+    void ResetState() const;
     void JudgeTripleClick() const;
     void SaveSelectionStartInfo(std::shared_ptr<PointerEvent> pointerEvent) const;
     void SaveSelectionEndInfo(std::shared_ptr<PointerEvent> pointerEvent) const;

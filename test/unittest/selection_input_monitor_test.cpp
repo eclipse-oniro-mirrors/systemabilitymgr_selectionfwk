@@ -83,5 +83,70 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor001, TestSize.Level1)
     ASSERT_EQ(ret, true);
 }
 
+HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor002, TestSize.Level1)
+{
+    std::cout << " SelectInputMonitor002 start " << std::endl;
+    vector<EventStruct> events = {
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_DOWN},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_UP},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_DOWN},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_UP}
+    };
+
+    for (uint16_t i = 0; i < events.size(); i++) {
+        auto event = events[i];
+        std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
+        pointEvent->SetPointerId(event.pointId);
+        pointEvent->SetPointerAction(event.action);
+        inputMonitor->OnInputEvent(pointEvent);
+    }
+    auto ret = inputMonitor->IsTextSelected();
+    ASSERT_EQ(ret, true);
+}
+
+HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor003, TestSize.Level1)
+{
+    std::cout << " SelectInputMonitor003 start " << std::endl;
+    vector<EventStruct> events = {
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_DOWN},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_UP},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_DOWN},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_UP},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_DOWN},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_UP}
+    };
+
+    for (uint16_t i = 0; i < events.size(); i++) {
+        auto event = events[i];
+        std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
+        pointEvent->SetPointerId(event.pointId);
+        pointEvent->SetPointerAction(event.action);
+        inputMonitor->OnInputEvent(pointEvent);
+    }
+    auto ret = inputMonitor->IsTextSelected();
+    ASSERT_EQ(ret, true);
+}
+
+HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor004, TestSize.Level1)
+{
+    std::cout << " SelectInputMonitor004 start " << std::endl;
+    vector<EventStruct> events = {
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_DOWN},
+        {PointerEvent::MOUSE_BUTTON_LEFT, PointerEvent::POINTER_ACTION_BUTTON_UP},
+        {PointerEvent::MOUSE_BUTTON_RIGHT, PointerEvent::POINTER_ACTION_BUTTON_DOWN},
+        {PointerEvent::MOUSE_BUTTON_RIGHT, PointerEvent::POINTER_ACTION_BUTTON_UP}
+    };
+
+    for (uint16_t i = 0; i < events.size(); i++) {
+        auto event = events[i];
+        std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
+        pointEvent->SetPointerId(event.pointId);
+        pointEvent->SetPointerAction(event.action);
+        inputMonitor->OnInputEvent(pointEvent);
+    }
+    auto ret = inputMonitor->IsTextSelected();
+    ASSERT_EQ(ret, false);
+}
+
 }
 }

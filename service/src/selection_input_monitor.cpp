@@ -101,6 +101,9 @@ void BaseSelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> point
     int32_t pointerId = pointerEvent->GetPointerId();
     PointerEvent::PointerItem pointerItem;
     pointerEvent->GetPointerItem(pointerId, pointerItem);
+    if (pointerId != PointerEvent::MOUSE_BUTTON_LEFT) {
+        ResetState();
+    }
     // SELECTION_HILOGI("pointerItem, display: %{public}d, %{public}d, \
     //     RawDxy: %{public}d, %{public}d. \
     //     windows: %{public}d, %{public}d, windowId: %{public}d, deviceId: %{public}d",
@@ -108,11 +111,6 @@ void BaseSelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> point
     //     pointerItem.GetRawDx(),pointerItem.GetRawDy(),
     //     pointerItem.GetWindowX(), pointerItem.GetWindowY(),
     //     pointerItem.GetTargetWindowId(), pointerItem.GetDeviceId());
-    if (curSelectState == SELECT_INPUT_INITIAL && pointerId != PointerEvent::MOUSE_BUTTON_LEFT) {
-        // SELECTION_HILOGI("[SelectionService] into PointerEvent, pointerId = %{public}d. curSelectState: %{public}d",
-            // pointerId, curSelectState);
-        return;
-    }
     SELECTION_HILOGD("[SelectionService] into PointerEvent, curSelectState = %{public}d.", curSelectState);
 
     switch (curSelectState)
@@ -378,14 +376,21 @@ void BaseSelectionInputMonitor::FinishedWordSelection() const
     SaveSelectionType();
 }
 
-void BaseSelectionInputMonitor::ResetState() const
+void BaseSelectionInputMonitor::ResetFinishedState() const
 {
-    // world selection action
     if (curSelectState != SELECT_INPUT_DOUBLE_CLICKED) {
         curSelectState = SELECT_INPUT_INITIAL;
         SELECTION_HILOGI("set curSelectState to SELECT_INPUT_INITIAL");
     }
     isTextSelected_ = false;
+}
+
+void BaseSelectionInputMonitor::ResetState() const
+{
+    isTextSelected_ = false;
+    curSelectState = SELECT_INPUT_INITIAL;
+    subSelectState = SUB_INITIAL;
+    SELECTION_HILOGI("ResetFinishedState.");
 }
 
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const
@@ -410,7 +415,7 @@ void SelectionInputMonitor::FinishedWordSelection() const
     if (!delegate_->IsTextSelected()) {
         return;
     }
-    delegate_->ResetState();
+    delegate_->ResetFinishedState();
     if (pasteboardObserver_ == nullptr) {
         pasteboardObserver_ = std::make_shared<SelectionPasteboardDisposableObserver>(shared_from_this());
     }
