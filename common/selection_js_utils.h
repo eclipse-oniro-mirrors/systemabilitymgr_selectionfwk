@@ -30,30 +30,11 @@
 using Ability = OHOS::AppExecFwk::Ability;
 namespace OHOS {
 namespace SelectionFwk {
-enum SEErrorCode : int32_t {
-    EXCEPTION_PERMISSION = 201,
-    EXCEPTION_SYSTEM_PERMISSION = 202,
+enum SFErrorCode : int32_t {
     EXCEPTION_PARAMCHECK = 401,
-    EXCEPTION_UNSUPPORTED = 801,
-    EXCEPTION_PACKAGEMANAGER = 12800001,
-    EXCEPTION_IMENGINE = 12800002,
-    EXCEPTION_IMCLIENT = 12800003,
-    EXCEPTION_IME = 12800004,
-    EXCEPTION_CONFPERSIST = 12800005,
-    EXCEPTION_CONTROLLER = 12800006,
-    EXCEPTION_SETTINGS = 12800007,
-    EXCEPTION_IMMS = 12800008,
-    EXCEPTION_DETACHED = 12800009,
-    EXCEPTION_DEFAULTIME = 12800010,
-    EXCEPTION_TEXT_PREVIEW_NOT_SUPPORTED = 12800011,
-    EXCEPTION_PANEL_NOT_FOUND = 12800012,
-    EXCEPTION_WINDOW_MANAGER = 12800013,
-    EXCEPTION_BASIC_MODE = 12800014,
-    EXCEPTION_REQUEST_NOT_ACCEPT = 12800015,
-    EXCEPTION_EDITABLE = 12800016,
-    EXCEPTION_INVALID_PANEL_TYPE_FLAG = 12800017,
-    EXCEPTION_SELECTION_SERVICE = 25600001, // TODO:待定
-    EXCEPTION_PANEL_DESTORYED    // TODO:待定
+    EXCEPTION_SELECTION_SERVICE = 33600001,
+    EXCEPTION_PANEL_DESTORYED = 33600002,
+    EXCEPTION_INVALID_OPERATION = 33600003,
 };
 
 enum TypeCode : int32_t {
@@ -76,7 +57,7 @@ enum TypeCode : int32_t {
 #define PARAM_CHECK_RETURN(env, condition, message, typeCode, retVal)                            \
     do {                                                                                         \
         if (!(condition)) {                                                                      \
-            JsUtils::ThrowException(env, SEErrorCode::EXCEPTION_PARAMCHECK, message, typeCode); \
+            JsUtils::ThrowException(env, SFErrorCode::EXCEPTION_PARAMCHECK, message, typeCode); \
             return retVal;                                                                       \
         }                                                                                        \
     } while (0)
@@ -84,7 +65,7 @@ enum TypeCode : int32_t {
 #define PARAM_CHECK_RETURN_VOID(env, condition, message, typeCode)                            \
     do {                                                                                         \
         if (!(condition)) {                                                                      \
-            JsUtils::ThrowException(env, SEErrorCode::EXCEPTION_PARAMCHECK, message, typeCode); \
+            JsUtils::ThrowException(env, SFErrorCode::EXCEPTION_PARAMCHECK, message, typeCode); \
             return;                                                                       \
         }                                                                                        \
     } while (0)

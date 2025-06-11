@@ -53,7 +53,7 @@ int32_t SelectionPanel::CreatePanel(
 
     // winOption_ = new (std::nothrow) OHOS::Rosen::WindowOption();
     // if (winOption_ == nullptr) {
-    //     return ErrorCode::ERROR_NULL_POINTER;
+    //     return ErrorCode::ERROR_SELECTION_SERVICE;
     // }
     // winOption_->SetWindowType(OHOS::Rosen::WindowType::WINDOW_TYPE_DYNAMIC);
     // winOption_->SetWindowRect(OHOS::Rosen::Rect{10, 10, 80, 50});
@@ -65,13 +65,13 @@ int32_t SelectionPanel::CreatePanel(
     // }
     // if (window_ == nullptr || wmError != WMError::WM_OK) {
     //     SELECTION_HILOGE("create window failed: %{public}d!", wmError);
-    //     return ErrorCode::ERROR_OPERATE_PANEL;
+    //     return ErrorCode::ERROR_SELECTION_SERVICE;
     // }
     // isScbEnable_ = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
     // if (SetPanelProperties() != ErrorCode::NO_ERROR) {
     //     wmError = window_->Destroy();
     //     SELECTION_HILOGI("destroy window end, wmError is %{public}d.", wmError);
-    //     return ErrorCode::ERROR_OPERATE_PANEL;
+    //     return ErrorCode::ERROR_SELECTION_SERVICE;
     // }
     // windowId_ = window_->GetWindowId();
     // SELECTION_HILOGI("success, type/flag/windowId/isScbEnable_: %{public}d/%{public}d/%{public}u/%{public}d.",
@@ -119,14 +119,14 @@ int32_t SelectionPanel::SetPanelProperties()
 {
     if (window_ == nullptr) {
         SELECTION_HILOGE("window is nullptr!");
-        return ErrorCode::ERROR_OPERATE_PANEL;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     WindowGravity gravity = WindowGravity::WINDOW_GRAVITY_FLOAT;
     if (!isScbEnable_) {
         WMError wmError = window_->SetWindowGravity(gravity, invalidGravityPercent);
         if (wmError != WMError::WM_OK) {
             SELECTION_HILOGE("failed to set window gravity, wmError is %{public}d, start destroy window!", wmError);
-            return ErrorCode::ERROR_OPERATE_PANEL;
+            return ErrorCode::ERROR_SELECTION_SERVICE;
         }
         return ErrorCode::NO_ERROR;
     }
@@ -134,7 +134,7 @@ int32_t SelectionPanel::SetPanelProperties()
     auto ret = window_->AdjustKeyboardLayout(keyboardLayoutParams_);
     if (ret != WMError::WM_OK) {
         SELECTION_HILOGE("SetWindowGravity failed, wmError is %{public}d, start destroy window!", ret);
-        return ErrorCode::ERROR_OPERATE_PANEL;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     return ErrorCode::NO_ERROR;
 }
@@ -147,7 +147,7 @@ int32_t SelectionPanel::DestroyPanel()
     }
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
-        return ErrorCode::ERROR_NULL_POINTER;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     auto result = window_->Destroy();
     SELECTION_HILOGI("destroy ret: %{public}d", result);
@@ -168,7 +168,7 @@ int32_t SelectionPanel::SetUiContent(const std::string &contentInfo, napi_env en
 {
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr, can not SetUiContent!");
-        return ErrorCode::ERROR_NULL_POINTER;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     if(IsDestroyed()) {
         SELECTION_HILOGE("window is destroyed!");
@@ -202,7 +202,7 @@ int32_t SelectionPanel::ShowPanel()
     }
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
-        return ErrorCode::ERROR_IMA_NULLPTR;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     if(IsDestroyed()) {
         SELECTION_HILOGE("window is destroyed!");
@@ -219,7 +219,7 @@ int32_t SelectionPanel::ShowPanel()
     }
     if (ret != WMError::WM_OK) {
         SELECTION_HILOGE("ShowPanel error, err = %{public}d", ret);
-        return ErrorCode::ERROR_OPERATE_PANEL;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     SELECTION_HILOGI("Selection panel shown successfully.");
     return ErrorCode::NO_ERROR;
@@ -229,7 +229,7 @@ bool SelectionPanel::IsShowing()
 {
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
-        return ErrorCode::ERROR_NULL_POINTER;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     auto windowState = window_->GetWindowState();
     if (windowState == WindowState::STATE_SHOWN) {
@@ -257,7 +257,7 @@ int32_t SelectionPanel::HidePanel()
     SELECTION_HILOGD("SelectionPanel start");
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
-        return ErrorCode::ERROR_NULL_POINTER;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     if(IsDestroyed()) {
         SELECTION_HILOGE("window is destroyed!");
@@ -274,7 +274,7 @@ int32_t SelectionPanel::HidePanel()
     }
     if (ret != WMError::WM_OK) {
         SELECTION_HILOGE("HidePanel error, err: %{public}d!", ret);
-        return ErrorCode::ERROR_OPERATE_PANEL;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     SELECTION_HILOGI("success, panelType/x/y/width/height: %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.",
         static_cast<int32_t>(panelType_), x_, y_, width_, height_);
@@ -301,7 +301,7 @@ int32_t SelectionPanel::StartMoving()
 {
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
-        return ErrorCode::ERROR_IME;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     if(IsDestroyed()) {
         SELECTION_HILOGE("window is destroyed!");
@@ -310,11 +310,11 @@ int32_t SelectionPanel::StartMoving()
     auto ret = window_->StartMoveWindow();
     if (ret == WmErrorCode::WM_ERROR_DEVICE_NOT_SUPPORT) {
         SELECTION_HILOGE("window manager service not support error ret = %{public}d.", ret);
-        return ErrorCode::ERROR_DEVICE_UNSUPPORTED;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     if (ret != WmErrorCode::WM_OK) {
         SELECTION_HILOGE("window manager service error ret = %{public}d.", ret);
-        return ErrorCode::ERROR_WINDOW_MANAGER;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     SELECTION_HILOGI("StartMoving  success!");
     return ErrorCode::NO_ERROR;
@@ -325,7 +325,7 @@ int32_t SelectionPanel::MoveTo(int32_t x, int32_t y)
     SELECTION_HILOGD("moveto start!");
     if (window_ == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
-        return ErrorCode::ERROR_NULL_POINTER;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     if(IsDestroyed()) {
         SELECTION_HILOGE("window is destroyed!");

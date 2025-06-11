@@ -72,11 +72,11 @@ int32_t TaskManager::Pend(action_ptr_t action)
 {
     if (action == nullptr) {
         SELECTION_HILOGE("curTask_ is NULL or not runing, pend failed!");
-        return ErrorCode::ERROR_NULL_POINTER;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     if (curTask_ == nullptr || !curTask_->IsRunning()) {
         SELECTION_HILOGE("curTask_ is NULL or not runing, pend failed!");
-        return ErrorCode::ERROR_TASK_MANAGER_PEND_FAILED;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     return curTask_->Pend(std::move(action));
 }

@@ -163,7 +163,6 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
 
     auto exec = [env, ctxt](AsyncCall::Context *ctx) {
         auto ret = SelectionAbility::GetInstance()->CreatePanel(ctxt->context, ctxt->panelInfo, ctxt->panel);
-        CHECK_RETURN_VOID(ret == ErrorCode::NO_ERROR, "JsSelectionEngineSetting CreatePanel failed!");
         if(ret != ErrorCode::NO_ERROR) {
             ctxt->SetErrorCode(ret);
             JsUtils::ThrowException(env, JsUtils::Convert(ret), "CreatePanel failed!", TYPE_NONE);
@@ -221,7 +220,7 @@ napi_value JsSelectionEngineSetting::DestroyPanel(napi_env env, napi_callback_in
         CHECK_RETURN((ctxt->panel != nullptr), "panel is nullptr!", napi_generic_failure);
         auto errCode = SelectionAbility::GetInstance()->DestroyPanel(ctxt->panel);
         if (errCode != ErrorCode::NO_ERROR) {
-            SELECTION_HILOGE("DestroyPanel failed, errCode: %{public}d!", errCode);
+            SELECTION_HILOGE("DestroyPanel failed, errCode: %{public}d!", JsUtils::Convert(errCode));
             JsUtils::ThrowException(env, JsUtils::Convert(errCode), "DestroyPanel failed!", TYPE_NONE);
             return napi_generic_failure;
         }

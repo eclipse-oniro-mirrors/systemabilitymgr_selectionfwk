@@ -85,7 +85,7 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
             selectionPanel = nullptr;
             return false;
         });
-    return flag ? ErrorCode::NO_ERROR : ErrorCode::ERROR_OPERATE_PANEL;
+    return flag ? ErrorCode::NO_ERROR : ErrorCode::ERROR_SELECTION_SERVICE;
 }
 
 int32_t SelectionAbility::DestroyPanel(const std::shared_ptr<SelectionPanel> &selectionPanel)
@@ -93,7 +93,7 @@ int32_t SelectionAbility::DestroyPanel(const std::shared_ptr<SelectionPanel> &se
     SELECTION_HILOGI("SelectionAbility DestroyPanel start.");
     if (selectionPanel == nullptr) {
         SELECTION_HILOGE("panel is nullptr!");
-        return ErrorCode::ERROR_BAD_PARAMETERS;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     auto ret = selectionPanel->DestroyPanel();
     if (ret == ErrorCode::NO_ERROR) {
@@ -106,7 +106,7 @@ int32_t SelectionAbility::DestroyPanel(const std::shared_ptr<SelectionPanel> &se
 int32_t SelectionAbility::ShowPanel(const std::shared_ptr<SelectionPanel> &selectionpanel)
 {
     if (selectionpanel == nullptr) {
-        return ErrorCode::ERROR_BAD_PARAMETERS;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     auto ret = selectionpanel->ShowPanel();
     if (ret != ErrorCode::NO_ERROR) {
@@ -119,7 +119,7 @@ int32_t SelectionAbility::ShowPanel(const std::shared_ptr<SelectionPanel> &selec
 int32_t SelectionAbility::HidePanel(const std::shared_ptr<SelectionPanel> &selectionpanel)
 {
     if (selectionpanel == nullptr) {
-        return ErrorCode::ERROR_BAD_PARAMETERS;
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     auto ret = selectionpanel->HidePanel();
     if (ret != ErrorCode::NO_ERROR) {

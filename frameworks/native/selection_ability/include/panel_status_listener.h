@@ -25,9 +25,6 @@ class PanelStatusListener {
 public:
     virtual ~PanelStatusListener() {};
     virtual void OnPanelStatus(uint32_t windowId, const std::string& status) = 0;
-    // virtual void OnSizeChange(uint32_t windowId, const WindowSize &size) = 0;
-    // virtual void OnSizeChange(
-    //     uint32_t windowId, const WindowSize &size, const PanelAdjustInfo &keyboardArea, const std::string &event) = 0;
 };
 } // namespace SelectionFwk
 } // namespace OHOS

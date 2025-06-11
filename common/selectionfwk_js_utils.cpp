@@ -22,102 +22,17 @@ constexpr size_t STR_TAIL_LENGTH = 1;
 constexpr size_t ARGC_MAX = 6;
 
 const std::map<int32_t, int32_t> JsUtils::ERROR_CODE_MAP = {
-    { ErrorCode::ERROR_CONTROLLER_INVOKING_FAILED, EXCEPTION_CONTROLLER },
-    { ErrorCode::ERROR_STATUS_PERMISSION_DENIED, EXCEPTION_PERMISSION },
-    { ErrorCode::ERROR_STATUS_SYSTEM_PERMISSION, EXCEPTION_SYSTEM_PERMISSION },
-    { ErrorCode::ERROR_REMOTE_CLIENT_DIED, EXCEPTION_IMCLIENT },
-    { ErrorCode::ERROR_CLIENT_NOT_FOUND, EXCEPTION_IMCLIENT },
-    { ErrorCode::ERROR_CLIENT_NULL_POINTER, EXCEPTION_IMCLIENT },
-    { ErrorCode::ERROR_CLIENT_NOT_FOCUSED, EXCEPTION_IMCLIENT },
-    { ErrorCode::ERROR_CLIENT_NOT_EDITABLE, EXCEPTION_EDITABLE },
-    { ErrorCode::ERROR_CLIENT_NOT_BOUND, EXCEPTION_DETACHED },
-    { ErrorCode::ERROR_CLIENT_ADD_FAILED, EXCEPTION_IMCLIENT },
-    { ErrorCode::ERROR_NULL_POINTER, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_BAD_PARAMETERS, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_SERVICE_START_FAILED, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_KBD_SHOW_FAILED, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_KBD_HIDE_FAILED, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IME_NOT_STARTED, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_EX_NULL_POINTER, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_PERSIST_CONFIG, EXCEPTION_CONFPERSIST },
-    { ErrorCode::ERROR_PACKAGE_MANAGER, EXCEPTION_PACKAGEMANAGER },
-    { ErrorCode::ERROR_EX_UNSUPPORTED_OPERATION, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_EX_SERVICE_SPECIFIC, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_EX_PARCELABLE, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_EX_ILLEGAL_ARGUMENT, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_EX_ILLEGAL_STATE, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IME_START_INPUT_FAILED, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_NOT_IME, EXCEPTION_IME },
-    { ErrorCode::ERROR_IME, EXCEPTION_IMENGINE },
     { ErrorCode::ERROR_PARAMETER_CHECK_FAILED, EXCEPTION_PARAMCHECK },
-    { ErrorCode::ERROR_NOT_DEFAULT_IME, EXCEPTION_DEFAULTIME },
-    { ErrorCode::ERROR_ENABLE_IME, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_NOT_CURRENT_IME, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_PANEL_NOT_FOUND, EXCEPTION_PANEL_NOT_FOUND },
-    { ErrorCode::ERROR_WINDOW_MANAGER, EXCEPTION_WINDOW_MANAGER },
-    { ErrorCode::ERROR_GET_TEXT_CONFIG, EXCEPTION_IMCLIENT },
-    { ErrorCode::ERROR_INVALID_PRIVATE_COMMAND_SIZE, EXCEPTION_PARAMCHECK },
-    { ErrorCode::ERROR_TEXT_LISTENER_ERROR, EXCEPTION_IMCLIENT },
-    { ErrorCode::ERROR_TEXT_PREVIEW_NOT_SUPPORTED, EXCEPTION_TEXT_PREVIEW_NOT_SUPPORTED },
-    { ErrorCode::ERROR_INVALID_RANGE, EXCEPTION_PARAMCHECK },
-    { ErrorCode::ERROR_SECURITY_MODE_OFF, EXCEPTION_BASIC_MODE },
-    { ErrorCode::ERROR_MSG_HANDLER_NOT_REGIST, EXCEPTION_REQUEST_NOT_ACCEPT },
-    { ErrorCode::ERROR_MESSAGE_HANDLER, EXCEPTION_IMCLIENT },
-    { ErrorCode::ERROR_INVALID_ARRAY_BUFFER_SIZE, EXCEPTION_PARAMCHECK },
-    { ErrorCode::ERROR_INVALID_PANEL_TYPE, EXCEPTION_INVALID_PANEL_TYPE_FLAG },
-    { ErrorCode::ERROR_INVALID_PANEL_FLAG, EXCEPTION_INVALID_PANEL_TYPE_FLAG },
-    { ErrorCode::ERROR_IMA_CHANNEL_NULLPTR, EXCEPTION_IMCLIENT },
-    { ErrorCode::ERROR_IPC_REMOTE_NULLPTR, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMA_NULLPTR, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_INPUT_TYPE_NOT_FOUND, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_DEFAULT_IME_NOT_FOUND, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_CLIENT_INPUT_READY_FAILED, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_MALLOC_FAILED, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_NULLPTR, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_USER_SESSION_NOT_FOUND, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_GET_IME_INFO_FAILED, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_IME_TO_START_NULLPTR, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_REBOOT_OLD_IME_NOT_STOP, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_IME_EVENT_CONVERT_FAILED, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_IME_CONNECT_FAILED, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_IME_DISCONNECT_FAILED, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_IME_START_TIMEOUT, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_IME_START_MORE_THAN_EIGHT_SECOND, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMSA_FORCE_STOP_IME_TIMEOUT, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_IMC_NULLPTR, EXCEPTION_IMMS },
-    { ErrorCode::ERROR_DEVICE_UNSUPPORTED, EXCEPTION_UNSUPPORTED },
     { ErrorCode::ERROR_SELECTION_SERVICE, EXCEPTION_SELECTION_SERVICE },
-    { ErrorCode::ERROR_PANEL_DESTORYED, EXCEPTION_PANEL_DESTORYED }
+    { ErrorCode::ERROR_PANEL_DESTORYED, EXCEPTION_PANEL_DESTORYED },
+    { ErrorCode::ERROR_INVALID_OPERATION, EXCEPTION_INVALID_OPERATION }
 };
 
 const std::map<int32_t, std::string> JsUtils::ERROR_CODE_CONVERT_MESSAGE_MAP = {
-    { EXCEPTION_PERMISSION, "the permissions check fails." },
-    { EXCEPTION_SYSTEM_PERMISSION, "not system application." },
-    { EXCEPTION_PARAMCHECK, "the parameters check fails." },
-    { EXCEPTION_UNSUPPORTED, "capability not supported." },
-    { EXCEPTION_PACKAGEMANAGER, "bundle manager error." },
-    { EXCEPTION_IMENGINE, "input method engine error. Possible causes: 1.input method panel not created.\
-        2.the input method application does not subscribe to related events." },
-    { EXCEPTION_IMCLIENT, "input method client error. Possible causes: 1.the edit box is not focused.\
-        2.no edit box is bound to current input method application." },
-    { EXCEPTION_IME, "not an input method application." },
-    { EXCEPTION_CONFPERSIST, "configuration persistence error." },
-    { EXCEPTION_CONTROLLER, "input method controller error.\
-        Possible cause: create InputmethodController object failed." },
-    { EXCEPTION_SETTINGS, "input method setter error. Possible cause: create InputmethodSetting object failed." },
-    { EXCEPTION_IMMS, "input method manager service error. Possible cause: a system error, such as null pointer,\
-        IPC exception." },
-    { EXCEPTION_DETACHED, "input method client detached." },
-    { EXCEPTION_DEFAULTIME, "not the preconfigured default input method." },
-    { EXCEPTION_TEXT_PREVIEW_NOT_SUPPORTED, "text preview not supported." },
-    { EXCEPTION_PANEL_NOT_FOUND, "the input method panel does not exist." },
-    { EXCEPTION_WINDOW_MANAGER, "window manager service error." },
-    { EXCEPTION_BASIC_MODE, "the input method is basic mode." },
-    { EXCEPTION_REQUEST_NOT_ACCEPT, "the another side does not accept the request." },
-    { EXCEPTION_EDITABLE, "the edit mode need enable." },
-    { EXCEPTION_INVALID_PANEL_TYPE_FLAG, "invalid panel type or panel flag." },
-    { EXCEPTION_SELECTION_SERVICE, "selection service exception." },
-    { EXCEPTION_PANEL_DESTORYED, "this panel has been destroyed." }
+    { EXCEPTION_PARAMCHECK, "The parameters check fails." },
+    { EXCEPTION_SELECTION_SERVICE, "Selection service exception." },
+    { EXCEPTION_PANEL_DESTORYED, "This selection window has been destroyed." },
+    { EXCEPTION_INVALID_OPERATION, "Invalid operation. The selection app is not valid." }
 };
 
 const std::map<int32_t, std::string> JsUtils::PARAMETER_TYPE = {
@@ -156,12 +71,6 @@ void JsUtils::ThrowException(napi_env env, int32_t err, const std::string &msg, 
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, err, &code));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, error, "code", code));
     NAPI_CALL_RETURN_VOID(env, napi_throw(env, error));
-}
-
-void JsUtils::ThrowException(napi_env env, int32_t errCode, const std::string& msg)
-{
-    std::string errMsg = ToMessage(JsUtils::Convert(errCode)) + " " + msg;
-    NAPI_CALL_RETURN_VOID(env, napi_throw_error(env, std::to_string(errCode).c_str(), errMsg.c_str()));
 }
 
 napi_value JsUtils::ToError(napi_env env, int32_t code, const std::string &msg)

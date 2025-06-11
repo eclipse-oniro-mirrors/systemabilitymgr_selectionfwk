@@ -133,14 +133,11 @@ napi_value JsPanel::SetUiContent(napi_env env, napi_callback_info info)
         }
         auto code = ctxt->selectionPanel->SetUiContent(ctxt->path, env);
         jsQueue_.Pop();
-        if (code == ErrorCode::ERROR_PARAMETER_CHECK_FAILED) {
+        if (code != ErrorCode::NO_ERROR) {
             ctxt->SetErrorCode(code);
-            ctxt->SetErrorMessage("path should be a path to specific page.");
-            return napi_generic_failure;
-        } else if (code == ErrorCode::ERROR_SELECTION_SERVICE || code == ErrorCode::ERROR_PANEL_DESTORYED) {
             JsUtils::ThrowException(env, JsUtils::Convert(code), "failed to SetUiContent", TYPE_NONE);
+            return napi_generic_failure;
         }
-
         return napi_ok;
     };
     ctxt->SetAction(std::move(input), std::move(output));
@@ -216,16 +213,16 @@ napi_value JsPanel::StartMoving(napi_env env, napi_callback_info info)
 {
     napi_value self = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, 0, nullptr, &self, nullptr));
-    RESULT_CHECK_RETURN(env, (self != nullptr), JsUtils::Convert(ErrorCode::ERROR_IME),
+    RESULT_CHECK_RETURN(env, (self != nullptr), JsUtils::Convert(ErrorCode::ERROR_SELECTION_SERVICE),
                         "", TYPE_NONE, JsUtil::Const::Null(env));
     void *native = nullptr;
     NAPI_CALL(env, napi_unwrap(env, self, &native));
-    RESULT_CHECK_RETURN(env, (native != nullptr), JsUtils::Convert(ErrorCode::ERROR_IME),
+    RESULT_CHECK_RETURN(env, (native != nullptr), JsUtils::Convert(ErrorCode::ERROR_SELECTION_SERVICE),
                         "", TYPE_NONE, JsUtil::Const::Null(env));
     auto selectionPanel = reinterpret_cast<JsPanel *>(native)->GetNative();
     if (selectionPanel == nullptr) {
         SELECTION_HILOGE("selectionPanel is nullptr!");
-        JsUtils::ThrowException(env, JsUtils::Convert(ErrorCode::ERROR_IME),
+        JsUtils::ThrowException(env, JsUtils::Convert(ErrorCode::ERROR_SELECTION_SERVICE),
             "failed to start moving, selectionPanel is nullptr", TYPE_NONE);
         return JsUtil::Const::Null(env);
     }
