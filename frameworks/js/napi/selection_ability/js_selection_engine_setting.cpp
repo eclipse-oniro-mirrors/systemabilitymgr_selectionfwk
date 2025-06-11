@@ -150,10 +150,9 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
         PARAM_CHECK_RETURN(env, valueType == napi_object, "param info type must be PanelInfo.", TYPE_NONE,
             napi_invalid_arg);
         status = OHOS::SelectionFwk::JsSelectionUtils::GetValue(env, argv[1], ctxt->panelInfo);
-        SELECTION_HILOGD(
-            "output js param panelInfo covert , panelType/x/y/width/height: %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.",
-            static_cast<int32_t>(ctxt->panelInfo.panelType), ctxt->panelInfo.x, ctxt->panelInfo.y, ctxt->panelInfo.width,
-            ctxt->panelInfo.height);
+        SELECTION_HILOGD("output js param panelInfo covert , panelType/x/y/width/height: \
+            %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.", static_cast<int32_t>(ctxt->panelInfo.panelType),
+            ctxt->panelInfo.x, ctxt->panelInfo.y, ctxt->panelInfo.width, ctxt->panelInfo.height);
         PARAM_CHECK_RETURN(env, status == napi_ok, "js param info covert failed!", TYPE_NONE, napi_invalid_arg);
         return status;
     };
@@ -348,7 +347,6 @@ void JsSelectionEngineSetting::RegisterListerToService(std::shared_ptr<JsSelecti
         SELECTION_HILOGE("selection system ability is nullptr!");
         return;
     }
-    // auto selectionInterface = GetJsSelectionEngineSetting();
     listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionEnging);
     if (listenerStub_ == nullptr) {
         SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
@@ -379,7 +377,8 @@ napi_value JsSelectionEngineSetting::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("createPanel", CreatePanel),
         DECLARE_NAPI_FUNCTION("destroyPanel", DestroyPanel),
     };
-    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(descriptor) / sizeof(napi_property_descriptor), descriptor));
+    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(descriptor) / sizeof(napi_property_descriptor),
+        descriptor));
     if (Register() != EXCEPTION_SUCCESS) {
         SELECTION_HILOGE("regist lister to service failed!");
         return nullptr;

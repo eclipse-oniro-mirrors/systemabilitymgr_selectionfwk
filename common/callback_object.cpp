@@ -60,9 +60,9 @@ bool JSCallbackObject::operator==(const JSCallbackObject& other) const
         return false;
     }
 
-    napi_value thisValue, otherValue;
-    napi_status status;
-    status = napi_get_reference_value(env_, this->callback_, &thisValue);
+    napi_value thisValue;
+    napi_value otherValue;
+    napi_status status = napi_get_reference_value(env_, this->callback_, &thisValue);
     if (status != napi_ok) {
         return false;
     }

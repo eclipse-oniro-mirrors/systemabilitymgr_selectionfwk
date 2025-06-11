@@ -282,8 +282,9 @@ void JsPanel::PrintEditorQueueInfoIfTimeout(int64_t start, const JsEventInfo &cu
         auto ret = jsQueue_.GetFront(frontInfo);
         int64_t frontTime = duration_cast<microseconds>(frontInfo.timestamp.time_since_epoch()).count();
         int64_t currentTime = duration_cast<microseconds>(currentInfo.timestamp.time_since_epoch()).count();
-        SELECTION_HILOGI("ret:%{public}d,front[%{public}" PRId64 ",%{public}d],current[%{public}" PRId64 ",%{public}d]", ret,
-            frontTime, static_cast<int32_t>(frontInfo.event), currentTime, static_cast<int32_t>(currentInfo.event));
+        SELECTION_HILOGI("ret:%{public}d,front[%{public}" PRId64 ",%{public}d],current[%{public}" PRId64
+            ",%{public}d]", ret, frontTime, static_cast<int32_t>(frontInfo.event), currentTime,
+            static_cast<int32_t>(currentInfo.event));
     }
 }
 

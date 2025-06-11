@@ -336,7 +336,8 @@ int32_t SelectionPanel::MoveTo(int32_t x, int32_t y)
     return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
 }
 
-bool SelectionPanel::SetPanelStatusListener(std::shared_ptr<PanelStatusListener> statusListener, const std::string &type)
+bool SelectionPanel::SetPanelStatusListener(std::shared_ptr<PanelStatusListener> statusListener,
+    const std::string &type)
 {
     if (!MarkListener(type, true)) {
         return false;

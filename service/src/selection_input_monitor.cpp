@@ -96,21 +96,12 @@ void BaseSelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> point
         SELECTION_HILOGD("It is not screen on.");
         return;
     }
-    // SELECTION_HILOGD("pointerEvent->windowId: %{public}d, displayId: %{public}d",
-    //     pointerEvent->GetTargetWindowId(), pointerEvent->GetTargetDisplayId());
     int32_t pointerId = pointerEvent->GetPointerId();
     PointerEvent::PointerItem pointerItem;
     pointerEvent->GetPointerItem(pointerId, pointerItem);
     if (pointerId != PointerEvent::MOUSE_BUTTON_LEFT) {
         ResetState();
     }
-    // SELECTION_HILOGI("pointerItem, display: %{public}d, %{public}d, \
-    //     RawDxy: %{public}d, %{public}d. \
-    //     windows: %{public}d, %{public}d, windowId: %{public}d, deviceId: %{public}d",
-        // pointerItem.GetDisplayX(),pointerItem.GetDisplayY(),
-    //     pointerItem.GetRawDx(),pointerItem.GetRawDy(),
-    //     pointerItem.GetWindowX(), pointerItem.GetWindowY(),
-    //     pointerItem.GetTargetWindowId(), pointerItem.GetDeviceId());
     SELECTION_HILOGD("[SelectionService] into PointerEvent, curSelectState = %{public}d.", curSelectState);
 
     switch (curSelectState)
@@ -455,69 +446,6 @@ void SelectionInputMonitor::InjectCtrlC() const
     SimulateKeyWithCtrl(KeyEvent::KEYCODE_C, KeyEvent::KEY_ACTION_DOWN);
     SimulateKeyWithCtrl(KeyEvent::KEYCODE_C, KeyEvent::KEY_ACTION_UP);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    // // 创建KeyEvent对象
-    // auto keyEvent1 = KeyEvent::Create();
-
-    // // 设置Ctrl键按下
-    // int deviceId = 100;
-    // int downTime = 104329296;
-    // keyEvent1->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
-    // keyEvent1->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-    // keyEvent1->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
-    // keyEvent1->SetDeviceId(deviceId);
-    // KeyEvent::KeyItem item1;
-    // item1.SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-    // item1.SetPressed(true);
-    // item1.SetDeviceId(deviceId);
-    // item1.SetDownTime(downTime);
-    // keyEvent1->AddKeyItem(item1);
-    // InputManager::GetInstance()->SimulateInputEvent(keyEvent1);
-
-    // // 设置C键按下
-    // auto keyEvent2 = KeyEvent::Create();
-    // keyEvent2->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
-    // keyEvent2->SetKeyCode(KeyEvent::KEYCODE_C);
-    // keyEvent2->SetKeyAction(KeyEvent::KEY_ACTION_DOWN);
-    // keyEvent2->SetDeviceId(deviceId);
-    // KeyEvent::KeyItem item2;
-    // item2.SetKeyCode(KeyEvent::KEYCODE_C);
-    // item2.SetPressed(true);
-    // item2.SetDeviceId(deviceId);
-    // item2.SetUnicode(99);
-    // item2.SetDownTime(downTime);
-    // keyEvent2->AddKeyItem(item1);
-    // keyEvent2->AddKeyItem(item2);
-    // InputManager::GetInstance()->SimulateInputEvent(keyEvent2);
-
-    // // 设置C键释放
-    // auto keyEvent3 = KeyEvent::Create();
-    // keyEvent3->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
-    // keyEvent3->SetKeyCode(KeyEvent::KEYCODE_C);
-    // keyEvent3->SetKeyAction(KeyEvent::KEY_ACTION_UP);
-    // keyEvent3->SetDeviceId(deviceId);
-    // KeyEvent::KeyItem item3;
-    // item3.SetKeyCode(KeyEvent::KEYCODE_C);
-    // item3.SetPressed(false);
-    // item3.SetDeviceId(deviceId);
-    // item3.SetUnicode(99);
-    // item3.SetDownTime(downTime);
-    // keyEvent3->AddKeyItem(item1);
-    // keyEvent3->AddKeyItem(item3);
-    // InputManager::GetInstance()->SimulateInputEvent(keyEvent3);
-
-    // // 设置Ctrl键释放
-    // auto keyEvent4 = KeyEvent::Create();
-    // keyEvent4->AddFlag(InputEvent::EVENT_FLAG_NO_INTERCEPT);
-    // keyEvent4->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-    // keyEvent4->SetKeyAction(KeyEvent::KEY_ACTION_UP);
-    // keyEvent4->SetDeviceId(deviceId);
-    // KeyEvent::KeyItem item4;
-    // item4.SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
-    // item4.SetPressed(false);
-    // item4.SetDeviceId(deviceId);
-    // item4.SetDownTime(downTime);
-    // keyEvent4->AddKeyItem(item4);
-    // InputManager::GetInstance()->SimulateInputEvent(keyEvent4);
 }
 
 void SelectionInputMonitor::SimulateKeyWithCtrl(int32_t keyCode, int32_t keyAction) const
@@ -525,7 +453,8 @@ void SelectionInputMonitor::SimulateKeyWithCtrl(int32_t keyCode, int32_t keyActi
     auto KeyEvent = KeyEvent::Create();
     KeyEvent->SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
     KeyEvent->SetKeyAction(keyAction);
-    KeyEvent::KeyItem item1, item2;
+    KeyEvent::KeyItem item1;
+    KeyEvent::KeyItem item2;
     item1.SetPressed(keyAction == KeyEvent::KEY_ACTION_DOWN);
     item1.SetKeyCode(KeyEvent::KEYCODE_CTRL_LEFT);
     item2.SetPressed(keyAction == KeyEvent::KEY_ACTION_DOWN);

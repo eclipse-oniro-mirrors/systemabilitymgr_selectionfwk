@@ -44,27 +44,9 @@ sptr<SelectionAbility> SelectionAbility::GetInstance()
                 SELECTION_HILOGE("instance is nullptr!");
                 return instance_;
             }
-            instance_->Initialize();
         }
     }
     return instance_;
-}
-
-void SelectionAbility::Initialize()
-{
-    SELECTION_HILOGD("SelectionAbility init.");
-    // sptr<SelectionCoreStub> coreStub = new (std::nothrow) SelectionCoreServiceImpl();//核心功能，处理文本操作
-    // if (coreStub == nullptr) {
-    //     SELECTION_HILOGE("failed to create core!");
-    //     return;
-    // }
-    // sptr<SelectionAgentStub> agentStub = new (std::nothrow) SelectionAgentServiceImpl();//服务代理，将核心功能暴露给外部，处理通信和事件分发，
-    // if (agentStub == nullptr) {
-    //     SELECTION_HILOGE("failed to create agent!");
-    //     return;
-    // }
-    // agentStub_ = agentStub;
-    // coreStub_ = coreStub;
 }
 
 int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Context> &context,

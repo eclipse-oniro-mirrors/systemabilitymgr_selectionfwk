@@ -150,7 +150,6 @@ public:
 
 
     static napi_status GetValue(napi_env env, napi_value in, const std::string &type, napi_value &out);
-    // static napi_status GetValue(napi_env env, napi_value in, PanelInfo &out);
     static napi_status GetValue(napi_env env, napi_value in, std::vector<uint8_t> &out);
 
 

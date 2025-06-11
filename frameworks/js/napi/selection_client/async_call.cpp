@@ -16,7 +16,7 @@
 #include "async_call.h"
 #include <algorithm>
 #include <sys/socket.h>
-#include <inttypes.h>
+#include <cinttypes>
 #include "selection_log.h"
 #include "selection_js_utils.h"
 #include "napi/native_node_api.h"
@@ -188,8 +188,8 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
             napi_get_undefined(env, &result[ARG_DATA]);
         }
     } else {
-        SELECTION_HILOGE("failed, [status:%{public}d, runStatus:%{public}d, errorCode:%{public}d, errMessage:%{public}s].",
-            status, runStatus, context->ctx->errorCode_, context->ctx->errMessage_.c_str());
+        SELECTION_HILOGE("failed, [status:%{public}d, runStatus:%{public}d, errorCode:%{public}d, \
+            errMessage:%{public}s].", status, runStatus, context->ctx->errorCode_, context->ctx->errMessage_.c_str());
         result[ARG_ERROR] = JsUtils::ToError(env, context->ctx->errorCode_, context->ctx->errMessage_);
         napi_get_undefined(env, &result[ARG_DATA]);
     }

@@ -16,13 +16,9 @@
 #include "task_manager.h"
 
 #include <string>
-
 #include "actions/action.h"
 #include "actions/action_wait.h"
-
-// #include "global.h"
 #include "selection_log.h"
-
 #include "tasks/task.h"
 #include "tasks/task_inner.h"
 

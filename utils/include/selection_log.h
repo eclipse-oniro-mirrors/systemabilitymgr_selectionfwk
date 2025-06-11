@@ -31,23 +31,23 @@ extern "C" {
 #define SELETION_DEBUG_ENABLE 0
 #endif
 
-#define __FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#define __BASE_FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
 
 #define SELECTION_HILOGF(fmt, ...)                                                                         \
     ((void)HILOG_IMPL(LOG_CORE, LOG_FATAL, LOG_DOMAIN, LOG_TAG, "[%{public}s(%{public}s:%{public}d)]" fmt, \
-                      __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+                      __BASE_FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 #define SELECTION_HILOGE(fmt, ...)                                                                         \
     ((void)HILOG_IMPL(LOG_CORE, LOG_ERROR, LOG_DOMAIN, LOG_TAG, "[%{public}s(%{public}s:%{public}d)]" fmt, \
-                      __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+                      __BASE_FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 #define SELECTION_HILOGW(fmt, ...)                                                                        \
     ((void)HILOG_IMPL(LOG_CORE, LOG_WARN, LOG_DOMAIN, LOG_TAG, "[%{public}s(%{public}s:%{public}d)]" fmt, \
-                      __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+                      __BASE_FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 #define SELECTION_HILOGI(fmt, ...)                                                                        \
     ((void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, LOG_TAG, "[%{public}s(%{public}s:%{public}d)]" fmt, \
-                      __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+                      __BASE_FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 #define SELECTION_HILOGD(fmt, ...)                                                                         \
     ((void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, LOG_DOMAIN, LOG_TAG, "[%{public}s(%{public}s:%{public}d)]" fmt, \
-                      __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+                      __BASE_FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 
 namespace ErrorCode {
 // Error Code definition in the input method management system
