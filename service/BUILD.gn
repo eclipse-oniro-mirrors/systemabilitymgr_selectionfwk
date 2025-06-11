@@ -103,6 +103,7 @@ ohos_shared_library("selection_service") {
     "ipc:ipc_single",
     "init:libbeget_proxy",
     "input:libmmi-client",
+    "pasteboard:pasteboard_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "screenlock_mgr:screenlock_client",
@@ -111,6 +112,7 @@ ohos_shared_library("selection_service") {
     "window_manager:libwsutils",
   ]
 
+  defines = []
   if (window_manager_use_sceneboard) {
     external_deps += [ "window_manager:libwm_lite" ]
     defines += [ "SCENE_BOARD_ENABLE" ]
