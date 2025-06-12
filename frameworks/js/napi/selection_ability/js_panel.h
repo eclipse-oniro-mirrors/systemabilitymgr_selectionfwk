@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SELECTION_IMF_JSPANEL_H
-#define SELECTION_IMF_JSPANEL_H
+#ifndef SELECTION_JSPANEL_H
+#define SELECTION_JSPANEL_H
 
 #include "napi/native_api.h"
 #include "selection_panel.h"
@@ -119,4 +119,4 @@ private:
 } // namespace SelectionFwk
 } // namespace OHOS
 
-#endif //SELECTION_IMF_JSPANEL_H
+#endif //SELECTION_JSPANEL_H

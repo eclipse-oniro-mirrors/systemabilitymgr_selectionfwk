@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SELECTION_IMF_PANEL_STATUS_LISTENER_H
-#define SELECTION_IMF_PANEL_STATUS_LISTENER_H
+#ifndef SELECTION_PANEL_STATUS_LISTENER_H
+#define SELECTION_PANEL_STATUS_LISTENER_H
 #include <cstdint>
 
 #include "panel_common.h"
@@ -29,4 +29,4 @@ public:
 } // namespace SelectionFwk
 } // namespace OHOS
 
-#endif // SELECTION_IMF_PANEL_STATUS_LISTENER_H
+#endif // SELECTION_PANEL_STATUS_LISTENER_H

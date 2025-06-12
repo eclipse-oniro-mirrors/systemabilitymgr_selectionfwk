@@ -81,7 +81,7 @@ napi_value AsyncCall::Call(napi_env env, Context::ExecAction exec, const std::st
     }
     napi_async_work work = context_->work;
     napi_value resource = nullptr;
-    std::string name = "IMF_" + resourceName;
+    std::string name = "SF_" + resourceName;
     napi_create_string_utf8(env, name.c_str(), NAPI_AUTO_LENGTH, &resource);
     napi_create_async_work(env, nullptr, resource, AsyncCall::OnExecute, AsyncCall::OnComplete, context_, &work);
     context_->work = work;

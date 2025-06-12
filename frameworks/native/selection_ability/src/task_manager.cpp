@@ -25,7 +25,7 @@
 namespace OHOS {
 namespace SelectionFwk {
 
-static const std::string THREAD_NAME = "OS_imf_task_manager";
+static const std::string THREAD_NAME = "OS_sf_task_manager";
 
 TaskManager::TaskManager()
 {

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SELECTION_IMF_PANEL_LISTENER_IMPL_H
-#define SELECTION_IMF_PANEL_LISTENER_IMPL_H
+#ifndef SELECTION_PANEL_LISTENER_IMPL_H
+#define SELECTION_PANEL_LISTENER_IMPL_H
 
 #include <mutex>
 #include <shared_mutex>
@@ -80,4 +80,4 @@ struct UvEntry {
 } // namespace SelectionFwk
 } // namespace OHOS
 
-#endif //SELECTION_IMF_PANEL_LISTENER_IMPL_H
+#endif //SELECTION_PANEL_LISTENER_IMPL_H

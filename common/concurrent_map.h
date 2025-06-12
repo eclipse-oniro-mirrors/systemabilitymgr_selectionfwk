@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_SELECTION_IMF_FRAMEWORKS_COMMON_CONCURRENT_MAP_H
-#define OHOS_SELECTION_IMF_FRAMEWORKS_COMMON_CONCURRENT_MAP_H
+#ifndef OHOS_SELECTION_FRAMEWORKS_COMMON_CONCURRENT_MAP_H
+#define OHOS_SELECTION_FRAMEWORKS_COMMON_CONCURRENT_MAP_H
 #include <functional>
 #include <map>
 #include <mutex>
@@ -299,4 +299,4 @@ private:
     std::map<_Key, _Tp> entries_;
 };
 } // namespace OHOS
-#endif // OHOS_SELECTION_IMF_FRAMEWORKS_COMMON_CONCURRENT_MAP_H
+#endif // OHOS_SELECTION_FRAMEWORKS_COMMON_CONCURRENT_MAP_H
