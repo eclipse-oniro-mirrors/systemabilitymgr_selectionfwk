@@ -61,7 +61,8 @@
       ],
       "inner_kits": [],
       "test": [
-        "//foundation/systemabilitymgr/selectionfwk/test/unittest:selection_service_unit_test"
+        "//foundation/systemabilitymgr/selectionfwk/test/unittest:selection_service_unit_test",
+        "//foundation/systemabilitymgr/selectionfwk/test/fuzztest:selection_service_fuzztest"
       ]
     }
   }
