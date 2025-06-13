@@ -87,12 +87,6 @@ SelectionService::~SelectionService()
     SELECTION_HILOGI("[~SelectionService]");
 }
 
-ErrCode SelectionService::AddVolume(int32_t volume, int32_t& funcResult)
-{
-    SELECTION_HILOGI("[SelectionService][AddVolume]begin");
-    return (volume + 1);
-}
-
 ErrCode SelectionService::UnregisterListener(const sptr<IRemoteObject> &listener)
 {
     listenerStub_ = nullptr;

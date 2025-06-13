@@ -57,7 +57,6 @@ public:
     SelectionService(int32_t saId, bool runOnCreate);
     ~SelectionService();
 
-    ErrCode AddVolume(int32_t volume, int32_t& funcResult) override;
     ErrCode RegisterListener(const sptr<IRemoteObject> &listener) override;
     ErrCode UnregisterListener(const sptr<IRemoteObject> &listener) override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;

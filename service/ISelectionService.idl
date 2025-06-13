@@ -15,7 +15,6 @@
 
 sequenceable OHOS.IRemoteObject;
 interface OHOS.SelectionFwk.ISelectionService {
-    int AddVolume([in] int volume);
     void RegisterListener([in] IRemoteObject listener);
     void UnregisterListener([in] IRemoteObject listener);
 }
