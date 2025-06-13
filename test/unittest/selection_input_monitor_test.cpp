@@ -25,7 +25,7 @@ namespace SelectionFwk {
 using namespace testing::ext;
 
 struct EventStruct {
-    int pointId;
+    int buttonId;
     int action;
 };
 class BaseSelectionInputMonitorTest : public testing::Test {
@@ -75,7 +75,7 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor001, TestSize.Level1)
     for (uint16_t i = 0; i < events.size(); i++) {
         auto event = events[i];
         std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
-        pointEvent->SetPointerId(event.pointId);
+        pointEvent->SetButtonId(event.buttonId);
         pointEvent->SetPointerAction(event.action);
         inputMonitor->OnInputEvent(pointEvent);
     }
@@ -96,7 +96,7 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor002, TestSize.Level1)
     for (uint16_t i = 0; i < events.size(); i++) {
         auto event = events[i];
         std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
-        pointEvent->SetPointerId(event.pointId);
+        pointEvent->SetButtonId(event.buttonId);
         pointEvent->SetPointerAction(event.action);
         inputMonitor->OnInputEvent(pointEvent);
     }
@@ -119,7 +119,7 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor003, TestSize.Level1)
     for (uint16_t i = 0; i < events.size(); i++) {
         auto event = events[i];
         std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
-        pointEvent->SetPointerId(event.pointId);
+        pointEvent->SetButtonId(event.buttonId);
         pointEvent->SetPointerAction(event.action);
         inputMonitor->OnInputEvent(pointEvent);
     }
@@ -140,7 +140,7 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor004, TestSize.Level1)
     for (uint16_t i = 0; i < events.size(); i++) {
         auto event = events[i];
         std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
-        pointEvent->SetPointerId(event.pointId);
+        pointEvent->SetButtonId(event.buttonId);
         pointEvent->SetPointerAction(event.action);
         inputMonitor->OnInputEvent(pointEvent);
     }

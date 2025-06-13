@@ -96,10 +96,8 @@ void BaseSelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> point
         SELECTION_HILOGD("It is not screen on.");
         return;
     }
-    int32_t pointerId = pointerEvent->GetPointerId();
-    PointerEvent::PointerItem pointerItem;
-    pointerEvent->GetPointerItem(pointerId, pointerItem);
-    if (pointerId != PointerEvent::MOUSE_BUTTON_LEFT) {
+    int32_t buttonId = pointerEvent->GetButtonId();
+    if (buttonId != PointerEvent::MOUSE_BUTTON_LEFT) {
         ResetState();
     }
     SELECTION_HILOGD("[SelectionService] into PointerEvent, curSelectState = %{public}d.", curSelectState);
@@ -227,8 +225,8 @@ bool BaseSelectionInputMonitor::IsSelectionDone() const {
 void BaseSelectionInputMonitor::InputInitialProcess(std::shared_ptr<PointerEvent> pointerEvent) const
 {
     int32_t action = pointerEvent->GetPointerAction();
-    int32_t pointerId = pointerEvent->GetPointerId();
-    if (action == PointerEvent::POINTER_ACTION_BUTTON_DOWN && pointerId == PointerEvent::MOUSE_BUTTON_LEFT) {
+    int32_t buttonId = pointerEvent->GetButtonId();
+    if (action == PointerEvent::POINTER_ACTION_BUTTON_DOWN && buttonId == PointerEvent::MOUSE_BUTTON_LEFT) {
         curSelectState = SELECT_INPUT_WORD_BEGIN;
         subSelectState = SUB_INITIAL;
         lastClickTime = GetCurrentTimeMillis();
