@@ -50,3 +50,10 @@ ohos_unittest("selection_service_unit_test") {
   part_name = "selectionfwk"
   subsystem_name = "systemabilitymgr"
 }
+
+group("selcection_manager_ut") {
+  testonly = true
+  deps = [
+    "systemapi_js_test:SystemApiJsTest",
+  ]
+}
