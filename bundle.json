@@ -63,7 +63,7 @@
       "test": [
         "//foundation/systemabilitymgr/selectionfwk/test/unittest:selection_service_unit_test",
         "//foundation/systemabilitymgr/selectionfwk/test/fuzztest:selection_service_fuzztest",
-        "//foundation/systemabilitymgr/selectionfwk/test/unittest:selcection_manager_ut"
+        "//foundation/systemabilitymgr/selectionfwk/test/unittest:selection_manager_ut"
       ]
     }
   }
