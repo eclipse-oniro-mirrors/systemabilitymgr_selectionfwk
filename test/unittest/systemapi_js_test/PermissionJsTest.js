@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -138,4 +138,125 @@ describe("SystemApiJsTest", function () {
     });
 
 
+  /*
+  * @tc.number  selection_panel_test_off_Hide_001
+  * @tc.name    Test whether the register the callback of the panel method is valid.
+  * @tc.desc    Function test
+  * @tc.level   2
+  */
+    it('selection_panel_test_off_Hide_001', 0, async function (done) {
+    console.info('************* selection_panel_test_off_Hide_001*************');
+    try {
+      this.panel_.off('hidden', () => {
+        console.info(`panel on hidde success`);
+        expect(true).assertTrue();
+        done();
+      });
+    } catch(error) {
+      console.info(`panel on hidden fail result: ${JSON.stringify(error)}`);
+      expect().assertFail();
+      done();
+    }
+  });
+
+  /*
+  * @tc.number  selection_panel_test_off_Hide_002
+  * @tc.name    Test whether the register the callback of the panel method is valid.
+  * @tc.desc    Function test
+  * @tc.level   2
+  */
+    it('selection_panel_test_off_Hide_001', 0, async function (done) {
+    console.info('************* selection_panel_test_off_Hide_002*************');
+    try {
+      this.panel_.off('hidden');
+    } catch(error) {
+      console.info(`panel on hidden fail result: ${JSON.stringify(error)}`);
+      expect().assertFail();
+      done();
+    }
+  });
+
+  /*
+  * @tc.number  selection_panel_test_on_destroyed_001
+  * @tc.name    Test whether the register the callback of the panel method is valid.
+  * @tc.desc    Function test
+  * @tc.level   2
+  */
+    it('selection_panel_test_on_destroyed_001', 0, async function (done) {
+    console.info('************* selection_panel_test_on_destroyed_001*************');
+    try {
+      this.panel_.on('destroyed', () => {
+        console.info(`panel on hide success`);
+        expect(true).assertTrue();
+        done();
+      });
+    } catch(error) {
+      console.info(`panel on destroyed fail result: ${JSON.stringify(error)}`);
+      expect().assertFail();
+      done();
+    }
+  });
+
+  /*
+  * @tc.number  selection_panel_test_off_destroyed_001
+  * @tc.name    Test whether the register the callback of the panel method is valid.
+  * @tc.desc    Function test
+  * @tc.level   2
+  */
+    it('selection_panel_test_off_destroyed_001', 0, async function (done) {
+    console.info('************* selection_panel_test_off_destroyed_001*************');
+    try {
+      this.panel_.off('destroyed', () => {
+        console.info(`panel on destroyed success`);
+        expect(true).assertTrue();
+        done();
+      });
+    } catch(error) {
+      console.info(`panel on destroyed fail result: ${JSON.stringify(error)}`);
+      expect().assertFail();
+      done();
+    }
+  });
+
+  /*
+  * @tc.number  selection_panel_test_off_destroyed_002
+  * @tc.name    Test whether the register the callback of the panel method is valid.
+  * @tc.desc    Function test
+  * @tc.level   2
+  */
+    it('selection_panel_test_off_destroyed_002', 0, async function (done) {
+    console.info('************* selection_panel_test_off_destroyed_002*************');
+    try {
+      this.panel_.off('destroyed');
+    } catch(error) {
+      console.info(`panel on "hidden fail result: ${JSON.stringify(error)}`);
+      expect().assertFail();
+      done();
+    }
+  });
+
+    /*
+     * @tc.name:selection_panel_method_destroyPanel_001
+     * @tc.desc:verify method of destroyPanel
+     * @tc.type: FUNC
+     */
+    it('selection_panel_method_destroyPanel_001', 0, async function (done) {
+      console.info('************* selection_panel_method_destroyPanel_001 Test start*************');
+      try {
+        selectionManager.destroyPanel(this.panel_).then(() => {
+          console.info('selection_panel_method_destroyPanel promise success');
+          expect(true).assertTrue();
+          done();
+        }).catch((error) => {
+          console.info(`selection_panel_method_destroyPanel result: ${JSON.stringify(error)}`);
+          expect().assertFail();
+          done();
+        })
+      } catch (error) {
+        console.info(`selection_panel_method_destroyPanel result: ${JSON.stringify(error)}`);
+        expect().assertFail();
+        done();
+      }
+      console.info('************* selection_panel_method_destroyPanel Test end*************');
+    });
 });
