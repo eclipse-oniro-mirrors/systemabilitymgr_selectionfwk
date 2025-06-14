@@ -30,10 +30,23 @@ struct EventStruct {
     int action;
 };
 
+std::shared_ptr<PointerEvent> GetPointerEvent()
+{
+    static std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
+    PointerEvent::PointerItem pointerItem;
+    pointerItem.SetDisplayX(100);
+    pointerItem.SetDisplayY(200);
+    pointerItem.SetWindowX(50);
+    pointerItem.SetWindowY(60);
+
+    pointEvent->AddPointerItem(pointerItem);
+    return pointEvent;
+}
+
 template <typename T>
 void LEFT_BUTTON_DOWN(std::shared_ptr<T> handler)
 {
-    std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
+    std::shared_ptr<PointerEvent> pointEvent = GetPointerEvent();
     pointEvent->SetButtonId(PointerEvent::MOUSE_BUTTON_LEFT);
     pointEvent->SetPointerAction(PointerEvent::POINTER_ACTION_BUTTON_DOWN);
     handler->OnInputEvent(pointEvent);
@@ -42,7 +55,7 @@ void LEFT_BUTTON_DOWN(std::shared_ptr<T> handler)
 template <typename T>
 void LEFT_BUTTON_UP(std::shared_ptr<T> handler)
 {
-    std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
+    std::shared_ptr<PointerEvent> pointEvent = GetPointerEvent();
     pointEvent->SetButtonId(PointerEvent::MOUSE_BUTTON_LEFT);
     pointEvent->SetPointerAction(PointerEvent::POINTER_ACTION_BUTTON_UP);
     handler->OnInputEvent(pointEvent);
@@ -69,7 +82,7 @@ void RIGHT_BUTTON_UP(std::shared_ptr<T> handler)
 template <typename T>
 void LEFT_BUTTON_MOVE(std::shared_ptr<T> handler)
 {
-    std::shared_ptr<PointerEvent> pointEvent = PointerEvent::Create();
+    std::shared_ptr<PointerEvent> pointEvent = GetPointerEvent();
     pointEvent->SetButtonId(PointerEvent::MOUSE_BUTTON_LEFT);
     pointEvent->SetPointerAction(PointerEvent::PointerEvent::POINTER_ACTION_MOVE);
     handler->OnInputEvent(pointEvent);
@@ -93,26 +106,22 @@ void CTRL_UP(std::shared_ptr<T> handler)
     handler->OnInputEvent(keyEvent);
 }
 
-void WAIT_TIMEOUT(){
+void WAIT_TIMEOUT()
+{
     std::this_thread::sleep_for(std::chrono::milliseconds(DOUBLE_CLICK_TIME + 1)); // >500ms
 }
 
-void CHICK_INFO(const SelectionInfo& info)
+void CHECK_INFO(const SelectionInfo& info)
 {
-    ASSERT_NE(info.selectionType, 0);
-    ASSERT_NE(info.text.empty(), true);
-    ASSERT_NE(info.startDisplayX, 0);
-    ASSERT_NE(info.startDisplayY, 0);
-    ASSERT_NE(info.endDisplayX, 0);
-    ASSERT_NE(info.endDisplayY, 0);
-    ASSERT_NE(info.startWindowX, 0);
-    ASSERT_NE(info.startWindowY, 0);
-    ASSERT_NE(info.endWindowX, 0);
-    ASSERT_NE(info.endWindowY, 0);
-    ASSERT_NE(info.displayId, 0);
-    ASSERT_NE(info.windowId, 0);
-    ASSERT_NE(info.endWindowY, 0);
-    ASSERT_NE(info.bundleName.empty(), true);
+    EXPECT_NE(info.selectionType, 0);
+    EXPECT_NE(info.startDisplayX, 0);
+    EXPECT_NE(info.startDisplayY, 0);
+    EXPECT_NE(info.endDisplayX, 0);
+    EXPECT_NE(info.endDisplayY, 0);
+    EXPECT_NE(info.startWindowX, 0);
+    EXPECT_NE(info.startWindowY, 0);
+    EXPECT_NE(info.endWindowX, 0);
+    EXPECT_NE(info.endWindowY, 0);
 }
 
 class BaseSelectionInputMonitorTest : public testing::Test {
@@ -159,6 +168,8 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor001, TestSize.Level1)
     LEFT_BUTTON_UP(inputMonitor);
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
+    auto info = inputMonitor->GetSelectionInfo();
+    CHECK_INFO(info);
 }
 
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor002, TestSize.Level1)
@@ -172,6 +183,8 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor002, TestSize.Level1)
 
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
+    auto info = inputMonitor->GetSelectionInfo();
+    CHECK_INFO(info);
 }
 
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor003, TestSize.Level1)
@@ -187,6 +200,8 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor003, TestSize.Level1)
 
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
+    auto info = inputMonitor->GetSelectionInfo();
+    CHECK_INFO(info);
 }
 
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor004, TestSize.Level1)
@@ -232,12 +247,14 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor006, TestSize.Level1)
 
     LEFT_BUTTON_DOWN(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
-   
+
     LEFT_BUTTON_DOWN(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
 
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
+    auto info = inputMonitor->GetSelectionInfo();
+    CHECK_INFO(info);
 }
 
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor007, TestSize.Level1)
@@ -250,7 +267,7 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor007, TestSize.Level1)
 
     LEFT_BUTTON_DOWN(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
-    
+
     WAIT_TIMEOUT();
 
     LEFT_BUTTON_DOWN(inputMonitor);
@@ -258,6 +275,8 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor007, TestSize.Level1)
 
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
+    auto info = inputMonitor->GetSelectionInfo();
+    CHECK_INFO(info);
 }
 
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor008, TestSize.Level1)
@@ -272,7 +291,7 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor008, TestSize.Level1)
 
     LEFT_BUTTON_DOWN(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
-   
+
     WAIT_TIMEOUT();
 
     LEFT_BUTTON_DOWN(inputMonitor);
@@ -296,6 +315,8 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor009, TestSize.Level1)
 
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
+    auto info = inputMonitor->GetSelectionInfo();
+    CHECK_INFO(info);
 }
 
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor010, TestSize.Level1)
@@ -312,9 +333,10 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor010, TestSize.Level1)
     LEFT_BUTTON_MOVE(inputMonitor);
     LEFT_BUTTON_UP(inputMonitor);
 
-
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
+    auto info = inputMonitor->GetSelectionInfo();
+    CHECK_INFO(info);
 }
 
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor011, TestSize.Level1)
@@ -331,6 +353,8 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor011, TestSize.Level1)
 
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
+    auto info = inputMonitor->GetSelectionInfo();
+    CHECK_INFO(info);
 }
 
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor012, TestSize.Level1)
@@ -346,6 +370,8 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor012, TestSize.Level1)
 
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
+    auto info = inputMonitor->GetSelectionInfo();
+    CHECK_INFO(info);
 }
 
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor013, TestSize.Level1)
@@ -363,6 +389,8 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor013, TestSize.Level1)
 
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
+    auto info = inputMonitor->GetSelectionInfo();
+    CHECK_INFO(info);
 }
 
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor014, TestSize.Level1)
@@ -383,6 +411,8 @@ HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor014, TestSize.Level1)
 
     auto ret = inputMonitor->IsTextSelected();
     ASSERT_EQ(ret, true);
+    auto info = inputMonitor->GetSelectionInfo();
+    CHECK_INFO(info);
 }
 
 HWTEST_F(BaseSelectionInputMonitorTest, SelectInputMonitor015, TestSize.Level1)
