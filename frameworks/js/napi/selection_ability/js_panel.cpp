@@ -23,6 +23,7 @@
 #include "selectionmethod_trace.h"
 #include "selection_ability.h"
 #include "event_checker.h"
+#include "selection_api_event_reporter.h"
 
 namespace OHOS {
 namespace SelectionFwk {

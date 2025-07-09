@@ -41,10 +41,12 @@ ohos_shared_library("selectionmanager_napi") {
     "../../../native/selection_ability/include",
     "../selection_client",
     "../../../common",
+    "../../../../hiappevent_agent",
   ]
 
   deps = [
     "${selection_fwk_root_path}/common:selection_common",
+    "${selection_fwk_root_path}/hiappevent_agent:selection_hiappevent_agent",
     "${selection_fwk_root_path}/interfaces/idl:selection_service_proxy",
     "${selection_fwk_root_path}/interfaces/idl:selection_listener_proxy",
     "${selection_fwk_root_path}/frameworks/native/selection_ability:selection_ability",

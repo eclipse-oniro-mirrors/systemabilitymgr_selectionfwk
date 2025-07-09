@@ -41,6 +41,7 @@ ComparisionResult SelectionConfigComparator::Compare(int uid, const SelectionCon
     SELECTION_HILOGI("result: %{public}s", result.ToString().c_str());
     return result;
 }
+
 ComparisionResult SelectionConfigComparator::DoCompare(int uid, const SelectionConfig &sysSelectionConfig,
     std::optional<SelectionConfig> &dbSelectionConfig)
 {

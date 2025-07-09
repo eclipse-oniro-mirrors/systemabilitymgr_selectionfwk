@@ -92,6 +92,7 @@ private:
     static std::shared_ptr<AppExecFwk::EventHandler> GetEventHandler();
     using EntrySetter = std::function<void(SelectionEntry &)>;
     std::shared_ptr<SelectionEntry> GetEntry(const std::string &type, EntrySetter entrySetter = nullptr);
+    static napi_value GetJsSelectionTypeProperty(napi_env env);
 
 private:
     static const std::string KDS_CLASS_NAME;

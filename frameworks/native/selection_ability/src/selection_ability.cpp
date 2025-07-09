@@ -68,7 +68,7 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
     }
 
     int32_t result = ErrorCode::NO_ERROR;
-    panels_.ComputeIfAbsent(panelInfo.panelType,
+    auto flag = panels_.ComputeIfAbsent(panelInfo.panelType,
         [&result, &panelInfo, &context, &selectionPanel] (
             const PanelType &panelType, std::shared_ptr<SelectionPanel> &panel) {
             selectionPanel = std::make_shared<SelectionPanel>();
@@ -81,7 +81,7 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
             selectionPanel = nullptr;
             return false;
         });
-    return result;
+    return flag ? result : ErrorCode::ERROR_PARAMETER_CHECK_FAILED;
 }
 
 int32_t SelectionAbility::DestroyPanel(const std::shared_ptr<SelectionPanel> &selectionPanel)

@@ -18,7 +18,6 @@
 
 #include <string>
 #include <mutex>
-#include "selection_config.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -37,9 +36,9 @@ public:
 
 private:
     bool isEnabled_ = true;
-    bool isTriggered_ = true;
-    int uid_ = 0;
-    std::string applicationInfo_ = "com.hm.youdao/ExtensionAbility";
+    bool isTriggered_ = false;
+    int uid_ = -1;
+    std::string applicationInfo_ = "com.huawei.hmos.vassistant/MiniMenuServiceExtAbility";
 };
 
 

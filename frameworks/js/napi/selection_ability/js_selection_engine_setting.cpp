@@ -29,6 +29,7 @@
 #include "js_panel.h"
 #include "js_selection_utils.h"
 #include "selection_app_validator.h"
+#include "selection_api_event_reporter.h"
 
 using namespace OHOS;
 namespace OHOS {
@@ -135,8 +136,9 @@ napi_status JsSelectionEngineSetting::GetContext(napi_env env, napi_value in,
 napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_info info)
 {
     SELECTION_HILOGI("SelectionEngineSetting CreatePanel start.");
+    auto eventReporter = std::make_shared<SelectionApiEventReporter>("createPanel");
     auto ctxt = std::make_shared<PanelContext>();
-    auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto inputInner = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PARAM_CHECK_RETURN(env, argc >= 2, "at least two parameters is required.", TYPE_NONE, napi_invalid_arg);
         napi_valuetype valueType = napi_undefined;
         // 0 means parameter of ctx<BaseContext>
@@ -158,14 +160,24 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
             TYPE_NONE, napi_invalid_arg);
         return status;
     };
+    auto input = [=](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        napi_status status = inputInner(env, argc, argv, self);
+        if (status != napi_ok) {
+            SELECTION_HILOGI("Check parameter invalid, Report error message to hiappevent");
+            eventReporter->WriteEndEvent(SelectionApiEventReporter::API_FAIL, SFErrorCode::EXCEPTION_PARAMCHECK);
+        }
+        return status;
+    };
 
-    auto exec = [ctxt](AsyncCall::Context *ctx) {
+    auto exec = [eventReporter, ctxt](AsyncCall::Context *ctx) {
         auto ret = SelectionAbility::GetInstance()->CreatePanel(ctxt->context, ctxt->panelInfo, ctxt->panel);
         if (ret != ErrorCode::NO_ERROR) {
             ctxt->SetErrorCode(ret);
+            eventReporter->WriteEndEvent(SelectionApiEventReporter::API_FAIL, JsUtils::Convert(ret));
             return;
         }
         ctxt->SetState(napi_ok);
+        eventReporter->WriteEndEvent(SelectionApiEventReporter::API_SUCCESS, ret);
     };
 
     auto output = [ctxt](napi_env env, napi_value *result) -> napi_status {
@@ -370,12 +382,36 @@ napi_value JsSelectionEngineSetting::Init(napi_env env, napi_value exports)
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(descriptor) / sizeof(napi_property_descriptor),
         descriptor));
+    NAPI_CALL(env, napi_set_named_property(env, exports, "SelectionType", GetJsSelectionTypeProperty(env)));
     if (Register(env) != EXCEPTION_SUCCESS) {
         SELECTION_HILOGE("regist lister to service failed!");
         return nullptr;
     }
     SelectionAppValidator::GetInstance().SetValid();
     return exports;
+}
+
+napi_value JsSelectionEngineSetting::GetJsSelectionTypeProperty(napi_env env)
+{
+    napi_value obj = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &obj));
+
+    auto ret = JsUtil::Object::WriteProperty(env, obj, "MOUSE_MOVE", static_cast<int32_t>(MOVE_SELECTION));
+    if (!ret) {
+        SELECTION_HILOGE("Failed to init module selectionInput.selectionManager.SelectionType as MOUSE_MOVE");
+        return nullptr;
+    }
+    ret = JsUtil::Object::WriteProperty(env, obj, "DOUBLE_CLICK", static_cast<int32_t>(DOUBLE_CLICKED_SELECTION));
+    if (!ret) {
+        SELECTION_HILOGE("Failed to init module selectionInput.selectionManager.SelectionType as DOUBLE_CLICK");
+        return nullptr;
+    }
+    ret = JsUtil::Object::WriteProperty(env, obj, "TRIPLE_CLICK", static_cast<int32_t>(TRIPLE_CLICKED_SELECTION));
+    if (!ret) {
+        SELECTION_HILOGE("Failed to init module selectionInput.selectionManager.SelectionType as TRIPLE_CLICK");
+        return nullptr;
+    }
+    return obj;
 }
 
 std::shared_ptr<AppExecFwk::EventHandler> JsSelectionEngineSetting::GetEventHandler()

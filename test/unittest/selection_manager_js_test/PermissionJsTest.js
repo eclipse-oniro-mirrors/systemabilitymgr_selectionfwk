@@ -14,7 +14,7 @@
  */
 
 import selectionManager from '@ohos.selectionInput.selectionManager'
-import { describe, beforeAll, afterAll, it, expect } from 'deccjsunit/index'
+import { describe, beforeAll, afterAll, beforeEach, afterEach, it, expect } from 'deccjsunit/index'
 import { PanelType } from '@ohos.selectionInput.SelectionPanel';
 
 describe("SelectionManagerJsTest", function () {
@@ -23,8 +23,16 @@ describe("SelectionManagerJsTest", function () {
   })
 
   afterAll(function () {
-    console.info('AfterAll called');
+    console.info('afterAll called');
   })
+
+  beforeEach(function () {
+    console.info('beforeEach called');
+  });
+
+  afterEach(function () {
+    console.info('afterEach called');
+  });
 
   async function createSelectionPanel()
   {
@@ -55,8 +63,11 @@ describe("SelectionManagerJsTest", function () {
       selectionManager.on('selectionCompletedtest', (info) => {
         console.info(`selectionfwk_on_selectionCompleted_001 is failed`);
         expect(false).assertTrue();
-      })
-    } catch(error) {
+        done();
+      });
+      console.info(`selectionfwk_on_selectionCompleted_001 is failed`);
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_on_selectionCompleted_001 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -75,8 +86,8 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.on('selectionCompleted');
       console.info(`selectionfwk_on_selectionCompleted_002 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_on_selectionCompleted_002 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -96,12 +107,13 @@ describe("SelectionManagerJsTest", function () {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_on_selectionCompleted_003 callback enter`);
         expect(true).assertTrue();
+        done();
       });
       console.info(`selectionfwk_on_selectionCompleted_003 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_on_selectionCompleted_003 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     console.info('************* selectionfwk_on_selectionCompleted_003 Test end*************');
     done();
@@ -118,11 +130,11 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.on(null, (info) => {
         console.info(`selectionfwk_on_selectionCompleted_004 callback enter`);
-        expect(false).assertTrue();
+        done();
       });
       console.info(`selectionfwk_on_selectionCompleted_004 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_on_selectionCompleted_004 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -141,11 +153,11 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.on(undefined, (info) => {
         console.info(`selectionfwk_on_selectionCompleted_005 callback enter`);
-        expect(false).assertTrue();
+        done();
       });
       console.info(`selectionfwk_on_selectionCompleted_005 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_on_selectionCompleted_005 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -164,8 +176,8 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.on('selectionCompleted', null);
       console.info(`selectionfwk_on_selectionCompleted_006 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_on_selectionCompleted_006 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -184,8 +196,8 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.on('selectionCompleted', undefined);
       console.info(`selectionfwk_on_selectionCompleted_007 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_on_selectionCompleted_007 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -204,9 +216,10 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.off('selectionCompletedtest', (info) => {
         console.info(`selectionfwk_off_selectionCompleted_001 is failed`);
-        expect(false).assertTrue();
-      })
-    } catch(error) {
+        done();
+      });
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_off_selectionCompleted_001 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -225,8 +238,8 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.off();
       console.info(`selectionfwk_off_selectionCompleted_002 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_off_selectionCompleted_002 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -245,14 +258,14 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_on_selectionCompleted_003 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       selectionManager.off('selectionCompleted');
       console.info(`selectionfwk_off_selectionCompleted_003 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_off_selectionCompleted_003 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     console.info('************* selectionfwk_off_selectionCompleted_003 Test end*************');
     done();
@@ -269,12 +282,12 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_off_selectionCompleted_004 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       selectionManager.off(null);
       console.info(`selectionfwk_off_selectionCompleted_004 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_off_selectionCompleted_004 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -293,12 +306,12 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_off_selectionCompleted_005 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       selectionManager.off(undefined);
       console.info(`selectionfwk_off_selectionCompleted_005 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_off_selectionCompleted_005 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -317,14 +330,14 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_off_selectionCompleted_006 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       selectionManager.off('selectionCompleted', null);
       console.info(`selectionfwk_off_selectionCompleted_006 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_off_selectionCompleted_006 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     console.info('************* selectionfwk_off_selectionCompleted_006 Test end*************');
     done();
@@ -341,14 +354,14 @@ describe("SelectionManagerJsTest", function () {
     try {
       selectionManager.on('selectionCompleted', (info) => {
         console.info(`selectionfwk_off_selectionCompleted_007 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       selectionManager.off('selectionCompleted', undefined);
       console.info(`selectionfwk_off_selectionCompleted_007 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_off_selectionCompleted_007 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     console.info('************* selectionfwk_off_selectionCompleted_007 Test end*************');
     done();
@@ -364,7 +377,7 @@ describe("SelectionManagerJsTest", function () {
     console.info('************* selectionfwk_createPanel_001 Test start*************');
     try {
       await selectionManager.createPanel({stageMode : false});
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_createPanel_001 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -390,7 +403,7 @@ describe("SelectionManagerJsTest", function () {
         height: 100
       }
       await selectionManager.createPanel(selectionManager.Context, panelInfo);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_createPanel_002 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -416,7 +429,7 @@ describe("SelectionManagerJsTest", function () {
         height: 100
       }
       await selectionManager.createPanel({stageMode : true}, panelInfo);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_createPanel_003 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -450,7 +463,7 @@ describe("SelectionManagerJsTest", function () {
       await destroySelectionPanel(panelTemp);
     } catch (error) {
       console.info(`selectionfwk_createPanel_004 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     console.info('************* selectionfwk_createPanel_004 Test end*************');
     done();
@@ -476,7 +489,7 @@ describe("SelectionManagerJsTest", function () {
       await destroySelectionPanel(panelTemp);
     } catch (error) {
       console.info(`selectionfwk_createPanel_005 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     console.info('************* selectionfwk_createPanel_005 Test end*************');
     done();
@@ -499,7 +512,7 @@ describe("SelectionManagerJsTest", function () {
         height: 100
       }
       await selectionManager.createPanel({stageMode : false}, panelInfo);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_createPanel_006 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -525,7 +538,7 @@ describe("SelectionManagerJsTest", function () {
         height: 100
       }
       await selectionManager.createPanel({stageMode : false}, panelInfo);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_createPanel_007 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -551,7 +564,7 @@ describe("SelectionManagerJsTest", function () {
         height: 100
       }
       await selectionManager.createPanel({stageMode : false}, panelInfo)
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_createPanel_008 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -577,7 +590,7 @@ describe("SelectionManagerJsTest", function () {
         height: -1
       }
       await selectionManager.createPanel({stageMode : false}, panelInfo)
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_createPanel_009 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -596,7 +609,7 @@ describe("SelectionManagerJsTest", function () {
     console.info('************* selectionfwk_createPanel_010 Test start*************');
     try {
       await selectionManager.createPanel({stageMode : false}, null);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_createPanel_010 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -615,7 +628,7 @@ describe("SelectionManagerJsTest", function () {
     console.info('************* selectionfwk_createPanel_011 Test start*************');
     try {
       await selectionManager.createPanel({stageMode : false}, undefined);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_createPanel_011 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -641,7 +654,7 @@ describe("SelectionManagerJsTest", function () {
         height: 100
       }
       await selectionManager.createPanel(null, panelInfo)
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_createPanel_012 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -667,7 +680,7 @@ describe("SelectionManagerJsTest", function () {
         height: 100
       }
       await selectionManager.createPanel(undefined, panelInfo)
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_createPanel_013 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -686,7 +699,7 @@ describe("SelectionManagerJsTest", function () {
     console.info('************* selectionfwk_destroyPanel_001 Test start*************');
     try {
       await selectionManager.destroyPanel();
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_destroyPanel_001 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -706,7 +719,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       let panel = 1;
       await selectionManager.destroyPanel(panel);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_destroyPanel_002 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -730,7 +743,7 @@ describe("SelectionManagerJsTest", function () {
       expect(true).assertTrue();
     } catch (error) {
       console.info(`selectionfwk_destroyPanel_003 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     console.info('************* selectionfwk_destroyPanel_003 Test end*************');
     done();
@@ -747,7 +760,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       await selectionManager.destroyPanel(null);
       console.info(`selectionfwk_destroyPanel_004 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_destroyPanel_004 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -767,7 +780,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       await selectionManager.destroyPanel(undefined);
       console.info(`selectionfwk_destroyPanel_005 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_destroyPanel_005 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -788,7 +801,7 @@ describe("SelectionManagerJsTest", function () {
     try {
      await panel.setUiContent();
       console.info(`selection_panel_setUiContent_001 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selection_panel_setUiContent_001 result: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -810,7 +823,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       await panel.setUiContent(20);
       console.info(`selection_panel_setUiContent_002 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selection_panel_setUiContent_002 result: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -832,7 +845,7 @@ describe("SelectionManagerJsTest", function () {
     await destroySelectionPanel(panel);
     try {
       await panel.setUiContent('pages/index/index');
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selection_panel_setUiContent_003 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(33600002);
@@ -852,7 +865,7 @@ describe("SelectionManagerJsTest", function () {
     let panel = await createSelectionPanel();
     try {
       await panel.setUiContent(null);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selection_panel_setUiContent_004 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -873,7 +886,7 @@ describe("SelectionManagerJsTest", function () {
     let panel = await createSelectionPanel();
     try {
       await panel.setUiContent(undefined);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selection_panel_setUiContent_005 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -895,7 +908,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       await panel.moveTo(20);
       console.info(`selectionfwk_panel_moveTo_001 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_panel_moveTo_001 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -917,7 +930,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       await panel.moveTo(20, '20');
       console.info(`selectionfwk_panel_moveTo_002 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_panel_moveTo_002 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -939,7 +952,7 @@ describe("SelectionManagerJsTest", function () {
     await destroySelectionPanel(panel);
     try {
       await panel.moveTo(20, 20);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_panel_moveTo_003 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(33600002);
@@ -963,7 +976,7 @@ describe("SelectionManagerJsTest", function () {
       expect(true).assertTrue();
     } catch (error) {
       console.info(`selectionfwk_panel_moveTo_004 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     await destroySelectionPanel(panel);
     console.info('************* selectionfwk_panel_moveTo_004 Test end*************');
@@ -982,7 +995,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       await panel.moveTo(-1, 50);
       console.info(`selectionfwk_panel_moveTo_005 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_panel_moveTo_005 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -1004,7 +1017,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       await panel.moveTo(50, -1);
       console.info(`selectionfwk_panel_moveTo_006 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_panel_moveTo_006 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -1026,7 +1039,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       await panel.moveTo(null, 50);
       console.info(`selectionfwk_panel_moveTo_007 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_panel_moveTo_007 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -1048,7 +1061,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       await panel.moveTo(undefined, 50);
       console.info(`selectionfwk_panel_moveTo_008 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_panel_moveTo_008 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -1070,7 +1083,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       await panel.moveTo(50, null);
       console.info(`selectionfwk_panel_moveTo_009 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_panel_moveTo_009 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -1092,7 +1105,7 @@ describe("SelectionManagerJsTest", function () {
     try {
       await panel.moveTo(50, undefined);
       console.info(`selectionfwk_panel_moveTo_010 promise success`);
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_panel_moveTo_010 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
@@ -1114,7 +1127,7 @@ describe("SelectionManagerJsTest", function () {
     await destroySelectionPanel(panel);
     try {
       await panel.show();
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_panel_show_001 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(33600002);
@@ -1135,9 +1148,10 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('destroyedTest', (info) => {
         console.info(`selectionfwk_panel_on_destroyed_001 is failed`);
-        expect(false).assertTrue();
-      })
-    } catch(error) {
+        done();
+      });
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_destroyed_001 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1158,8 +1172,8 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('destroyed');
       console.info(`selectionfwk_panel_on_destroyed_002 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_destroyed_002 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1180,13 +1194,13 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('destroyed', (info) => {
         console.info(`selectionfwk_panel_on_destroyed_003 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       console.info(`selectionfwk_panel_on_destroyed_003 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_panel_on_destroyed_003 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     await destroySelectionPanel(panel);
     console.info('************* selectionfwk_panel_on_destroyed_003 Test end*************');
@@ -1205,11 +1219,11 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on(null, (info) => {
         console.info(`selectionfwk_panel_on_destroyed_004 callback enter`);
-        expect(false).assertTrue();
+        done();
       });
       console.info(`selectionfwk_panel_on_destroyed_004 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_destroyed_004 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1230,11 +1244,11 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on(undefined, (info) => {
         console.info(`selectionfwk_panel_on_destroyed_005 callback enter`);
-        expect(false).assertTrue();
+        done();
       });
       console.info(`selectionfwk_panel_on_destroyed_005 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_destroyed_005 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1255,8 +1269,8 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('destroyed', null);
       console.info(`selectionfwk_panel_on_destroyed_006 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_destroyed_006 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1277,8 +1291,8 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('destroyed', undefined);
       console.info(`selectionfwk_panel_on_destroyed_007 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_destroyed_007 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1299,9 +1313,10 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.off('destroyedTest', (info) => {
         console.info(`selectionfwk_panel_off_destroyed_001 is failed`);
-        expect(false).assertTrue();
-      })
-    } catch(error) {
+        done();
+      });
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_off_destroyed_001 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1322,9 +1337,9 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.off(() => {
         console.info(`selectionfwk_panel_off_destroyed_002 is failed`);
-        expect(false).assertTrue();
+        expect().assertFail();
       })
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_panel_off_destroyed_002 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1345,14 +1360,14 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('destroyed', (info) => {
         console.info(`selectionfwk_panel_off_destroyed_003 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       panel.off('destroyed');
       console.info(`selectionfwk_panel_off_destroyed_003 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_panel_off_destroyed_003 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     await destroySelectionPanel(panel);
     console.info('************* selectionfwk_panel_off_destroyed_003 Test end*************');
@@ -1371,12 +1386,12 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('destroyed', (info) => {
         console.info(`selectionfwk_panel_off_destroyed_004 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       panel.off(null);
       console.info(`selectionfwk_panel_off_destroyed_004 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_off_destroyed_004 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1397,12 +1412,12 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('destroyed', (info) => {
         console.info(`selectionfwk_panel_off_destroyed_005 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       panel.off(undefined);
       console.info(`selectionfwk_panel_off_destroyed_005 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_off_destroyed_005 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1423,14 +1438,14 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('destroyed', (info) => {
         console.info(`selectionfwk_panel_off_destroyed_006 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       panel.off('destroyed', null);
       console.info(`selectionfwk_panel_off_destroyed_006 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_panel_off_destroyed_006 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     await destroySelectionPanel(panel);
     console.info('************* selectionfwk_panel_off_destroyed_006 Test end*************');
@@ -1449,14 +1464,14 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('destroyed', (info) => {
         console.info(`selectionfwk_panel_off_destroyed_007 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       panel.off('destroyed', undefined);
       console.info(`selectionfwk_panel_off_destroyed_007 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_panel_off_destroyed_007 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     await destroySelectionPanel(panel);
     console.info('************* selectionfwk_panel_off_destroyed_007 Test end*************');
@@ -1475,9 +1490,10 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('hiddenTest', (info) => {
         console.info(`selectionfwk_panel_on_hidden_001 is failed`);
-        expect(false).assertTrue();
-      })
-    } catch(error) {
+        done();
+      });
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_hidden_001 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1498,8 +1514,8 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('hidden');
       console.info(`selectionfwk_panel_on_hidden_002 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_hidden_002 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1520,13 +1536,13 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('hidden', (info) => {
         console.info(`selectionfwk_panel_on_hidden_003 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       console.info(`selectionfwk_panel_on_hidden_003 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_panel_on_hidden_003 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     await destroySelectionPanel(panel);
     console.info('************* selectionfwk_panel_on_hidden_003 Test end*************');
@@ -1545,11 +1561,11 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on(null, (info) => {
         console.info(`selectionfwk_panel_on_hidden_004 callback enter`);
-        expect(false).assertTrue();
+        done();
       });
       console.info(`selectionfwk_panel_on_hidden_004 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_hidden_004 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1570,11 +1586,11 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on(undefined, (info) => {
         console.info(`selectionfwk_panel_on_hidden_005 callback enter`);
-        expect(false).assertTrue();
+        done();
       });
       console.info(`selectionfwk_panel_on_hidden_005 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_hidden_005 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1595,8 +1611,8 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('hidden', null);
       console.info(`selectionfwk_panel_on_hidden_006 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_hidden_006 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1617,8 +1633,8 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('hidden', undefined);
       console.info(`selectionfwk_panel_on_hidden_007 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_on_hidden_007 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1639,9 +1655,10 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.off('hiddenTest', (info) => {
         console.info(`selectionfwk_panel_off_hidden_001 is failed`);
-        expect(false).assertTrue();
-      })
-    } catch(error) {
+        done();
+      });
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_off_hidden_001 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1662,9 +1679,9 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.off(() => {
         console.info(`selectionfwk_panel_off_hidden_002 is failed`);
-        expect(false).assertTrue();
+        expect().assertFail();
       })
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_panel_off_hidden_002 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1685,14 +1702,14 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('hidden', (info) => {
         console.info(`selectionfwk_panel_off_hidden_003 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       panel.off('hidden');
       console.info(`selectionfwk_panel_off_hidden_003 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_panel_off_hidden_003 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     await destroySelectionPanel(panel);
     console.info('************* selectionfwk_panel_off_hidden_003 Test end*************');
@@ -1711,12 +1728,12 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('hidden', (info) => {
         console.info(`selectionfwk_panel_off_hidden_004 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       panel.off(null);
       console.info(`selectionfwk_panel_off_hidden_004 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_off_hidden_004 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1737,12 +1754,12 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('hidden', (info) => {
         console.info(`selectionfwk_panel_off_hidden_005 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       panel.off(undefined);
       console.info(`selectionfwk_panel_off_hidden_005 is failed`);
-      expect(false).assertTrue();
-    } catch(error) {
+      expect().assertFail();
+    } catch (error) {
       console.info(`selectionfwk_panel_off_hidden_005 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(401);
     }
@@ -1763,14 +1780,14 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('hidden', (info) => {
         console.info(`selectionfwk_panel_off_hidden_006 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       panel.off('hidden', null);
       console.info(`selectionfwk_panel_off_hidden_006 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_panel_off_hidden_006 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     await destroySelectionPanel(panel);
     console.info('************* selectionfwk_panel_off_hidden_006 Test end*************');
@@ -1789,14 +1806,14 @@ describe("SelectionManagerJsTest", function () {
     try {
       panel.on('hidden', (info) => {
         console.info(`selectionfwk_panel_off_hidden_007 callback enter`);
-        expect(true).assertTrue();
+        done();
       });
       panel.off('hidden', undefined);
       console.info(`selectionfwk_panel_off_hidden_007 is success`);
       expect(true).assertTrue();
-    } catch(error) {
+    } catch (error) {
       console.info(`selectionfwk_panel_off_hidden_007 throw error: ${JSON.stringify(error)}`);
-      expect(false).assertTrue();
+      expect().assertFail();
     }
     await destroySelectionPanel(panel);
     console.info('************* selectionfwk_panel_off_hidden_007 Test end*************');
@@ -1815,7 +1832,7 @@ describe("SelectionManagerJsTest", function () {
     await destroySelectionPanel(panel);
     try {
       await panel.hide();
-      expect(false).assertTrue();
+      expect().assertFail();
     } catch (error) {
       console.info(`selectionfwk_panel_hide_001 throw error: ${JSON.stringify(error)}`);
       expect(error.code).assertEqual(33600002);

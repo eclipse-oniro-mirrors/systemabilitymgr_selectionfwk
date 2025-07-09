@@ -49,7 +49,8 @@
         "hicollie",
         "hisysevent",
         "memmgr",
-        "resource_schedule_service"
+        "resource_schedule_service",
+        "hiappevent"
       ],
       "third_party": [
       ]
@@ -68,7 +69,8 @@
         "//foundation/systemabilitymgr/selectionfwk/frameworks/native/selection_extension:selection_extension_ability_native",
         "//foundation/systemabilitymgr/selectionfwk/frameworks/js/napi/selection_ability:selectionmanager_napi",
         "//foundation/systemabilitymgr/selectionfwk/frameworks/native/selection_ability:selection_ability",
-        "//foundation/systemabilitymgr/selectionfwk/interfaces/inner_kits/selection_client:selection_client"
+        "//foundation/systemabilitymgr/selectionfwk/interfaces/inner_kits/selection_client:selection_client",
+        "//foundation/systemabilitymgr/selectionfwk/hiappevent_agent:selection_hiappevent_agent"
       ],
       "inner_kits": [
         {

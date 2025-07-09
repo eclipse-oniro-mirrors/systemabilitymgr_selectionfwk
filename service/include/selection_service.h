@@ -63,14 +63,14 @@ public:
     int32_t ConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName);
     void DisconnectCurrentExtAbility();
     sptr<ISelectionListener> GetListener();
-    int GetUserId();
-    bool IsExistUid();
+    void PersistSelectionConfig();
 
 protected:
     void OnStart() override;
     void OnStop() override;
     void HandleKeyEvent(int32_t keyCode);
     void HandlePointEvent(int32_t type);
+
 private:
     void InputMonitorInit();
     void InputMonitorCancel();
@@ -79,7 +79,9 @@ private:
     void CancelFocusChangedMonitor();
     void HandleFocusChanged(const sptr<Rosen::FocusChangeInfo> &focusChangeInfo, bool isFocused);
     void SynchronizeSelectionConfig();
-    void GetAccountLocalId();
+    int GetUserId();
+    int LoadAccountLocalId();
+    bool IsUserLoggedIn();
 
     int32_t inputMonitorId_ {-1};
     mutable std::mutex mutex_;
@@ -88,7 +90,6 @@ private:
     std::mutex connectInnerMutex_;
     std::atomic<int> pid_ = -1;
     std::atomic<int> userId_ = -1;
-    std::atomic<bool> isExistUid_ = false;
 };
 }
 

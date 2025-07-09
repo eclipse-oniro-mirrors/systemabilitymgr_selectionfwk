@@ -144,12 +144,8 @@ static void WatchEnableSwitch(const char *key, const char *value, void *context)
     bool isEnabledValue = (strcmp(value, DEFAULT_SWITCH) == 0);
     SELECTION_HILOGI("isEnabledValue is %{public}d", isEnabledValue);
     MemSelectionConfig::GetInstance().SetEnabled(isEnabledValue);
-    auto &selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
-    SELECTION_HILOGI("selectionConfig.selectionConfig is %{public}d", selectionConfig.GetEnable());
-    int ret = DbSelectionConfigRepository::GetInstance()->Save(selectionService->GetUserId(), selectionConfig);
-    if (ret != SELECTION_CONFIG_OK) {
-        SELECTION_HILOGE("Add database failed. ret = %{public}d", ret);
-    }
+
+    selectionService->PersistSelectionConfig();
 }
 
 static void WatchTriggerMode(const char *key, const char *value, void *context)
@@ -163,11 +159,8 @@ static void WatchTriggerMode(const char *key, const char *value, void *context)
 
     bool triggerValue = (triggerCmpResult == 0);
     MemSelectionConfig::GetInstance().SetTriggered(triggerValue);
-    auto &selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
-    int ret = DbSelectionConfigRepository::GetInstance()->Save(selectionService->GetUserId(), selectionConfig);
-    if (ret != SELECTION_CONFIG_OK) {
-        SELECTION_HILOGE("Add database failed. ret = %{public}d", ret);
-    }
+
+    selectionService->PersistSelectionConfig();
 }
 
 static void WatchAppSwitch(const char *key, const char *value, void *context)
@@ -203,16 +196,20 @@ static void WatchAppSwitch(const char *key, const char *value, void *context)
     auto ret = selectionService->ConnectNewExtAbility(bundleName, extName);
     SELECTION_HILOGD("StartExtensionAbility ret = %{public}d", ret);
 
+    selectionService->PersistSelectionConfig();
+}
+
+void SelectionService::PersistSelectionConfig()
+{
+    if (!IsUserLoggedIn()) {
+        SELECTION_HILOGW("Do not save selection config to DB because user is not logged in.");
+        return;
+    }
     auto &selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
-    ret = DbSelectionConfigRepository::GetInstance()->Save(selectionService->GetUserId(), selectionConfig);
+    int ret = DbSelectionConfigRepository::GetInstance()->Save(GetUserId(), selectionConfig);
     if (ret != SELECTION_CONFIG_OK) {
         SELECTION_HILOGE("Add database failed. ret = %{public}d", ret);
     }
-}
-
-bool SelectionService::IsExistUid()
-{
-    return isExistUid_.load();
 }
 
 void SelectionService::DisconnectCurrentExtAbility()
@@ -269,7 +266,7 @@ int SelectionService::GetUserId()
     return userId_.load();
 }
 
-void SelectionService::GetAccountLocalId()
+int SelectionService::LoadAccountLocalId()
 {
     int32_t userId = -1;
     int32_t ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(userId);
@@ -281,11 +278,20 @@ void SelectionService::GetAccountLocalId()
     }
     SELECTION_HILOGI("GetForegroundOsAccountLocalId userId.");
     userId_.store(userId);
+    return userId;
+}
+
+bool SelectionService::IsUserLoggedIn()
+{
+    return LoadAccountLocalId() != -1;
 }
 
 void SelectionService::SynchronizeSelectionConfig()
 {
-    GetAccountLocalId();
+    if (!IsUserLoggedIn()) {
+        SELECTION_HILOGW("No selection config sync because user is not logged in.");
+        return;
+    }
     SelectionConfig sysSelectionConfig = SysSelectionConfigRepository::GetInstance()->GetSysParameters();
     SELECTION_HILOGI("sysSelectionConfig: enable=%{public}d trigger=%{public}d applicationInfo=%{public}s",
         sysSelectionConfig.GetEnable(), sysSelectionConfig.GetTriggered(),

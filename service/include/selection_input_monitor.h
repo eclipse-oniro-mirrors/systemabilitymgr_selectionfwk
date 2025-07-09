@@ -17,6 +17,7 @@
 #define SELECTION_INPUT_MONITOR_H
 
 #include <string>
+#include <vector>
 #include <i_input_event_consumer.h>
 #include "selection_interface.h"
 #include "pasteboard_disposable_observer.h"
@@ -26,6 +27,7 @@ using namespace OHOS::MiscServices;
 
 constexpr const uint32_t DOUBLE_CLICK_TIME = 500;
 constexpr const uint32_t MAX_PASTERBOARD_TEXT_LENGTH = 2000;
+constexpr const uint32_t BYTES_PER_CHINESE_CHAR = 3;  // In UTF-8, common Chinese characters occupy 3 bytes.
 
 enum class SelectInputState: uint32_t {
     SELECT_INPUT_INITIAL = 0,
@@ -101,9 +103,7 @@ private:
 
 class SelectionInputMonitor : public IInputEventConsumer {
 public:
-    SelectionInputMonitor() {
-        baseInputMonitor_ = std::make_shared<BaseSelectionInputMonitor>();
-    }
+    SelectionInputMonitor();
 
     virtual void OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const;
     virtual void OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const;
@@ -113,10 +113,12 @@ private:
     void FinishedWordSelection() const;
     void InjectCtrlC() const;
     void HandleWindowFocused(std::shared_ptr<PointerEvent> pointerEvent) const;
+    bool IsAppInBlacklist(const std::string& bundleName) const;
 
 private:
     std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
     mutable sptr<SelectionPasteboardDisposableObserver> pasteboardObserver_;
+    std::vector<std::string> appBlacklist_;
 };
 }
 

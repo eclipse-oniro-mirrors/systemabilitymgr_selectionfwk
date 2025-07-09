@@ -19,6 +19,7 @@
 #include <input_manager.h>
 #include "common_event_manager.h"
 #include "pasteboard_client.h"
+#include "selection_config.h"
 #include "selection_input_monitor.h"
 #include "window_manager.h"
 
@@ -405,6 +406,14 @@ void BaseSelectionInputMonitor::ResetState() const
     SELECTION_HILOGD("ResetFinishedState.");
 }
 
+SelectionInputMonitor::SelectionInputMonitor() {
+    baseInputMonitor_ = std::make_shared<BaseSelectionInputMonitor>();
+    appBlacklist_ = {
+        "com.huawei.hmos.hishell",
+        "com.huawei.hmos.filemanager"
+    };
+}
+
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent) const
 {
     baseInputMonitor_->OnInputEvent(keyEvent);
@@ -450,6 +459,10 @@ void SelectionInputMonitor::HandleWindowFocused(std::shared_ptr<PointerEvent> po
     }
 }
 
+bool SelectionInputMonitor::IsAppInBlacklist(const std::string& bundleName) const {
+    return std::find(appBlacklist_.begin(), appBlacklist_.end(), bundleName) != appBlacklist_.end();
+}
+
 void SelectionInputMonitor::FinishedWordSelection() const
 {
     if (!baseInputMonitor_->IsTextSelected()) {
@@ -459,9 +472,20 @@ void SelectionInputMonitor::FinishedWordSelection() const
     if (pasteboardObserver_ == nullptr) {
          pasteboardObserver_ = sptr<SelectionPasteboardDisposableObserver>::MakeSptr(baseInputMonitor_);
     }
+
     auto selectionInfo = baseInputMonitor_->GetSelectionInfo();
+    if (IsAppInBlacklist(selectionInfo.bundleName)) {
+        SELECTION_HILOGW("The app [%{public}s] is in the blacklist, skip notifying selection info.",
+            selectionInfo.bundleName.c_str());
+        return;
+    }
+    if (!MemSelectionConfig::GetInstance().GetEnable()) {
+        SELECTION_HILOGI("Selection switch is off, skip notifying selection info.");
+        return;
+    }
+
     int32_t ret = PasteboardClient::GetInstance()->SubscribeDisposableObserver(pasteboardObserver_,
-        selectionInfo.bundleName, DisposableType::PLAIN_TEXT, MAX_PASTERBOARD_TEXT_LENGTH);
+        selectionInfo.bundleName, DisposableType::PLAIN_TEXT, MAX_PASTERBOARD_TEXT_LENGTH * BYTES_PER_CHINESE_CHAR);
     SELECTION_HILOGI("[selectevent] Call pasteboard interface. Selection event id is %{public}u. \
         Error code is %{public}d.", selSeqId.load(), ret);
     if (ret != ERR_OK) {
@@ -527,17 +551,20 @@ void SelectionInputMonitor::InjectCtrlC() const
 void SelectionPasteboardDisposableObserver::OnTextReceived(const std::string &text, int32_t errCode)
 {
     SELECTION_HILOGI("[selectevent] Pasteboard call sa. Selection event id is %{public}u.", selSeqId.load());
+    SELECTION_HILOGI("Text received length: %{public}u, errCode: %{public}d.", text.length(), errCode);
     if (errCode != 0) {
         SELECTION_HILOGI("Error receiving text, errCode: %{public}d", errCode);
         return;
     }
-    SELECTION_HILOGI("Text received length: %{public}u.", text.length());
     if (!baseInputMonitor_) {
         return;
     }
 
-    if (text.empty()) {
-        SELECTION_HILOGI("Received empty text.");
+    auto isAllWhitespace = std::all_of(text.begin(), text.end(), [](unsigned char c) {
+        return std::isspace(c);
+    });
+    if (isAllWhitespace) {
+        SELECTION_HILOGI("Received empty text or all whitespaces.");
         return;
     }
 
@@ -545,7 +572,7 @@ void SelectionPasteboardDisposableObserver::OnTextReceived(const std::string &te
     selectionInfo.text = text;
     SelectionInfoData infoData;
     infoData.data = selectionInfo;
-    SELECTION_HILOGI("SelectionInfoData length: %{public}u.", infoData.ToString().length());
+    SELECTION_HILOGI("SelectionInfoData: %{public}s.", infoData.ToString().c_str());
     sptr<ISelectionListener> listener = SelectionService::GetInstance()->GetListener();
     if (listener == nullptr) {
         SELECTION_HILOGE("Selection listener is nullptr");

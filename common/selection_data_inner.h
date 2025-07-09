@@ -100,13 +100,19 @@ struct SelectionInfoData : public Parcelable {
 
     std::string ToString() const {
         std::ostringstream oss;
-        oss << "SelectionInfo { selectionType: " << data.selectionType << ", text: \"" << data.text << "\" \
-            startDisplayX: " << data.startDisplayX << ", startDisplayY: " << data.startDisplayY << ", \
-            endDisplayX: " << data.endDisplayX << ", endDisplayY: " << data.endDisplayY << ", \
-            startWindowX: " << data.startWindowX << ", startWindowY: " << data.startWindowY << ", \
-            endWindowX: " << data.endWindowX << ", endWindowY: " << data.endWindowY << ", \
-            displayId: " << data.displayId << ", windowId: " << data.windowId << ", bundleName: \
-            " << data.bundleName << "}";
+        oss << "SelectionInfo { selectionType: " << data.selectionType <<
+            ", text.length: " << data.text.length() <<
+            ", startDisplayX: " << data.startDisplayX <<
+            ", startDisplayY: " << data.startDisplayY <<
+            ", endDisplayX: " << data.endDisplayX <<
+            ", endDisplayY: " << data.endDisplayY <<
+            ", startWindowX: " << data.startWindowX <<
+            ", startWindowY: " << data.startWindowY <<
+            ", endWindowX: " << data.endWindowX <<
+            ", endWindowY: " << data.endWindowY <<
+            ", displayId: " << data.displayId <<
+            ", windowId: " << data.windowId <<
+            ", bundleName: " << data.bundleName << "}";
         return oss.str();
     }
 };
@@ -153,7 +159,7 @@ public:
     std::string ToString() const
     {
         std::ostringstream oss;
-        oss << "SelectionFocusChangeInfo { windowId: " << windowId_ << ", displayId: \"" << displayId_ <<
+        oss << "SelectionFocusChangeInfo { windowId: " << windowId_ << ", displayId: " << displayId_ <<
             ", windowType: " << windowType_ << ", isFocused: " << isFocused_ <<
             ", source_: " << static_cast<uint32_t>(source_) << "}";
         return oss.str();
