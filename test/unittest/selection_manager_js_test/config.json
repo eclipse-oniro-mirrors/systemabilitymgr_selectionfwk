@@ -1,0 +1,63 @@
+{
+  "app": {
+    "bundleName": "com.example.selectionmanagertest",
+    "vendor": "example",
+    "version": {
+      "code": 1,
+      "name": "1.0"
+    },
+    "apiVersion": {
+      "compatible": 20,
+      "target": 20
+    }
+  },
+  "deviceConfig": {},
+  "module": {
+    "reqPermissions": [],
+    "package": "com.example.selectionmanagertest",
+    "name": ".MyApplication",
+    "deviceType": [
+      "default",
+      "tablet",
+      "2in1"
+    ],
+    "distro": {
+      "deliveryWithInstall": true,
+      "moduleName": "entry",
+      "moduleType": "entry"
+    },
+    "abilities": [
+      {
+        "visible": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "action.system.home"
+            ]
+          }
+        ],
+        "name": "com.example.selectionmanagertest.MainAbility",
+        "icon": "$media:icon",
+        "description": "$string:mainability_description",
+        "label": "PermissionJsTest",
+        "type": "page",
+        "launchType": "standard"
+      }
+    ],
+    "js": [
+      {
+        "pages": [
+          "pages/index/index"
+        ],
+        "name": "default",
+        "window": {
+          "designWidth": 720,
+          "autoDesignWidth": false
+        }
+      }
+    ]
+  }
+}

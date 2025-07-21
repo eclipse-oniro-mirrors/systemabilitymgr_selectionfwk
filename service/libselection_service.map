@@ -1,0 +1,10 @@
+{
+  global:
+    extern "C++" {
+      OHOS::SelectionFwk::SelectionService::RegisterListener*;
+      OHOS::SelectionFwk::SelectionService::UnregisterListener*;
+      OHOS::SelectionFwk::SelectionService::IsCurrentSelectionApp*;
+    };
+  local:
+    *;
+};

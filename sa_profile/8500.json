@@ -1,0 +1,37 @@
+{
+    "process": "selection_service",
+    "systemability": [
+        {
+            "name": 8500,
+            "libpath": "libselection_service.z.so",
+            "run-on-create": false,
+            "distributed": false,
+            "bootphase": "BootStartPhase",
+            "dump_level": 1,
+            "auto-restart": true,
+            "start-on-demand": {
+                "allow-update": true,
+                "param": [
+                    {
+                        "name": "sys.selection.switch",
+                        "value": "on"
+                    }
+                ],
+                "commonevent": [
+                    {
+                        "name": "usual.event.USER_SWITCHED"
+                    }
+                ]
+            },
+            "stop-on-demand": {
+                "allow-update": true,
+                "param": [
+                    {
+                        "name": "sys.selection.switch",
+                        "value": "off"
+                    }
+                ]
+            }
+        }
+    ]
+}
