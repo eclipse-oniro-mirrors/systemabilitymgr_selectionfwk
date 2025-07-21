@@ -56,5 +56,7 @@ group("selection_manager_ut") {
   deps = [
     ":selection_service_unit_test",
     "resource/ohos_test:copy_ohos_test",
+    "selection_manager_js_test:SelectionManagerJsTest",
+    "selection_manager_invalid_operation_js_test:SelectionManagerInvalidOperationJsTest",
   ]
 }
