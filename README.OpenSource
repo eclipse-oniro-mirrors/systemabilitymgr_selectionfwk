@@ -1,0 +1,11 @@
+[
+    {
+        "Name": "selectionfwk",
+        "License": "Apache 2.0 License",
+        "License File": "LICENSE",
+        "Version Number": "1.0.0",
+        "Owner": "mawenbing@huawei.com",
+        "Upstream URL": "this repo has no upstream repo",
+        "Description": "Provide word selection capabilities."
+    }
+]

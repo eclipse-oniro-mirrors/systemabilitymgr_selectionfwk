@@ -1,10 +1,16 @@
 # selectionfwk
 
 #### 介绍
-划词服务,通过剪贴板获取划词内存，提供划词配置同步接口，划词服务SA监听多模键鼠事件获取鼠标和触控板操作窗口和应用信息，DFX增强。
+从API version 20开始，新增支持划词服务，提供跨应用文本处理及系统管理划词应用的能力。
+
+主要用于文本翻译、内容摘要、术语解释等场景，例如用户长按外文新闻中的单词时，自动触发翻译服务并悬浮显示结果；在阅读应用中划选长段落，通过划词服务快速生成内容摘要；教育类应用识别用户选中的专业术语，提供即时解释卡片等。
 
 #### 仓路径
 /foundation/systemabilitymgr/selectionfwk
+
+#### 接口说明
+划词服务接口详细说明请参考[划词扩展能力](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionAbility-sys.md)和[划词管理](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionManager-sys.md)。划词服务的功能范围、约束限制及划词应用开发可参考[划词服务应用指南](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/Readme-CN.md)。
+
 
 ## 目录
 
@@ -14,11 +20,14 @@
 │   ├── common                                      # 公共代码
 │   ├── etc                                         # 组件包含的进程的配置文件
 │   ├── frameworks                                  # 接口实现
-│   │   └── js/napi                                 # 划词框架napi接口
+│   │   ├── js/napi                                 # 划词框架napi接口
 │   │   └── native                                  # native接口
+│   ├── hiappevent_agent                            # hiappevent平台打点
+│   ├── interfaces                                  # idl接口定义文件
 │   ├── sa_profile                                  # sa定义
 │   ├── services                                    # 划词框架服务
 │   ├── test                                        # 接口测试目录
+│   │   ├── fuzztest                                # fuzz测试
 │   │   └── unitest                                 # 接口的单元测试
 │   ├── utils                                       # 核心服务工具代码目录
 ```
@@ -64,7 +73,7 @@ $ ./build.sh --product-name rk3568 --ccache --build-target selectionfwk
 ```
 设置划词触发方式
 ```
-# param set sys.selection.trigger ""
+# param set sys.selection.trigger "immediate"
 ```
 
 2. 获取日志命令
