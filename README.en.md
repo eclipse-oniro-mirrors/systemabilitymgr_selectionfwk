@@ -9,7 +9,14 @@ This feature is primarily designed for scenarios such as text translation, conte
 /foundation/systemabilitymgr/selectionfwk
 
 #### Interface Specification
-For detailed information on the selection input service interface, please refer to [selectionInput.SelectionExtensionAbility](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionAbility-sys.md) 和 [selectionInput.selectionManager](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionManager-sys.md)。For the functional scope, constraints, and development of the selection input service, please refer to [selection services applicayion guide](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/Readme-CN.md)。
+The interfaces currently provided by the selection input service are all system interfaces and have not yet been opened up to third-party selection input applications. For detailed information on the selection input service interface, please refer to [selectionInput.SelectionExtensionAbility](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionAbility-sys.md) and [selectionInput.selectionManager](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionManager-sys.md).
+
+#### Constraints and Restrictions
+- The [2-in-1](https://gitcode.com/openharmony/docs/blob/master/en/application-dev/quick-start/module-configuration-file.md#deviceTypes) device supports external keyboards and mice.
+
+- Support for retrieving text selections, with a maximum length of 6,000 bytes.
+
+For more information, please refer to [the development documentation of the selection service application](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/Readme-CN.md).
 
 ## Directory Structure
 

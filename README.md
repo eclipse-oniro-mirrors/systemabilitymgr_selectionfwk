@@ -9,7 +9,14 @@
 /foundation/systemabilitymgr/selectionfwk
 
 #### 接口说明
-划词服务接口详细说明请参考[划词扩展能力](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionAbility-sys.md)和[划词管理](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionManager-sys.md)。划词服务的功能范围、约束限制及划词应用开发可参考[划词服务应用指南](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/Readme-CN.md)。
+当前划词服务提供的接口均为系统接口，暂未对三方划词应用开放。划词服务接口详细说明请参考[划词扩展能力](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionAbility-sys.md)和[划词管理](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionManager-sys.md)。
+
+#### 约束限制
+- 支持外接键盘和鼠标的[2in1](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/quick-start/module-configuration-file.md#devicetypes标签)设备。
+
+- 支持获取文本类型的划词内容，最大长度限制为6000个字节。
+
+更多介绍见[划词服务应用开发文档](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/Readme-CN.md)。
 
 
 ## 目录
