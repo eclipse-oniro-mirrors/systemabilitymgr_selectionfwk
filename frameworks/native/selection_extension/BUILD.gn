@@ -30,6 +30,10 @@ ohos_shared_library("selection_extension_ability_native") {
     "-ffunction-sections",
     "-Os",
   ]
+  ldflags = [
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+  ]
 
   include_dirs = [
     "include",

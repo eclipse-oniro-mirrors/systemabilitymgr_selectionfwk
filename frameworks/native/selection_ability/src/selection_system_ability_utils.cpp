@@ -36,7 +36,7 @@ sptr<ISelectionService> SelectionSystemAbilityUtils::GetSelectionSystemAbility()
     }
 
     sptr<IRemoteObject> systemAbility = nullptr;
-    systemAbility = systemAbilityManager->GetSystemAbility(SELECTION_FWK_SA_ID);
+    systemAbility = systemAbilityManager->CheckSystemAbility(SELECTION_FWK_SA_ID);
     if (systemAbility == nullptr) {
         SELECTION_HILOGE("get system ability is nullptr!");
         return nullptr;

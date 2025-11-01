@@ -23,7 +23,7 @@ int32_t SelectionExtensionContext::ILLEGAL_REQUEST_CODE(-1);
 
 ErrCode SelectionExtensionContext::StartAbility(const AAFwk::Want& want) const
 {
-    SELECTION_HILOGD("%{public}s begin.", __func__);
+    SELECTION_HILOGI("%{public}s begin.", __func__);
     ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, token_, ILLEGAL_REQUEST_CODE);
     SELECTION_HILOGD("%{public}s ret=%{public}d", __func__, err);
     if (err != ERR_OK) {

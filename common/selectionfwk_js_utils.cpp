@@ -14,6 +14,7 @@
  */
 
 #include "selection_js_utils.h"
+#include "selection_errors.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -28,11 +29,26 @@ const std::map<int32_t, int32_t> JsUtils::ERROR_CODE_MAP = {
     { ErrorCode::ERROR_INVALID_OPERATION, EXCEPTION_INVALID_OPERATION }
 };
 
+const std::map<int32_t, int32_t> JsUtils::SERVICE_ERROR_CODE_MAP = {
+    { SelectionServiceError::INVALID_DATA, EXCEPTION_SELECTION_SERVICE },
+    { SelectionServiceError::NOT_SYSTEM_APP_ERROR, EXCEPTION_NOT_SYSTEM_APP },
+    { SelectionServiceError::INVALID_TIMING, EXCEPTION_INVALID_TIMING },
+    { SelectionServiceError::CANNOT_GET_CONTENT, EXCEPTION_CANNOT_GET_CONTENT },
+    { SelectionServiceError::CONTENT_OUT_OF_RANGE, EXCEPTION_CONTENT_OUT_OF_RANGE },
+    { SelectionServiceError::GET_CONTENT_TIMEOUT, EXCEPTION_GET_CONTENT_TIMEOUT },
+};
+
 const std::map<int32_t, std::string> JsUtils::ERROR_CODE_CONVERT_MESSAGE_MAP = {
     { EXCEPTION_PARAMCHECK, "The parameters check fails." },
     { EXCEPTION_SELECTION_SERVICE, "Selection service exception." },
+    { EXCEPTION_NOT_SYSTEM_APP, "Permission denied. Called by non-system application."},
     { EXCEPTION_PANEL_DESTROYED, "This selection window has been destroyed." },
-    { EXCEPTION_INVALID_OPERATION, "Invalid operation. The selection app is not valid." }
+    { EXCEPTION_INVALID_OPERATION, "Invalid operation. The selection app is not valid." },
+    { EXCEPTION_TOO_FREQUENT, "The interface is called too frequently." },
+    { EXCEPTION_INVALID_TIMING, "The interface is called at the wrong time." },
+    { EXCEPTION_CANNOT_GET_CONTENT, "The current application is prohibited from accessing content." },
+    { EXCEPTION_CONTENT_OUT_OF_RANGE, "The length of selected content is out of range." },
+    { EXCEPTION_GET_CONTENT_TIMEOUT, "Getting the selected content times out." },
 };
 
 const std::map<int32_t, std::string> JsUtils::PARAMETER_TYPE = {
@@ -99,6 +115,18 @@ int32_t JsUtils::Convert(int32_t code)
     }
     SELECTION_HILOGD("Convert end.");
     return ERROR_CODE_QUERY_FAILED;
+}
+
+int32_t JsUtils::ConvertServiceErrorToJs(int32_t errCode)
+{
+    SELECTION_HILOGD("ConvertServiceErrorToJs start.");
+    auto iter = SERVICE_ERROR_CODE_MAP.find(errCode);
+    if (iter != SERVICE_ERROR_CODE_MAP.end()) {
+        SELECTION_HILOGD("ErrorCode: %{public}d", iter->second);
+        return iter->second;
+    }
+    SELECTION_HILOGD("ConvertServiceErrorToJs end.");
+    return EXCEPTION_SELECTION_SERVICE;
 }
 
 const std::string JsUtils::ToMessage(int32_t code)

@@ -158,7 +158,7 @@ void SysSelectionConfigRepository::SetEnabled(bool enabled)
 
 void SysSelectionConfigRepository::SetTriggered(bool isTriggered)
 {
-    auto value = isTriggered ? "ctrl" : "";
+    auto value = isTriggered ? "ctrl" : "immediate";
     auto ret = SetParameter(SELECTION_TRIGGER, value);
     if (ret < 0) {
         SELECTION_HILOGE("Failed to SetParameter(%{public}s, %{public}s), ret: %{public}d",

@@ -39,8 +39,12 @@ enum SelectionServiceError {
     INVALID_DATA = 1,
     UNAUTHENTICATED_ERROR,
     NOT_SYSTEM_APP_ERROR,
+    INVALID_TIMING,
+    CANNOT_GET_CONTENT,
+    CONTENT_OUT_OF_RANGE,
+    GET_CONTENT_TIMEOUT,
 };
 
-} // namespace USB
+} // namespace SelectionFwk
 } // namespace OHOS
 #endif // SELECTION_ERRORS_H

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sys.selection.switch = off
-sys.selection.trigger = immediate
+sys.selection.switch = on
+sys.selection.trigger = ctrl
 sys.selection.app = com.selection.selectionapplication/SelectionExtensionAbility
 sys.selection.uid = -1

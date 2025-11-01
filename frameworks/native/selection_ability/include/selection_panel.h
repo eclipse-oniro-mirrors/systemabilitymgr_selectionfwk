@@ -53,29 +53,29 @@ public:
     int32_t StartMoving();
     int32_t MoveTo(int32_t x, int32_t y);
     PanelType GetPanelType();
-    bool IsShowing();
-    bool IsHidden();
-    bool IsDestroyed() const;
     bool SetPanelStatusListener(std::shared_ptr<PanelStatusListener> statusListener, const std::string &type);
     void ClearPanelListener(const std::string &type);
     uint32_t GetWindowId();
 
-    uint32_t windowId_ = INVALID_WINDOW_ID;
-
 private:
-    bool IsSelectionSystemAbilityExistent();
-
-private:
-    inline static const std::unordered_map<SelectionWindowStatus, std::string> panelStatusMap_ {
-        { SelectionWindowStatus::HIDDEN, "hidden" },
-        { SelectionWindowStatus::DESTROYED, "destroyed" }
-    };
     std::string GeneratePanelName();
     int32_t SetPanelProperties();
     static uint32_t GenerateSequenceId();
     void PanelStatusChange(const SelectionWindowStatus &status);
     bool MarkListener(const std::string &type, bool isRegister);
     bool IsPanelListenerClearable();
+    int32_t DoHidePanel(const sptr<OHOS::Rosen::Window>& window);
+    bool IsShowing(const sptr<OHOS::Rosen::Window>& window);
+    bool IsHidden(const sptr<OHOS::Rosen::Window>& window);
+    bool IsDestroyed(const sptr<OHOS::Rosen::Window>& window);
+    bool IsSelectionSystemAbilityExistent();
+    sptr<OHOS::Rosen::Window> GetWindow() { return window_; };
+
+private:
+    inline static const std::unordered_map<SelectionWindowStatus, std::string> panelStatusMap_ {
+        { SelectionWindowStatus::HIDDEN, "hidden" },
+        { SelectionWindowStatus::DESTROYED, "destroyed" }
+    };
 
     PanelType panelType_ = PanelType::MENU_PANEL;
     int32_t x_ = 0;
@@ -83,7 +83,6 @@ private:
     int32_t width_ = 0;
     int32_t height_ = 0;
 
-    static std::mutex windowMutex_;
     sptr<OHOS::Rosen::Window> window_;
     sptr<OHOS::Rosen::WindowOption> winOption_ = nullptr;
     bool isScbEnable_ { false };

@@ -32,10 +32,16 @@ namespace OHOS {
 namespace SelectionFwk {
 enum SFErrorCode : int32_t {
     EXCEPTION_SUCCESS = 0,
+    EXCEPTION_NOT_SYSTEM_APP = 202,
     EXCEPTION_PARAMCHECK = 401,
     EXCEPTION_SELECTION_SERVICE = 33600001,
     EXCEPTION_PANEL_DESTROYED = 33600002,
     EXCEPTION_INVALID_OPERATION = 33600003,
+    EXCEPTION_TOO_FREQUENT = 33600004,
+    EXCEPTION_INVALID_TIMING = 33600005,
+    EXCEPTION_CANNOT_GET_CONTENT = 33600006,
+    EXCEPTION_CONTENT_OUT_OF_RANGE = 33600007,
+    EXCEPTION_GET_CONTENT_TIMEOUT = 33600008,
 };
 
 enum TypeCode : int32_t {
@@ -117,6 +123,7 @@ public:
     static void ThrowException(napi_env env, int32_t err, const std::string &msg = "");
     static napi_value ToError(napi_env env, int32_t code, const std::string &msg);
     static int32_t Convert(int32_t code);
+    static int32_t ConvertServiceErrorToJs(int32_t errCode);
     static bool Equals(napi_env env, napi_value value, napi_ref copy, std::thread::id threadId);
     static void *GetNativeSelf(napi_env env, napi_callback_info info);
     static const std::string ToMessage(int32_t code);
@@ -148,6 +155,7 @@ public:
 
 private:
     static const std::map<int32_t, int32_t> ERROR_CODE_MAP;
+    static const std::map<int32_t, int32_t> SERVICE_ERROR_CODE_MAP;
     static const std::map<int32_t, std::string> ERROR_CODE_CONVERT_MESSAGE_MAP;
     static const std::map<int32_t, std::string> PARAMETER_TYPE;
     static constexpr int32_t ERROR_CODE_QUERY_FAILED = 1;

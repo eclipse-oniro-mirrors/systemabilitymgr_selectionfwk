@@ -45,11 +45,11 @@ std::shared_ptr<DbSelectionConfigRepository> DbSelectionConfigRepository::GetIns
 
 int DbSelectionConfigRepository::Save(int uid, const SelectionConfig &info)
 {
+    std::lock_guard<std::mutex> guard(databaseMutex_);
     if (selectionDatabase_ == nullptr) {
         SELECTION_HILOGE("selectionDatabase_ is null");
         return SELECTION_CONFIG_RDB_NO_INIT;
     }
-    std::lock_guard<std::mutex> guard(databaseMutex_);
     ValuesBucket values;
     values.Clear();
     values.PutInt("uid", uid);

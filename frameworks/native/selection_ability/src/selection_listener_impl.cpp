@@ -16,7 +16,6 @@
 #include "selection_listener_impl.h"
 #include "selection_log.h"
 #include "selection_data_inner.h"
-#include "selection_panel_manager.h"
 #include "selection_ability.h"
 #include "wm_common.h"
 #include "window.h"
@@ -31,7 +30,6 @@ static void CopySelectionData(const SelectionInfoData& src, SelectionInfo& dst)
 
 ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionInfoData& selectionInfoData)
 {
-    SELECTION_HILOGI("Recveive selection data length: %{public}u", selectionInfoData.data.text.length());
     SelectionInfo selectionInfo;
     CopySelectionData(selectionInfoData, selectionInfo);
     if (selectionI_ == nullptr) {
@@ -44,7 +42,7 @@ ErrCode SelectionListenerImpl::OnSelectionChange(const SelectionInfoData& select
 
 ErrCode SelectionListenerImpl::FocusChange(const SelectionFocusChangeInfo& focusChangeInfo)
 {
-    SELECTION_HILOGI("Recveive FocusChange: %{public}s.", focusChangeInfo.ToString().c_str());
+    SELECTION_HILOGW("Recveive FocusChange: %{public}s.", focusChangeInfo.ToString().c_str());
     if (!focusChangeInfo.isFocused_) {
         return NO_ERROR;
     }
@@ -54,13 +52,7 @@ ErrCode SelectionListenerImpl::FocusChange(const SelectionFocusChangeInfo& focus
         return NO_ERROR;
     }
 
-    auto& panelManager = SelectionPanelManager::GetInstance();
-    if (!panelManager.FindWindowID(focusChangeInfo.windowId_)) {
-        SELECTION_HILOGI("The focus window is not a selection window, hide or destroy selection panels.");
-        panelManager.Dispose();
-        return NO_ERROR;
-    }
-
+    SelectionAbility::GetInstance()->Dispose(focusChangeInfo.windowId_);
     return NO_ERROR;
 }
 } // namespace SelectionFramework

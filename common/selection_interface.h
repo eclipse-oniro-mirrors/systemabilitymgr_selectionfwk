@@ -31,8 +31,7 @@ typedef enum {
 } SelectionType;
 
 struct SelectionInfo {
-    SelectionType selectionType;
-    std::string text = "";
+    SelectionType selectionType = SelectionType::MOVE_SELECTION;
     int32_t startDisplayX = 0;
     int32_t startDisplayY = 0;
     int32_t endDisplayX = 0;

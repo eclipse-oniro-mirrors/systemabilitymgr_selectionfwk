@@ -113,7 +113,7 @@ std::shared_ptr<SelectionPanel> JsPanel::GetNative()
 
 napi_value JsPanel::SetUiContent(napi_env env, napi_callback_info info)
 {
-    SELECTION_HILOGI("JsPanel start.");
+    SELECTION_HILOGI("JsPanel SetUiContent start.");
     auto ctxt = std::make_shared<PanelContentContext>(env, info);
     auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         napi_status status = napi_generic_failure;
@@ -151,6 +151,7 @@ napi_value JsPanel::SetUiContent(napi_env env, napi_callback_info info)
 
 napi_value JsPanel::Show(napi_env env, napi_callback_info info)
 {
+    SELECTION_HILOGI("JsPanel Show start.");
     SelectionMethodSyncTrace tracer("JsPanel_Show");
     auto ctxt = std::make_shared<PanelContentContext>(env, info);
     auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
@@ -182,6 +183,7 @@ napi_value JsPanel::Show(napi_env env, napi_callback_info info)
 
 napi_value JsPanel::Hide(napi_env env, napi_callback_info info)
 {
+    SELECTION_HILOGI("JsPanel Hide start.");
     SelectionMethodSyncTrace tracer("JsPanel_Hide");
     auto ctxt = std::make_shared<PanelContentContext>(env, info);
     
@@ -214,7 +216,7 @@ napi_value JsPanel::Hide(napi_env env, napi_callback_info info)
 
 napi_value JsPanel::StartMoving(napi_env env, napi_callback_info info)
 {
-    SELECTION_HILOGD("StartMoving start!");
+    SELECTION_HILOGI("JsPanel StartMoving start!");
     auto ctxt = std::make_shared<PanelContentContext>(env, info);
     auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         ctxt->info = { std::chrono::system_clock::now(), JsEvent::START_MOVING };
@@ -246,7 +248,7 @@ napi_value JsPanel::StartMoving(napi_env env, napi_callback_info info)
 
 napi_value JsPanel::MoveTo(napi_env env, napi_callback_info info)
 {
-    SELECTION_HILOGD("moveto start!");
+    SELECTION_HILOGI("JsPanel MoveTo start!");
     auto ctxt = std::make_shared<PanelContentContext>(env, info);
     auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         napi_status status = napi_generic_failure;
@@ -328,11 +330,11 @@ napi_value JsPanel::Subscribe(napi_env env, napi_callback_info info)
     // 1 means the second param callback.
     std::shared_ptr<JSCallbackObject> cbObject = std::make_shared<JSCallbackObject>(
         env, argv[1], std::this_thread::get_id(), AppExecFwk::EventHandler::Current());
-    observer->Subscribe(selectionPanel->windowId_, type, cbObject);
+    observer->Subscribe(selectionPanel->GetWindowId(), type, cbObject);
     bool ret = selectionPanel->SetPanelStatusListener(observer, type);
     if (!ret) {
         SELECTION_HILOGE("failed to subscribe %{public}s!", type.c_str());
-        observer->RemoveInfo(type, selectionPanel->windowId_);
+        observer->RemoveInfo(type, selectionPanel->GetWindowId());
     }
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -369,9 +371,9 @@ napi_value JsPanel::UnSubscribe(napi_env env, napi_callback_info info)
     if (paramType == napi_function) {
         std::shared_ptr<JSCallbackObject> cbObject = std::make_shared<JSCallbackObject>(
             env, argv[1], std::this_thread::get_id(), AppExecFwk::EventHandler::Current());
-        observer->RemoveInfo(type, selectionPanel->windowId_, cbObject);
+        observer->RemoveInfo(type, selectionPanel->GetWindowId(), cbObject);
     } else {
-        observer->RemoveInfo(type, selectionPanel->windowId_);
+        observer->RemoveInfo(type, selectionPanel->GetWindowId());
         selectionPanel->ClearPanelListener(type);
     }
 

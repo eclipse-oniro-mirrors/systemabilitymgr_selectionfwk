@@ -35,7 +35,7 @@ public:
     std::string ToString() const;
 
 private:
-    bool isEnabled_ = true;
+    bool isEnabled_ = false;
     bool isTriggered_ = false;
     int uid_ = -1;
     std::string applicationInfo_ = "com.selection.selectionapplication/SelectionExtensionAbility";
@@ -45,7 +45,7 @@ private:
 class MemSelectionConfig {
 public:
     static MemSelectionConfig &GetInstance();
-    SelectionConfig &GetSelectionConfig();
+    SelectionConfig GetSelectionConfig();
     void SetSelectionConfig(const SelectionConfig &config);
     bool GetEnable() const;
     bool GetTriggered() const;

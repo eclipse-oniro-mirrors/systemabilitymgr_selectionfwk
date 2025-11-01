@@ -46,6 +46,15 @@ ohos_source_set("selection_listener_proxy") {
     cfi_vcall_icall_only = true
     debug = false
   }
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+  ]
+  ldflags = [
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+  ]
   include_dirs = [
     "${target_gen_dir}",
   ]
@@ -70,6 +79,15 @@ ohos_source_set("selection_listener_stub") {
     cfi_vcall_icall_only = true
     debug = false
   }
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+  ]
+  ldflags = [
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+  ]
   include_dirs = [
     "${target_gen_dir}",
   ]
@@ -94,6 +112,15 @@ ohos_source_set("selection_service_proxy") {
     cfi_vcall_icall_only = true
     debug = false
   }
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+  ]
+  ldflags = [
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+  ]
   include_dirs = [
     "${target_gen_dir}",
   ]
@@ -118,6 +145,15 @@ ohos_source_set("selection_service_stub") {
     cfi_vcall_icall_only = true
     debug = false
   }
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+  ]
+  ldflags = [
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+  ]
   include_dirs = [
     "${target_gen_dir}",
   ]

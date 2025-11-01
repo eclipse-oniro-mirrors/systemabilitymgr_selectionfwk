@@ -1,0 +1,38 @@
+{
+  global:
+    extern "C++" {
+      OHOS::SelectionFwk::BaseSelectionInputMonitor::*;
+      "virtual thunk to OHOS::SelectionFwk::BaseSelectionInputMonitor::~BaseSelectionInputMonitor()";
+      VTT?for?OHOS::SelectionFwk::BaseSelectionInputMonitor;
+      vtable?for?OHOS::SelectionFwk::BaseSelectionInputMonitor;
+      OHOS::SelectionFwk::SelectionConfig::*;
+      OHOS::SelectionFwk::SelectionConfigComparator::*;
+      OHOS::SelectionFwk::MemSelectionConfig::*;
+      OHOS::SelectionFwk::IsAllWhitespace*;
+      OHOS::SelectionFwk::IsNumber*;
+      OHOS::SelectionFwk::ParseAppInfo*;
+      OHOS::SelectionFwk::DbSelectionConfigRepository*;
+      OHOS::SelectionFwk::SelectionAppValidator::GetInstance*;
+      OHOS::SelectionFwk::SelectionAppValidator::Validate*;
+      OHOS::SelectionFwk::SelectionAppValidator::GetCurrentBundleName*;
+      OHOS::SelectionFwk::SelectionConfigDataBase*;
+      OHOS::SelectionFwk::SysSelectionConfigRepository*;
+      OHOS::SelectionFwk::FocusMonitorManager::GetInstance*;
+      OHOS::SelectionFwk::FocusMonitorManager::RegisterFocusChangedListener*;
+      VTT?for?OHOS::SelectionFwk::FocusChangedListener;
+      vtable?for?OHOS::SelectionFwk::FocusChangedListener;
+      OHOS::SelectionFwk::FocusChangedListener::OnFocused*;
+      OHOS::SelectionFwk::FocusMonitorManager::UnregisterFocusChangedListener*;
+      OHOS::SelectionFwk::FocusChangedListener::OnUnfocused*;
+      OHOS::SelectionFwk::AbilityRuntimeInfo*;
+      OHOS::SelectionFwk::SystemAbilityStatusChangeListener*;
+      VTT?for?OHOS::SelectionFwk::SystemAbilityStatusChangeListener;
+      OHOS::SelectionFwk::SelectionService::*;
+      "virtual thunk to OHOS::SelectionFwk::SelectionService::~SelectionService()";
+      VTT?for?OHOS::SelectionFwk::SelectionService;
+      vtable?for?OHOS::SelectionFwk::SelectionService;
+      "virtual thunk to OHOS::SelectionFwk::SelectionService::*";
+    };
+  local:
+    *;
+};

@@ -57,7 +57,7 @@ napi_value AttachSelectionExtensionContext(napi_env env, void* value, void*)
     napi_status status = napi_wrap(
         env, contextObj, workContext,
         [](napi_env, void* data, void*) {
-            SELECTION_HILOGI("finalizer for weak_ptr input method extension context is called.");
+            SELECTION_HILOGI("finalizer for weak_ptr selection extension context is called.");
             delete static_cast<std::weak_ptr<SelectionExtensionContext>*>(data);
         },
         nullptr, nullptr);
@@ -222,7 +222,7 @@ void JsSelectionExtension::BindContext(napi_env env, napi_value obj)
     }
     contextObj = shellContextRef->GetNapiValue();
     if (contextObj == nullptr) {
-        SELECTION_HILOGE("failed to get input method extension native object!");
+        SELECTION_HILOGE("failed to get selection extension native object!");
         return;
     }
     auto workContext = new (std::nothrow) std::weak_ptr<SelectionExtensionContext>(context);
@@ -234,6 +234,7 @@ void JsSelectionExtension::BindContext(napi_env env, napi_value obj)
         AttachSelectionExtensionContext, workContext, nullptr);
     if (status != napi_ok) {
         SELECTION_HILOGE("napi_coerce_to_native_binding_object failed!");
+        delete workContext;
         return;
     }
     SELECTION_HILOGD("JsSelectionExtension::Init Bind.");
@@ -243,7 +244,7 @@ void JsSelectionExtension::BindContext(napi_env env, napi_value obj)
     status = napi_wrap(
         env, contextObj, workContext,
         [](napi_env, void* data, void*) {
-            SELECTION_HILOGI("Finalizer for weak_ptr input method extension context is called.");
+            SELECTION_HILOGI("Finalizer for weak_ptr selection extension context is called.");
             delete static_cast<std::weak_ptr<SelectionExtensionContext>*>(data);
         },
         nullptr, nullptr);

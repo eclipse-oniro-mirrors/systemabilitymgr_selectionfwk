@@ -25,6 +25,16 @@ ohos_shared_library("selectionmanager_napi") {
     integer_overflow = true
     ubsan = true
   }
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+    "-std=c++17",
+  ]
+  ldflags = [
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+  ]
   sources = [
     "js_selection_engine_setting.cpp",
     "panel_listener_impl.cpp",
@@ -42,17 +52,16 @@ ohos_shared_library("selectionmanager_napi") {
     "../selection_client",
     "../../../common",
     "../../../../hiappevent_agent",
+    "../../../../interfaces/inner_kits/selection_client/include",
   ]
 
   deps = [
     "${selection_fwk_root_path}/common:selection_common",
-    "${selection_fwk_root_path}/hiappevent_agent:selection_hiappevent_agent",
     "${selection_fwk_root_path}/interfaces/idl:selection_service_proxy",
     "${selection_fwk_root_path}/interfaces/idl:selection_listener_proxy",
     "${selection_fwk_root_path}/frameworks/native/selection_ability:selection_ability",
+    "${selection_fwk_root_path}/interfaces/inner_kits/selection_client:selection_client",
   ]
-
-  cflags_cc = [ "-std=c++17" ]
 
   external_deps = [
     "ability_base:configuration",
@@ -76,6 +85,7 @@ ohos_shared_library("selectionmanager_napi") {
     "samgr:samgr_proxy",
   ]
 
+  version_script = "../selection_framework.map"
   relative_install_dir = "module/selectioninput"
   subsystem_name = "systemabilitymgr"
   part_name = "selectionfwk"

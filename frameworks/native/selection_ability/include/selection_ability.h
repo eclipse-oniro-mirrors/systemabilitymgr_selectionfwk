@@ -37,13 +37,18 @@ public:
     int32_t DestroyPanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
     int32_t ShowPanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
     int32_t HidePanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
+    void Dispose(uint32_t winId);
+
+private:
+    void PushPanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
+    std::optional<std::shared_ptr<SelectionPanel>> PopPanel();
 
 private:
     static std::mutex instanceLock_;
     static sptr<SelectionAbility> instance_;
 
-    ConcurrentMap<PanelType, std::shared_ptr<SelectionPanel>> panels_ {};
-    std::atomic_bool isShowAfterCreate_ { false };
+    std::mutex panelsMutex_;
+    std::queue<std::shared_ptr<SelectionPanel>> panels_;
 };
 } // namespace SelectionFwk
 } // namespace OHOS

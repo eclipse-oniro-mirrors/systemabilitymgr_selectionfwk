@@ -15,6 +15,9 @@
 
 #include "js_selection_engine_setting.h"
 
+#include <chrono>
+#include <deque>
+
 #include "event_checker.h"
 #include "selection_ability.h"
 #include "selection_js_utils.h"
@@ -27,15 +30,21 @@
 #include "js_panel.h"
 #include "js_selection_utils.h"
 #include "selection_app_validator.h"
-#include "selection_api_event_reporter.h"
 #include "selection_system_ability_utils.h"
+#include "selection_api_event_reporter.h"
+#include "selection_client.h"
+#include "selection_errors.h"
 
 using namespace OHOS;
 namespace OHOS {
 namespace SelectionFwk {
 
+constexpr size_t ARGC_ZERO = 0;
 constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;
+
+static constexpr int MAX_CALLS_PER_WINDOW = 50;
+static constexpr int WINDOW_MS = 500;
 
 const std::string JsSelectionEngineSetting::KDS_CLASS_NAME = "SelectionAbility";
 thread_local napi_ref JsSelectionEngineSetting::KDSRef_ = nullptr;
@@ -44,6 +53,8 @@ std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::selectionDel
 std::mutex JsSelectionEngineSetting::eventHandlerMutex_;
 std::shared_ptr<AppExecFwk::EventHandler> JsSelectionEngineSetting::handler_{ nullptr };
 sptr<ISelectionListener> JsSelectionEngineSetting::listenerStub_ { nullptr };
+static SelectionClient &g_selectionClient = SelectionClient::GetInstance();
+static std::deque<uint64_t> g_getSelectionContentCounter;
 
 napi_value JsSelectionEngineSetting::Subscribe(napi_env env, napi_callback_info info)
 {
@@ -72,6 +83,10 @@ napi_value JsSelectionEngineSetting::Subscribe(napi_env env, napi_callback_info 
         std::make_shared<JSCallbackObject>(env, argv[1], std::this_thread::get_id(),
             AppExecFwk::EventHandler::Current());
     auto engine = JsSelectionEngineSetting::GetJsSelectionEngineSetting();
+    if (engine == nullptr) {
+        SELECTION_HILOGI("engine is nullptr.");
+        return nullptr;
+    }
     engine->RegisterListener(argv[ARGC_ONE], type, callback);
     napi_value result = nullptr;
     napi_get_null(env, &result);
@@ -131,29 +146,106 @@ napi_status JsSelectionEngineSetting::GetContext(napi_env env, napi_value in,
     return napi_ok;
 }
 
-napi_status JsSelectionEngineSetting::CheckPanelInfoAndConext(napi_env env, size_t argc, napi_value *argv,
-    std::shared_ptr<PanelContext> ctxt)
+static auto GetSelectionContentExecute = [](napi_env env, void *data) {
+    if (data == nullptr) {
+        SELECTION_HILOGE("Failed to create async work, data is nullptr");
+        return;
+    }
+    GetSelectionContentAsyncContext *asyncContext = reinterpret_cast<GetSelectionContentAsyncContext *>(data);
+    asyncContext->errCode = g_selectionClient.GetSelectionContent(asyncContext->result);
+};
+
+static auto GetSelectionContentComplete = [](napi_env env, napi_status status, void *data) {
+    if (data == nullptr) {
+        SELECTION_HILOGE("Failed to create async work, data is nullptr");
+        return;
+    }
+    GetSelectionContentAsyncContext *asyncContext = reinterpret_cast<GetSelectionContentAsyncContext *>(data);
+
+    if (status != napi_ok || asyncContext->errCode != ERR_OK) {
+        int32_t err = JsUtils::ConvertServiceErrorToJs(asyncContext->errCode);
+        std::string errMsg = JsUtils::ToMessage(err);
+        napi_value error;
+        napi_value code;
+        napi_value message;
+        napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &message);
+        napi_create_error(env, nullptr, message, &error);
+        napi_create_int32(env, err, &code);
+        napi_set_named_property(env, error, "code", code);
+        napi_reject_deferred(env, asyncContext->deferred, error);
+    } else {
+        napi_value result = nullptr;
+        napi_create_string_utf8(env, asyncContext->result.c_str(), asyncContext->result.size(), &result);
+        napi_resolve_deferred(env, asyncContext->deferred, result);
+    }
+    napi_delete_async_work(env, asyncContext->work);
+    delete asyncContext;
+};
+
+static uint64_t GetNowMs()
 {
-    PARAM_CHECK_RETURN(env, argc >= ARGC_TWO, "at least two parameters is required.", TYPE_NONE, napi_invalid_arg);
-    napi_valuetype valueType = napi_undefined;
-    // 0 means parameter of ctx<BaseContext>
-    napi_typeof(env, argv[0], &valueType);
-    PARAM_CHECK_RETURN(env, valueType == napi_object, "ctx type must be BaseContext.", TYPE_NONE, napi_invalid_arg);
-    napi_status status = GetContext(env, argv[0], ctxt->context);
-    PARAM_CHECK_RETURN(env, status == napi_ok, "js param context covert failed.", TYPE_NONE, napi_invalid_arg);
-    // 1 means parameter of info<PanelInfo>
-    napi_typeof(env, argv[1], &valueType);
-    PARAM_CHECK_RETURN(env, valueType == napi_object, "param info type must be PanelInfo.", TYPE_NONE,
-        napi_invalid_arg);
-    status = OHOS::SelectionFwk::JsSelectionUtils::GetValue(env, argv[1], ctxt->panelInfo);
-    SELECTION_HILOGD("output js param panelInfo covert , panelType/x/y/width/height: \
-        %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.", static_cast<int32_t>(ctxt->panelInfo.panelType),
-        ctxt->panelInfo.x, ctxt->panelInfo.y, ctxt->panelInfo.width, ctxt->panelInfo.height);
-    PARAM_CHECK_RETURN(env, status == napi_ok, "js param info covert failed!", TYPE_NONE, napi_invalid_arg);
-    PARAM_CHECK_RETURN(env, ctxt->panelInfo.x >= 0 && ctxt->panelInfo.y >= 0 && ctxt->panelInfo.width > 0 &&
-        ctxt->panelInfo.height > 0, "js param is invalid: x/y cannot be negative, width/height must be positive!",
-        TYPE_NONE, napi_invalid_arg);
-    return status;
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+}
+
+static void CheckGetSelectionContentFrequency(napi_env env)
+{
+    uint64_t now = GetNowMs();
+    g_getSelectionContentCounter.push_back(now);
+
+    while (!g_getSelectionContentCounter.empty() && g_getSelectionContentCounter.front() + WINDOW_MS < now) {
+        g_getSelectionContentCounter.pop_front();
+    }
+
+    if (g_getSelectionContentCounter.size() > MAX_CALLS_PER_WINDOW &&
+        g_getSelectionContentCounter.back() - g_getSelectionContentCounter.front() <= WINDOW_MS) {
+        napi_value error;
+        napi_value message;
+        napi_value codeValue;
+        std::string errMsg = JsUtils::ToMessage(EXCEPTION_TOO_FREQUENT);
+        napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &message);
+        napi_create_error(env, nullptr, message, &error);
+        napi_create_int32(env, EXCEPTION_TOO_FREQUENT, &codeValue);
+        napi_set_named_property(env, error, "code", codeValue);
+        napi_throw(env, error);
+    }
+}
+
+napi_value JsSelectionEngineSetting::GetSelectionContent(napi_env env, napi_callback_info info)
+{
+    SELECTION_HILOGI("SelectionEngineSetting GetSelectionContent start.");
+
+    CheckGetSelectionContentFrequency(env);
+
+    size_t argc = ARGC_ONE;
+    napi_value argv[ARGC_ONE] = { nullptr };
+    napi_value thisVar = nullptr;
+    void *data = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVar, &data));
+    if (argc != ARGC_ZERO) {
+        SELECTION_HILOGE("GetSelectionContent failed");
+        JsUtils::ThrowException(env, SFErrorCode::EXCEPTION_PARAMCHECK, "", TYPE_NONE);
+        return nullptr;
+    }
+
+    auto asyncContext = new (std::nothrow) GetSelectionContentAsyncContext();
+        if (asyncContext == nullptr) {
+        SELECTION_HILOGE("Create GetSelectionContentAsyncContext failed.");
+        return nullptr;
+    }
+
+    asyncContext->env = env;
+    napi_value result = nullptr;
+    napi_create_promise(env, &asyncContext->deferred, &result);
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "GetContent", NAPI_AUTO_LENGTH, &resource);
+
+    napi_create_async_work(env, nullptr, resource, GetSelectionContentExecute, GetSelectionContentComplete,
+        reinterpret_cast<void *>(asyncContext), &asyncContext->work);
+    napi_queue_async_work(env, asyncContext->work);
+
+    return result;
 }
 
 napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_info info)
@@ -162,7 +254,7 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
     auto eventReporter = std::make_shared<SelectionApiEventReporter>("createPanel");
     auto ctxt = std::make_shared<PanelContext>();
     auto input = [=](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        napi_status status = CheckPanelInfoAndConext(env, argc, argv, ctxt);
+        napi_status status = CheckArguments(env, argc, argv, ctxt);
         if (status != napi_ok) {
             SELECTION_HILOGI("Check parameter invalid, Report error message to hiappevent");
             eventReporter->WriteEndEvent(SelectionApiEventReporter::API_FAIL, SFErrorCode::EXCEPTION_PARAMCHECK);
@@ -359,6 +451,7 @@ napi_value JsSelectionEngineSetting::Init(napi_env env, napi_value exports)
     napi_property_descriptor descriptor[] = {
         DECLARE_NAPI_FUNCTION("on", Subscribe),
         DECLARE_NAPI_FUNCTION("off", UnSubscribe),
+        DECLARE_NAPI_FUNCTION("getSelectionContent", GetSelectionContent),
         DECLARE_NAPI_FUNCTION("createPanel", CreatePanel),
         DECLARE_NAPI_FUNCTION("destroyPanel", DestroyPanel),
     };
@@ -394,6 +487,31 @@ napi_value JsSelectionEngineSetting::GetJsSelectionTypeProperty(napi_env env)
         return nullptr;
     }
     return obj;
+}
+
+napi_status JsSelectionEngineSetting::CheckArguments(napi_env env, size_t argc, napi_value *argv,
+    std::shared_ptr<PanelContext> ctxt)
+{
+    PARAM_CHECK_RETURN(env, argc >= ARGC_TWO, "at least two parameters is required.", TYPE_NONE, napi_invalid_arg);
+    napi_valuetype valueType = napi_undefined;
+    // 0 means parameter of ctx<BaseContext>
+    napi_typeof(env, argv[0], &valueType);
+    PARAM_CHECK_RETURN(env, valueType == napi_object, "ctx type must be BaseContext.", TYPE_NONE, napi_invalid_arg);
+    napi_status status = GetContext(env, argv[0], ctxt->context);
+    PARAM_CHECK_RETURN(env, status == napi_ok, "js param context covert failed.", TYPE_NONE, napi_invalid_arg);
+    // 1 means parameter of info<PanelInfo>
+    napi_typeof(env, argv[1], &valueType);
+    PARAM_CHECK_RETURN(env, valueType == napi_object, "param info type must be PanelInfo.", TYPE_NONE,
+        napi_invalid_arg);
+    status = OHOS::SelectionFwk::JsSelectionUtils::GetValue(env, argv[1], ctxt->panelInfo);
+    SELECTION_HILOGD("output js param panelInfo covert , panelType/x/y/width/height: \
+        %{public}d/%{public}d/%{public}d/%{public}d/%{public}d.", static_cast<int32_t>(ctxt->panelInfo.panelType),
+        ctxt->panelInfo.x, ctxt->panelInfo.y, ctxt->panelInfo.width, ctxt->panelInfo.height);
+    PARAM_CHECK_RETURN(env, status == napi_ok, "js param info covert failed!", TYPE_NONE, napi_invalid_arg);
+    PARAM_CHECK_RETURN(env, ctxt->panelInfo.x >= 0 && ctxt->panelInfo.y >= 0 && ctxt->panelInfo.width > 0 &&
+        ctxt->panelInfo.height > 0, "js param is invalid: x/y cannot be negative, width/height must be positive!",
+        TYPE_NONE, napi_invalid_arg);
+    return status;
 }
 
 std::shared_ptr<AppExecFwk::EventHandler> JsSelectionEngineSetting::GetEventHandler()
@@ -436,7 +554,6 @@ napi_value JsSelectionEngineSetting::Write(napi_env env, const SelectionInfo &se
     ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "endDisplayX", selectionInfo.endDisplayX);
     ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "startDisplayY", selectionInfo.startDisplayY);
     ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "startDisplayX", selectionInfo.startDisplayX);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "text", selectionInfo.text);
     SELECTION_HILOGD("write selectionInfo into object, ret=%{public}s", ret ? "true" : "false");
     return ret ? jsObject : JsUtil::Const::Null(env);
 }
@@ -457,7 +574,6 @@ int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selectio
         return 1;
     }
 
-    SELECTION_HILOGI("selection text length is [%{public}u]", entry->selectionInfo.text.length());
     auto task = [entry]() {
         auto paramGetter = [entry](napi_env env, napi_value *args, uint8_t argc) -> bool {
             if (argc == 0) {

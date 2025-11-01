@@ -34,6 +34,15 @@ ohos_shared_library("selectionpanel_napi") {
     integer_overflow = true
     ubsan = true
   }
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+  ]
+  ldflags = [
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+  ]
   sources = [
     "selection_panel_module.cpp",
     "js_selection_panel.cpp",

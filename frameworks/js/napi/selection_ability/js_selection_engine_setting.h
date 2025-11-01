@@ -41,6 +41,7 @@ public:
     static napi_value GetSelectionAbility(napi_env env, napi_callback_info info);
     static napi_value Subscribe(napi_env env, napi_callback_info info);
     static napi_value UnSubscribe(napi_env env, napi_callback_info info);
+    static napi_value GetSelectionContent(napi_env env, napi_callback_info info);
     static napi_value CreatePanel(napi_env env, napi_callback_info info);
     static napi_value DestroyPanel(napi_env env, napi_callback_info info);
     int32_t OnSelectionEvent(const SelectionInfo &selectionInfo);
@@ -91,7 +92,7 @@ private:
     using EntrySetter = std::function<void(SelectionEntry &)>;
     std::shared_ptr<SelectionEntry> GetEntry(const std::string &type, EntrySetter entrySetter = nullptr);
     static napi_value GetJsSelectionTypeProperty(napi_env env);
-    static napi_status CheckPanelInfoAndConext(napi_env env, size_t argc, napi_value *argv,
+    static napi_status CheckArguments(napi_env env, size_t argc, napi_value *argv,
         std::shared_ptr<PanelContext> ctxt);
 
 private:
@@ -105,6 +106,19 @@ private:
     static std::mutex eventHandlerMutex_;
     static std::shared_ptr<AppExecFwk::EventHandler> handler_;
 };
+
+struct SelectionAsyncContext {
+    napi_env env;
+    napi_async_work work;
+    napi_deferred deferred;
+    napi_status status;
+};
+
+struct GetSelectionContentAsyncContext : SelectionAsyncContext {
+    std::string result = "";
+    int32_t errCode = 0;
+};
+
 } // namespace SelectionFwk
 } // namespace OHOS
 #endif //JS_SELECTION_ENGINE_SETTING_H

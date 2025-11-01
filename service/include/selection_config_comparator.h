@@ -18,18 +18,21 @@
 
 #include <optional>
 #include "selection_config.h"
+#include "selection_common.h"
 
 namespace OHOS {
 namespace SelectionFwk {
 enum SyncDirection {
+    NONE,
     FromDbToSys,
     FromSysToDb
 };
 
 struct ComparisionResult {
-    SyncDirection direction = FromDbToSys;
-    bool shouldStop = false;
+    SyncDirection direction = NONE;
     bool shouldCreate = false;
+    bool shouldStop = false;
+    bool shouldStart = false;
     bool shouldRestartApp = false;
     SelectionConfig selectionConfig;
 
@@ -38,12 +41,23 @@ struct ComparisionResult {
 
 class SelectionConfigComparator {
 public:
-    static ComparisionResult Compare(int uid, const SelectionConfig &sysSelectionConfig,
-        std::optional<SelectionConfig> &dbSelectionConfig);
+    static SelectionConfigComparator& GetInstance();
+
+    void Init();
+    void Init(const SelectionConfig& defaultSelectionConfig);
+    ComparisionResult Compare(int uid, const SelectionConfig &sysSelectionConfig,
+                              std::optional<SelectionConfig> &dbSelectionConfig,
+                              const std::optional<AbilityRuntimeInfo> &connectedAbilityInfo = std::nullopt);
 
 private:
-    static ComparisionResult DoCompare(int uid, const SelectionConfig &sysSelectionConfig,
-        std::optional<SelectionConfig> &dbSelectionConfig);
+    SelectionConfigComparator() = default;
+
+    ComparisionResult DoCompare(int uid, const SelectionConfig &sysSelectionConfig,
+                                std::optional<SelectionConfig> &dbSelectionConfig,
+                                const std::optional<AbilityRuntimeInfo> &connectedAbilityInfo = std::nullopt);
+
+private:
+    SelectionConfig defaultSelectionConfig_;
 };
 } // namespace SelectionFwk
 } // namespace OHOS

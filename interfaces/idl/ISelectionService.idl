@@ -19,4 +19,5 @@ interface OHOS.SelectionFwk.ISelectionService {
     void RegisterListener([in] ISelectionListener listener);
     void UnregisterListener([in] ISelectionListener listener);
     void IsCurrentSelectionApp([in] int pid, [out] boolean resultValue);
+    void GetSelectionContent([out] String selectionContent);
 }

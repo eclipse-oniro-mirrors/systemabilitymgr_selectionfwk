@@ -16,12 +16,15 @@
 #ifndef SELECTION_CLIENT_H
 #define SELECTION_CLIENT_H
 
+#include <cstdint>
+#include <string>
 #include "visibility.h"
 
 class SelectionClient {
 public:
     SELECTION_API static SelectionClient& GetInstance();
     bool IsCurrentSelectionApp(int pid);
+    int32_t GetSelectionContent(std::string& selectionContent);
 };
 
 #endif // SELECTION_CLIENT_H

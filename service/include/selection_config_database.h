@@ -47,8 +47,9 @@ constexpr const char *SQL_ADD_TOKEN_ID = "ALTER TABLE selection_config ADD COLUM
 class SelectionConfigDataBase {
 public:
     static std::shared_ptr<SelectionConfigDataBase> GetInstance();
-    int64_t Insert(const OHOS::NativeRdb::ValuesBucket &insertValues);
-    int32_t Update(int32_t &changedRows, const OHOS::NativeRdb::ValuesBucket &values,
+    virtual ~SelectionConfigDataBase() = default;
+    virtual int64_t Insert(const OHOS::NativeRdb::ValuesBucket &insertValues);
+    virtual int32_t Update(int32_t &changedRows, const OHOS::NativeRdb::ValuesBucket &values,
         const OHOS::NativeRdb::RdbPredicates &predicates);
     int32_t Update(int32_t &changedRows, const OHOS::NativeRdb::ValuesBucket &values, const std::string &whereClause,
         const std::vector<std::string> &whereArgs);
@@ -58,13 +59,14 @@ public:
         const std::vector<OHOS::NativeRdb::ValueObject> &bindArgs = std::vector<OHOS::NativeRdb::ValueObject>());
     std::shared_ptr<OHOS::NativeRdb::ResultSet> QuerySql(
         const std::string &sql, const std::vector<std::string> &selectionArgs);
-    std::shared_ptr<OHOS::NativeRdb::ResultSet> Query(
+    virtual std::shared_ptr<OHOS::NativeRdb::ResultSet> Query(
         const OHOS::NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
-    int32_t BeginTransaction();
-    int32_t Commit();
-    int32_t RollBack();
+    virtual int32_t BeginTransaction();
+    virtual int32_t Commit();
+    virtual int32_t RollBack();
 
 private:
+    SelectionConfigDataBase() = default;
     SelectionConfigDataBase(const std::shared_ptr<OHOS::NativeRdb::RdbStore>& store);
     DISALLOW_COPY_AND_MOVE(SelectionConfigDataBase);
 

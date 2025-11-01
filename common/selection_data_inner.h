@@ -32,7 +32,6 @@ struct SelectionInfoData : public Parcelable {
     bool ReadFromParcel(Parcel &in)
     {
         data.selectionType = static_cast<SelectionType>(in.ReadInt8());
-        data.text = in.ReadString();
         data.startDisplayX = in.ReadInt32();
         data.startDisplayY = in.ReadInt32();
         data.endDisplayX = in.ReadInt32();
@@ -50,9 +49,6 @@ struct SelectionInfoData : public Parcelable {
     bool Marshalling(Parcel &out) const
     {
         if (!out.WriteInt8(static_cast<int8_t>(data.selectionType))) {
-            return false;
-        }
-        if (!out.WriteString(data.text)) {
             return false;
         }
         if (!out.WriteInt32(data.startDisplayX)) {
@@ -105,7 +101,6 @@ struct SelectionInfoData : public Parcelable {
     {
         std::ostringstream oss;
         oss << "SelectionInfo { selectionType: " << data.selectionType <<
-            ", text.length: " << data.text.length() <<
             ", startDisplayX: " << data.startDisplayX <<
             ", startDisplayY: " << data.startDisplayY <<
             ", endDisplayX: " << data.endDisplayX <<

@@ -80,9 +80,8 @@ void MemSelectionConfig::SetSelectionConfig(const SelectionConfig &config)
     delegate_ = config;
 }
 
-SelectionConfig& MemSelectionConfig::GetSelectionConfig()
+SelectionConfig MemSelectionConfig::GetSelectionConfig()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     return delegate_;
 }
 

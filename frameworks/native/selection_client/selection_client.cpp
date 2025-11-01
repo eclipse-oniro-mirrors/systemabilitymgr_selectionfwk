@@ -45,6 +45,39 @@ bool SelectionClient::IsCurrentSelectionApp(int pid)
         return result;
     }
     auto abilityManager = iface_cast<ISelectionService>(systemAbility);
-    abilityManager->IsCurrentSelectionApp(pid, result);
+    if (abilityManager == nullptr) {
+        SELECTION_HILOGE("abilityManager is nullptr!");
+        return result;
+    }
+    ErrCode errCode = abilityManager->IsCurrentSelectionApp(pid, result);
+    if (errCode != 0) {
+        SELECTION_HILOGE("Failed to call IsCurrentSelectionApp, errCode: %{public}d.", errCode);
+    }
     return result;
+}
+
+int32_t SelectionClient::GetSelectionContent(std::string& selectionContent)
+{
+    SELECTION_HILOGI("SelectionClient::GetSelectionContent");
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityManager == nullptr) {
+        SELECTION_HILOGE("system ability manager is nullptr!");
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
+    sptr<IRemoteObject> systemAbility = nullptr;
+    systemAbility = systemAbilityManager->GetSystemAbility(SELECTION_FWK_SA_ID);
+    if (systemAbility == nullptr) {
+        SELECTION_HILOGE("get system ability is nullptr!");
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
+    auto abilityManager = iface_cast<ISelectionService>(systemAbility);
+    if (abilityManager == nullptr) {
+        SELECTION_HILOGE("abilityManager is nullptr!");
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
+    auto ret = abilityManager->GetSelectionContent(selectionContent);
+    if (ret != ErrorCode::NO_ERROR) {
+        SELECTION_HILOGE("SelectionClient::GetSelectionContent GetSelectionContent failed, ret = %{public}d", ret);
+    }
+    return ret;
 }

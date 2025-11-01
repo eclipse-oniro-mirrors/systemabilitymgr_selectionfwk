@@ -16,6 +16,22 @@
 #ifndef SELECTION_COMMON_H
 #define SELECTION_COMMON_H
 
-bool IsNumber(const std::string& str);
+#include <optional>
+#include <tuple>
 
+namespace OHOS {
+namespace SelectionFwk {
+struct AbilityRuntimeInfo {
+    int userId;
+    std::string bundleName;
+    std::string abilityName;
+
+    bool operator==(const AbilityRuntimeInfo& other) const;
+};
+
+bool IsNumber(const std::string& str);
+bool IsAllWhitespace(const std::string &text);
+std::optional<std::tuple<std::string, std::string>> ParseAppInfo(const std::string& appInfo);
+} // namespace SelectionFwk
+} // namespace OHOS
 #endif // SELECTION_COMMON_H

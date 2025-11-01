@@ -24,6 +24,7 @@ namespace OHOS::SelectionFwk {
 class SelectionAppValidator {
 public:
     static SelectionAppValidator& GetInstance();
+    virtual ~SelectionAppValidator() = default;
     bool Validate() const;
 
 private:
@@ -33,7 +34,7 @@ private:
     SelectionAppValidator& operator= (const SelectionAppValidator&) = delete;
     SelectionAppValidator& operator= (SelectionAppValidator&&) = delete;
 
-    std::optional<std::string> GetCurrentBundleName() const;
+    virtual std::optional<std::string> GetCurrentBundleName() const;
     std::optional<std::string> GetBundleNameFromSys() const;
 };
 

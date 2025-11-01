@@ -18,10 +18,10 @@
 
 #include <map>
 #include <mutex>
+#include <future>
 #include <string>
 
 #include "ability_connect_callback_stub.h"
-#include "callback_object.h"
 #include "focus_change_info.h"
 #include "iselection_listener.h"
 #include "selection_service_stub.h"
@@ -31,10 +31,13 @@
 #include "common_event_data.h"
 #include "common_event_subscriber.h"
 #include "common_event_subscribe_info.h"
+#include "selection_common.h"
+#include "selection_input_monitor.h"
 
 namespace OHOS::SelectionFwk {
 using namespace MMI;
 
+constexpr const char *BOOTEVENT_BOOT_COMPLETED = "bootevent.boot.completed";
 constexpr const char *SYS_SELECTION_SWITCH = "sys.selection.switch";
 constexpr const char *SYS_SELECTION_TRIGGER = "sys.selection.trigger";
 constexpr const char *SYS_SELECTION_APP = "sys.selection.app";
@@ -43,14 +46,25 @@ constexpr const char *DEFAULT_TRIGGER = "ctrl";
 
 class SelectionExtensionAbilityConnection : public OHOS::AAFwk::AbilityConnectionStub {
 public:
-    SelectionExtensionAbilityConnection() = default;
+    SelectionExtensionAbilityConnection(int32_t userId);
     ~SelectionExtensionAbilityConnection() = default;
     void OnAbilityConnectDone(
         const OHOS::AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode) override;
     void OnAbilityDisconnectDone(const OHOS::AppExecFwk::ElementName &element, int resultCode) override;
 
+    void WaitForConnect();
+    void WaitForDisconnect();
+
 public:
     bool needReconnectWithException = true;
+    std::optional<AbilityRuntimeInfo> connectedAbilityInfo;
+
+private:
+    int32_t userId_;
+    std::mutex connectMutex_;
+    std::mutex disconnectMutex_;
+    std::unique_ptr<std::promise<void>> connectPromise_;
+    std::unique_ptr<std::promise<void>> disconnectPromise_;
 };
 
 class SelectionSysEventReceiver : public EventFwk::CommonEventSubscriber,
@@ -69,26 +83,33 @@ public:
     static sptr<SelectionService> GetInstance();
     SelectionService();
     SelectionService(int32_t saId, bool runOnCreate);
-    ~SelectionService();
+    virtual ~SelectionService();
 
     ErrCode RegisterListener(const sptr<ISelectionListener>& listener) override;
     ErrCode UnregisterListener(const sptr<ISelectionListener>& listener) override;
     ErrCode IsCurrentSelectionApp(int pid, bool &resultValue) override;
+    ErrCode GetSelectionContent(std::string& selectionContent) override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;
     int32_t ConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName);
+    int32_t ReconnectExtAbility(const std::string& bundleName, const std::string& abilityName);
     void DisconnectCurrentExtAbility();
+    void UnloadService();
+
     sptr<ISelectionListener> GetListener();
     void PersistSelectionConfig();
     void HandleCommonEvent(const EventFwk::CommonEventData &data);
     bool GetScreenLockedFlag();
+    void WatchExtAbilityInstalled(const std::string& bundleName, const std::string& abilityName);
 
 protected:
     void OnStart() override;
     void OnStop() override;
-    void HandleKeyEvent(int32_t keyCode);
-    void HandlePointEvent(int32_t type);
 
 private:
+    void Init();
+    void Shutdown();
+    int32_t DoConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName);
+    void DoDisconnectCurrentExtAbility();
     void InitSystemAbilityChangeHandlers();
     void RegisterSystemAbilityStatusChangeListener();
     void InputMonitorInit();
@@ -100,22 +121,28 @@ private:
     void SynchronizeSelectionConfig();
     int GetUserId();
     int LoadAccountLocalId();
-    bool IsUserLoggedIn();
-    bool IsSystemCalling();
+    virtual bool CheckUserLoggedIn();
+    virtual bool IsSystemCalling();
     void SubscribeSysEventReceiver();
+    void UnsubscribeSysEventReceiver();
     void SetScreenLockedFlag(bool isLocked);
-    void UnloadSelectionSa();
+    void PerformParamBootCompleted(const char* key, const char* value, void* context);
 
     std::map<int32_t, std::function<void(int32_t, const std::string&)>> systemAbilityChangeHandlers_;
+    std::shared_ptr<SelectionInputMonitor> inputMonitor_;
     int32_t inputMonitorId_ {-1};
     mutable std::mutex mutex_;
     static sptr<ISelectionListener> listener_;
     sptr<SelectionExtensionAbilityConnection> connectInner_ {nullptr};
-    std::mutex connectInnerMutex_;
+    std::mutex connectMutex_;
     std::atomic<int> pid_ = -1;
     std::atomic<int> userId_ = -1;
     std::shared_ptr<SelectionSysEventReceiver> selectionSysEventReceiver_ {nullptr};
     std::atomic<bool> isScreenLocked_ = false;
+    std::mutex initMutex_;
+    bool isMonitorInitialized_ = false;
+    bool isWindowInitialized_ = false;
+    bool isCommonEventInitialized_ = false;
 };
 }
 

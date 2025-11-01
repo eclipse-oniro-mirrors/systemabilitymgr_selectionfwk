@@ -19,7 +19,6 @@
 #include <utility>
 #include "selection_panel.h"
 #include "selection_log.h"
-#include "selection_panel_manager.h"
 #include "selection_app_validator.h"
 #include "selection_system_ability_utils.h"
 
@@ -55,13 +54,6 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
     const PanelInfo &panelInfo, std::shared_ptr<SelectionPanel> &selectionPanel)
 {
     SELECTION_HILOGI("enter CreatePanel, panelInfo: {panelType: %{public}d}", panelInfo.panelType);
-    std::ostringstream buffer;
-    panels_.ForEach([&](const PanelType &panelType, auto &) {
-        buffer << static_cast<uint32_t>(panelType) << ",";
-        return false;
-    });
-    auto panelTypes = buffer.str();
-    SELECTION_HILOGI("panels_: %{public}s", panelTypes.c_str());
 
     if (!SelectionSystemAbilityUtils::IsSelectionSystemAbilityExistent()) {
         SELECTION_HILOGE("selection system ability is not existent!");
@@ -72,25 +64,14 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
         return ErrorCode::ERROR_INVALID_OPERATION;
     }
 
-    int32_t result = ErrorCode::NO_ERROR;
-    auto flag = panels_.ComputeIfAbsent(panelInfo.panelType,
-        [&result, &panelInfo, &context, &selectionPanel] (
-            const PanelType &panelType, std::shared_ptr<SelectionPanel> &panel) {
-            selectionPanel = std::make_shared<SelectionPanel>();
-            result = selectionPanel->CreatePanel(context, panelInfo);
-            if (result == ErrorCode::NO_ERROR) {
-                panel = selectionPanel;
-                SelectionPanelManager::GetInstance().AddSelectionPanel(selectionPanel->GetWindowId(), selectionPanel);
-                return true;
-            }
-            selectionPanel = nullptr;
-            return false;
-        });
-
-    if (!flag && result == ErrorCode::NO_ERROR) {
-        return ErrorCode::ERROR_PARAMETER_CHECK_FAILED;
+    auto panel = std::make_shared<SelectionPanel>();
+    if (panel == nullptr) {
+        SELECTION_HILOGE("Construct selectionPanel failed");
+        return ErrorCode::ERROR_SELECTION_SERVICE;
     }
-    return result;
+    selectionPanel = panel;
+
+    return selectionPanel->CreatePanel(context, panelInfo);
 }
 
 int32_t SelectionAbility::DestroyPanel(const std::shared_ptr<SelectionPanel> &selectionPanel)
@@ -100,25 +81,31 @@ int32_t SelectionAbility::DestroyPanel(const std::shared_ptr<SelectionPanel> &se
         SELECTION_HILOGE("panel is nullptr!");
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
-    if (!SelectionSystemAbilityUtils::IsSelectionSystemAbilityExistent()) {
-        SELECTION_HILOGE("selection system ability is not existent!");
-        return ErrorCode::ERROR_SELECTION_SERVICE;
-    }
 
-    auto ret = selectionPanel->DestroyPanel();
-    if (ret == ErrorCode::NO_ERROR) {
-        PanelType panelType = selectionPanel->GetPanelType();
-        panels_.Erase(panelType);
-    }
-    return ret;
+    return selectionPanel->DestroyPanel();
 }
 
-int32_t SelectionAbility::ShowPanel(const std::shared_ptr<SelectionPanel> &selectionpanel)
+int32_t SelectionAbility::ShowPanel(const std::shared_ptr<SelectionPanel> &selectionPanel)
 {
-    if (selectionpanel == nullptr) {
+    if (selectionPanel == nullptr) {
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
-    auto ret = selectionpanel->ShowPanel();
+    auto ret = selectionPanel->ShowPanel();
+    if (ret != ErrorCode::NO_ERROR) {
+        SELECTION_HILOGD("failed, ret: %{public}d", ret);
+        return ret;
+    }
+
+    PushPanel(selectionPanel);
+    return ErrorCode::NO_ERROR;
+}
+
+int32_t SelectionAbility::HidePanel(const std::shared_ptr<SelectionPanel> &selectionPanel)
+{
+    if (selectionPanel == nullptr) {
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
+    auto ret = selectionPanel->HidePanel();
     if (ret != ErrorCode::NO_ERROR) {
         SELECTION_HILOGD("failed, ret: %{public}d", ret);
         return ret;
@@ -126,18 +113,46 @@ int32_t SelectionAbility::ShowPanel(const std::shared_ptr<SelectionPanel> &selec
     return ErrorCode::NO_ERROR;
 }
 
-int32_t SelectionAbility::HidePanel(const std::shared_ptr<SelectionPanel> &selectionpanel)
+void SelectionAbility::Dispose(uint32_t winId)
 {
-    if (selectionpanel == nullptr) {
-        return ErrorCode::ERROR_SELECTION_SERVICE;
+    SELECTION_HILOGI("Dispose start, winid:%{public}d, panels_ size: %{public}zu", winId, panels_.size());
+
+    auto selectionPanelOpt = PopPanel();
+    if (!selectionPanelOpt.has_value()) {
+        return;
     }
-    auto ret = selectionpanel->HidePanel();
-    if (ret != ErrorCode::NO_ERROR) {
-        SELECTION_HILOGD("failed, ret: %{public}d", ret);
-        return ret;
+
+    auto selectionPanel = selectionPanelOpt.value();
+    if (selectionPanel == nullptr) {
+        SELECTION_HILOGI("selectionPanel is nullptr.");
+        return;
     }
-    return ErrorCode::NO_ERROR;
+
+    if (selectionPanel->GetPanelType() == PanelType::MENU_PANEL) {
+        selectionPanel->HidePanel();
+    } else {
+        selectionPanel->DestroyPanel();
+    }
 }
 
+void SelectionAbility::PushPanel(const std::shared_ptr<SelectionPanel> &selectionPanel)
+{
+    std::lock_guard<std::mutex> lock(panelsMutex_);
+    panels_.push(selectionPanel);
+}
+
+std::optional<std::shared_ptr<SelectionPanel>> SelectionAbility::PopPanel()
+{
+    std::lock_guard<std::mutex> lock(panelsMutex_);
+    if (panels_.empty()) {
+        SELECTION_HILOGI("No left panel to dispose.");
+        return std::nullopt;
+    }
+
+    auto selectionPanel = panels_.front();
+
+    panels_.pop();
+    return selectionPanel;
+}
 } // namespace SelectionFwk
 } // namespace OHOS

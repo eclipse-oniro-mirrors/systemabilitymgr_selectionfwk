@@ -46,6 +46,15 @@ ohos_shared_library("selectionextensioncontext_napi") {
     integer_overflow = true
     ubsan = true
   }
+  cflags_cc = [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+  ]
+  ldflags = [
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+  ]
   sources = [ "selection_extension_context_module.cpp" ]
 
   deps = [
