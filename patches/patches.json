@@ -3,12 +3,12 @@
         {
             "project":"productdefine_common",
             "path":"productdefine/common",
-            "pr_url":"https://gitee.com/openharmony/productdefine_common/pulls/1032"
+            "pr_url":"https://gitcode.com/openharmony/productdefine_common/pull/1032"
         },
         {
             "project":"build",
             "path":"build",
-            "pr_url":"https://gitee.com/openharmony/build/pulls/5686"
+            "pr_url":"https://gitcode.com/openharmony/build/pull/5686"
         }
     ]
 }
