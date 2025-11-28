@@ -11,7 +11,7 @@ The word selection service primarily relies on domains such as multimodal and cl
 - Step 2: During runtime, it monitors multimodal events to detect user word selection actions. Once the user's word selection operation is recognized, it transmits word selection markers to the clipboard and registers a callback function. Simultaneously, it injects simulated CTRL+C operations into the target application via multimodal interfaces. This corresponds to sequence numbers ③④⑤⑥ in the figure below.
 - Step 3: After receiving the CTRL+C command, the highlighted word application triggers the copy operation, writing the currently selected content to the clipboard. Upon receiving the data, the clipboard transmits the text content back to the highlighting service. Finally, the highlighting service passes the content to the highlighted word application, which processes the corresponding business logic and displays the highlighting window. This corresponds to the numbered steps ⑦, ⑧, and ⑨ in the diagram below.
 
-![Architectural Diagram of the Selection Service Framework](figures/selection-service-schematic-en.PNG)
+![Architectural Diagram of the Selection Service Framework](figures/selection-service-schematic-en.png)
 
 ### Repository Path
 /foundation/systemabilitymgr/selectionfwk
