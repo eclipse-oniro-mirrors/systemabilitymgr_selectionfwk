@@ -31,7 +31,7 @@ std::shared_ptr<SelectionFwkTimer> SelectionFwkTimer::GetInstance()
 SelectionFwkTimer::SelectionFwkTimer()
 {
     selectionFwkTimer_ = std::make_unique<Utils::Timer>("selectionFwkTimer", -1);
-    selectionFwkTimer_->SetUp();
+    selectionFwkTimer_->Setup();
     SELECTION_HILOGI("timer setup");
 }
 
@@ -47,7 +47,7 @@ SelectionFwkTimer::~SelectionFwkTimer()
 
 uint32_t SelectionFwkTimer::Register(const TimerCallback& callback, uint32_t interval, bool once)
 {
-    uint32_t timerId = selectionFwkTimer->Register(callback, interval, once);
+    uint32_t timerId = selectionFwkTimer_->Register(callback, interval, once);
     {
         std::lock_guard<std::mutex> lock(timerSetMtx);
         timerRegSet_.insert(timerId);

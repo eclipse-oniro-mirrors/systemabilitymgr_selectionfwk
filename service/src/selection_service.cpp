@@ -430,7 +430,7 @@ int32_t SelectionService::DoConnectNewExtAbility(const std::string& bundleName, 
     ret = connectInner_->WaitForConnect();
     if (ret != 0) {
         HisyseventAdapter::GetInstance()->ReportShowPanelFailed(bundleName, ret,
-            static_cast<int32_t>(SelectFailedReason::CONNECT_EXTENTION_TIMEOUT));
+            static_cast<int32_t>(SelectFailedReason::CONNECT_EXTENSION_TIMEOUT));
         SELECTION_HILOGI("[selectevent] StartExtensionAbility timeout.");
         return ret;
     }

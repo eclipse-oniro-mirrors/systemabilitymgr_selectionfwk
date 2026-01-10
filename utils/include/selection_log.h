@@ -65,7 +65,7 @@ extern "C" {
     } while (0)
 
 namespace ErrorCode {
-// Error Code definition in the input method management system
+// Error Code definition in the selection management system
 enum {
     // no error
     NO_ERROR = 0, // no error
