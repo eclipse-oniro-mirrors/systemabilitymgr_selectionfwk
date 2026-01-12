@@ -77,7 +77,7 @@ void HisyseventAdapter::ReportStatisticInfo()
 void HisyseventAdapter::StartHisyseventTimer()
 {
     SelectionFwkTimer::GetInstance()->Register([this] {this->ReportStatisticInfo();},
-        SELECTION_HISYSEVENT_REPORT_TIME)
+        SELECTION_HISYSEVENT_REPORT_TIME);
     SELECTION_HILOGI("StartDfxTimer");
 }
 

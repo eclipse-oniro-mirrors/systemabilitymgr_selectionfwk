@@ -48,10 +48,10 @@ std::mutex mtx;
 std::condition_variable cv;
 std::string g_selectionContent = "";
 int32_t g_pasteBoardErrorCode = 0;
+uint32_t g_disconnectExtensionTime = 300 * 1000; // ms
 constexpr int32_t PB_ERR_OUT_OF_RANGE = 5;
 constexpr int32_t PB_ERR_CANNOT_GET_CONTENT = 7;
 constexpr int32_t MAX_DELAY_WAIT_FOR_PB = 110;
-constexpr uint32_t DISCONNECT_EXTENSION_TIME = 300 * 1000; // ms
 constexpr uint32_t SECONDS_TO_MILLISECONDS = 1000;
 
 static int64_t GetCurrentTimeMillis()
@@ -555,12 +555,12 @@ void SelectionInputMonitor::CloseTimerAndDisconnectExt() const
 
 uint32_t SelectionInputMonitor::GetTimeout() const
 {
-    return MemSelectionConfig::GetInstance.GetTimeout() * SECONDS_TO_MILLISECONDS; // ms
+    return MemSelectionConfig::GetInstance().GetTimeout() * SECONDS_TO_MILLISECONDS; // ms
 }
 
 void SelectionInputMonitor::HandleWordSelected() const
 {
-    DISCONNECT_EXTENSION_TIME = GetTimeout(); // ms
+    g_disconnectExtensionTime = GetTimeout(); // ms
     if (!SelectionService::GetInstance()->HasExtAbilityConnection()) {
         int32_t ret = SelectionService::GetInstance()->ConnectExtAbilityFromConfig();
         if (ret != 0) {
@@ -573,7 +573,7 @@ void SelectionInputMonitor::HandleWordSelected() const
         disconnectTimerId_ = 0;
     }
     disconnectTimerId_ = SelectionFwkTimer::GetInstance()->Register([this]() {this->CloseTimerAndDisconnectExt();},
-        DISCONNECT_EXTENSION_TIME);
+        g_disconnectExtensionTime);
 }
 
 void SelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const
