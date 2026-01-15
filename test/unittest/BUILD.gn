@@ -47,7 +47,12 @@ ohos_unittest("selection_service_unit_test") {
     "selection_common_test.cpp",
     "selection_config_comparator_test.cpp",
     "selection_config_database_test.cpp",
+    "selection_config_test.cpp",
+    "selection_input_monitor_ctrl_test.cpp",
     "selection_input_monitor_test.cpp",
+    "selection_service_test.cpp",
+    "sys_selection_config_repository_test.cpp",
+    "system_ability_status_change_listener_test.cpp",
   ]
   deps = [
     "${selection_fwk_root_path}/service:selection_service",

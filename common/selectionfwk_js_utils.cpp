@@ -43,7 +43,8 @@ const std::map<int32_t, std::string> JsUtils::ERROR_CODE_CONVERT_MESSAGE_MAP = {
     { EXCEPTION_SELECTION_SERVICE, "Selection service exception." },
     { EXCEPTION_NOT_SYSTEM_APP, "Permission denied. Called by non-system application."},
     { EXCEPTION_PANEL_DESTROYED, "This selection window has been destroyed." },
-    { EXCEPTION_INVALID_OPERATION, "Invalid operation. The selection app is not valid." },
+    { EXCEPTION_INVALID_OPERATION, "The application calling the API does not match the application \
+        selected in the system settings." },
     { EXCEPTION_TOO_FREQUENT, "The interface is called too frequently." },
     { EXCEPTION_INVALID_TIMING, "The interface is called at the wrong time." },
     { EXCEPTION_CANNOT_GET_CONTENT, "The current application is prohibited from accessing content." },

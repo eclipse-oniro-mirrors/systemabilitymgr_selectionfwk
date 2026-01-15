@@ -51,6 +51,7 @@ napi_value JsPanel::Init(napi_env env)
         DECLARE_NAPI_FUNCTION("hide", Hide),
         DECLARE_NAPI_FUNCTION("startMoving", StartMoving),
         DECLARE_NAPI_FUNCTION("moveTo", MoveTo),
+        DECLARE_NAPI_FUNCTION("moveToGlobalDisplay", MoveTo),
         DECLARE_NAPI_FUNCTION("on", Subscribe),
         DECLARE_NAPI_FUNCTION("off", UnSubscribe)
     };

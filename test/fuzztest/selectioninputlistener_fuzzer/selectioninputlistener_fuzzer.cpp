@@ -56,7 +56,6 @@ void TestOnSelectionChange(std::string fuzzedString, int32_t fuzzedInt32, uint32
 
     SelectionInfoData dataInner;
     dataInner.data.selectionType = MOVE_SELECTION;
-    dataInner.data.text = fuzzedString;
     dataInner.data.startDisplayX = fuzzedInt32;
     dataInner.data.startDisplayY = fuzzedInt32;
     dataInner.data.endDisplayX = fuzzedInt32;

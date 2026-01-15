@@ -65,8 +65,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (data == nullptr || size < sizeof(uint32_t)) {
         return 0;
     }
-
-    auto fuzzedCode = static_cast<uint32_t>(size);
+    uint32_t fuzzedCode = 0;
+    errno_t err = memcpy_s(&fuzzedCode, sizeof(fuzzedCode), data, sizeof(uint32_t));
+    if (err != 0) {
+        SELECTION_HILOGE("memcpy_s failed: %{public}d", err);
+        return 0;
+    }
 
     OHOS::SelectionFwk::TestSendRequest(fuzzedCode);
     return 0;
