@@ -21,7 +21,7 @@
 using namespace OHOS::HiviewDFX;
 using namespace OHOS::SelectionFwk;
 namespace {
-// fail event
+// fault event
 constexpr const char* SELECTION_PROCESS_ABNORMAL = "SELECTION_PROCESS_ABNORMAL";
 // param
 constexpr const char* FAIL_REASON = "FAIL_REASON";

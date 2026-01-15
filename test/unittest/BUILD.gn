@@ -17,20 +17,42 @@ import("//foundation/systemabilitymgr/selectionfwk/selection_service.gni")
 module_out_path = "selectionfwk/selectionfwk"
 ohos_unittest("selection_service_unit_test") {
   module_out_path = module_out_path
-  cflags_cc = [ "-std=c++17" ]
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    cfi_vcall_icall_only = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+  cflags_cc = [
+    "-std=c++17",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
   include_dirs = [
     "./",
+    "${target_gen_dir}",
     "${selection_fwk_root_path}/service/include",
+    "${selection_fwk_root_path}/service/focus_monitor/include",
     "${selection_fwk_root_path}/utils/include",
   ]
 
   sources = [
+    "db_selection_config_repository_test.cpp",
+    "focus_monitor_test.cpp",
+    "selection_app_validator_test.cpp",
+    "selection_common_test.cpp",
     "selection_config_comparator_test.cpp",
+    "selection_config_database_test.cpp",
     "selection_input_monitor_test.cpp",
   ]
   deps = [
     "${selection_fwk_root_path}/service:selection_service",
     "${selection_fwk_root_path}/common:selection_common",
+    "${selection_fwk_root_path}/interfaces/idl:selection_listener_proxy",
   ]
   external_deps = [
     "ability_base:want",
@@ -46,7 +68,18 @@ ohos_unittest("selection_service_unit_test") {
     "pasteboard:pasteboard_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "window_manager:libdm_lite",
+    "window_manager:libwsutils",
   ]
+
+  defines = []
+  if (window_manager_use_sceneboard) {
+    external_deps += [ "window_manager:libwm_lite" ]
+    defines += [ "SCENE_BOARD_ENABLE" ]
+  } else {
+    external_deps += [ "window_manager:libwm" ]
+  }
+
   part_name = "selectionfwk"
   subsystem_name = "systemabilitymgr"
 }
@@ -55,5 +88,6 @@ group("selection_manager_ut") {
   testonly = true
   deps = [
     ":selection_service_unit_test",
+    "mock:selection_service_unit_mock_test",
   ]
 }

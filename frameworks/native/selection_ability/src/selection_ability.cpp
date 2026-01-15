@@ -112,11 +112,11 @@ void SelectionAbility::NotifyPanelShowingStatusChange()
 {
     {
         std::lock_guard<std::mutex> lock(panelsMutex_);
-        if (panels_empty()) {
+        if (panels_.empty()) {
             SELECTION_HILOGI("the panel deque is empty");
             isPanelShowing_ = false;
         } else {
-            for (auto panel : panels) {
+            for (auto panel : panels_) {
                 if (panel != nullptr && panel->IsPanelShowing()) {
                     SELECTION_HILOGI("the panel is showing");
                     isPanelShowing_ = true;

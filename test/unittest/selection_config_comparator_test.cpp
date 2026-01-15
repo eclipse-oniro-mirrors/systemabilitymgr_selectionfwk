@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,6 @@
 
 #include "gtest/gtest.h"
 
-#define private public
 #include "selection_config_comparator.h"
 #include "selection_config.h"
 
@@ -54,10 +53,11 @@ void SelectionConfigComparatorTest::TearDown()
     std::cout << "SelectionConfigComparatorTest TearDown" << std::endl;
 }
 
-void SetSelectionConfig(SelectionConfig& dbSelectionConfig, int uid, bool bEnable)
+void SetSelectionConfig(SelectionConfig& selectionConfig, int uid, bool isEnabled, const std::string &appInfo)
 {
-    dbSelectionConfig.SetUid(uid);
-    dbSelectionConfig.SetEnabled(bEnable);
+    selectionConfig.SetUid(uid);
+    selectionConfig.SetEnabled(isEnabled);
+    selectionConfig.SetApplicationInfo(appInfo);
 }
 
 /**
@@ -65,15 +65,26 @@ void SetSelectionConfig(SelectionConfig& dbSelectionConfig, int uid, bool bEnabl
  * @tc.desc: database testcase 001
  * @tc.type: FUNC
  */
-HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator001, TestSize.Level1)
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator001, TestSize.Level0)
 {
     int uid = 100;
     SelectionConfig sysSelectionConfig;
     std::optional<SelectionConfig> dbSelectionConfig = std::nullopt;
-    auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfig);
+
+    std::string defaultAppInfo("a/b");
+    SelectionConfig defaultSelectionConfig;
+    SetSelectionConfig(defaultSelectionConfig, 0, true, defaultAppInfo);
+    auto& comparator = SelectionConfigComparator::GetInstance();
+    comparator.Init();
+    comparator.Init(defaultSelectionConfig);
+    auto result = comparator.Compare(uid, sysSelectionConfig, dbSelectionConfig);
+
     ASSERT_TRUE(result.shouldCreate);
     ASSERT_FALSE(result.shouldStop);
     ASSERT_FALSE(result.shouldRestartApp);
+    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
+    ASSERT_EQ(result.selectionConfig.GetApplicationInfo(), "a/b");
 }
 
 /**
@@ -81,18 +92,23 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator001, TestSize.L
  * @tc.desc: database testcase 002
  * @tc.type: FUNC
  */
-HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator002, TestSize.Level1)
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator002, TestSize.Level0)
 {
     int uid = 100;
+    std::string appInfo("a/b");
     SelectionConfig dbSelectionConfig;
-    SetSelectionConfig(dbSelectionConfig, uid, true);
+    SetSelectionConfig(dbSelectionConfig, uid, true, appInfo);
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
-    auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
-    ASSERT_EQ(result.direction, SyncDirection::FromDbToSys);
-    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
-    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    auto result = SelectionConfigComparator::GetInstance().Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
+
+    ASSERT_FALSE(result.shouldCreate);
     ASSERT_FALSE(result.shouldStop);
+    ASSERT_FALSE(result.shouldRestartApp);
+    ASSERT_EQ(result.direction, SyncDirection::FromDbToSys);
+    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
+    ASSERT_EQ(result.selectionConfig.GetApplicationInfo(), "a/b");
 }
 
 /**
@@ -100,19 +116,23 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator002, TestSize.L
  * @tc.desc: database testcase 003
  * @tc.type: FUNC
  */
-HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator003, TestSize.Level1)
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator003, TestSize.Level0)
 {
     int uid = 100;
     SelectionConfig dbSelectionConfig;
-    SetSelectionConfig(dbSelectionConfig, uid, true);
+    SetSelectionConfig(dbSelectionConfig, uid, true, "a/b");
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
-    SetSelectionConfig(sysSelectionConfig, uid, false);
-    auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
-    ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
+    SetSelectionConfig(sysSelectionConfig, uid, false, "c/d");
+    auto result = SelectionConfigComparator::GetInstance().Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
+
+    ASSERT_FALSE(result.shouldCreate);
     ASSERT_TRUE(result.shouldStop);
-    ASSERT_FALSE(result.selectionConfig.GetEnable());
     ASSERT_FALSE(result.shouldRestartApp);
+    ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
+    ASSERT_FALSE(result.selectionConfig.GetEnable());
+    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
+    ASSERT_EQ(result.selectionConfig.GetApplicationInfo(), "c/d");
 }
 
 /**
@@ -120,18 +140,23 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator003, TestSize.L
  * @tc.desc: database testcase 004
  * @tc.type: FUNC
  */
-HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator004, TestSize.Level1)
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator004, TestSize.Level0)
 {
     int uid = 100;
     SelectionConfig dbSelectionConfig;
-    SetSelectionConfig(dbSelectionConfig, uid, true);
+    SetSelectionConfig(dbSelectionConfig, uid, true, "a/b");
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
-    SetSelectionConfig(sysSelectionConfig, uid, true);
-    auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
-    ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
+    SetSelectionConfig(sysSelectionConfig, uid, true, "c/d");
+    auto result = SelectionConfigComparator::GetInstance().Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
+
+    ASSERT_FALSE(result.shouldCreate);
     ASSERT_FALSE(result.shouldStop);
     ASSERT_FALSE(result.shouldRestartApp);
+    ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
+    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
+    ASSERT_EQ(result.selectionConfig.GetApplicationInfo(), "c/d");
 }
 
 /**
@@ -139,17 +164,22 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator004, TestSize.L
  * @tc.desc: database testcase 005
  * @tc.type: FUNC
  */
-HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator005, TestSize.Level1)
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator005, TestSize.Level0)
 {
     int uid = 100;
     SelectionConfig dbSelectionConfig;
-    SetSelectionConfig(dbSelectionConfig, uid, false);
+    SetSelectionConfig(dbSelectionConfig, uid, false, "a/b");
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
-    auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
+    auto result = SelectionConfigComparator::GetInstance().Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
+
+    ASSERT_FALSE(result.shouldCreate);
     ASSERT_TRUE(result.shouldStop);
+    ASSERT_FALSE(result.shouldRestartApp);
     ASSERT_EQ(result.direction, SyncDirection::FromDbToSys);
+    ASSERT_FALSE(result.selectionConfig.GetEnable());
     ASSERT_EQ(result.selectionConfig.GetUid(), 100);
+    ASSERT_EQ(result.selectionConfig.GetApplicationInfo(), "a/b");
 }
 
 /**
@@ -157,18 +187,23 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator005, TestSize.L
  * @tc.desc: database testcase 006
  * @tc.type: FUNC
  */
-HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator006, TestSize.Level1)
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator006, TestSize.Level0)
 {
     int uid = 100;
     SelectionConfig dbSelectionConfig;
-    SetSelectionConfig(dbSelectionConfig, uid, false);
+    SetSelectionConfig(dbSelectionConfig, uid, false, "a/b");
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
-    SetSelectionConfig(sysSelectionConfig, uid, false);
-    auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
-    ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
+    SetSelectionConfig(sysSelectionConfig, uid, false, "a/b");
+    auto result = SelectionConfigComparator::GetInstance().Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
+
+    ASSERT_FALSE(result.shouldCreate);
     ASSERT_TRUE(result.shouldStop);
     ASSERT_FALSE(result.shouldRestartApp);
+    ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
+    ASSERT_FALSE(result.selectionConfig.GetEnable());
+    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
+    ASSERT_EQ(result.selectionConfig.GetApplicationInfo(), "a/b");
 }
 
 /**
@@ -176,19 +211,23 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator006, TestSize.L
  * @tc.desc: database testcase 007
  * @tc.type: FUNC
  */
-HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator007, TestSize.Level1)
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator007, TestSize.Level0)
 {
     int uid = 100;
     SelectionConfig dbSelectionConfig;
-    SetSelectionConfig(dbSelectionConfig, uid, false);
+    SetSelectionConfig(dbSelectionConfig, uid, false, "a/b");
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
-    SetSelectionConfig(sysSelectionConfig, uid, true);
-    auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
-    ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
-    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    SetSelectionConfig(sysSelectionConfig, uid, true, "c/d");
+    auto result = SelectionConfigComparator::GetInstance().Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
+
+    ASSERT_FALSE(result.shouldCreate);
     ASSERT_FALSE(result.shouldStop);
     ASSERT_FALSE(result.shouldRestartApp);
+    ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
+    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
+    ASSERT_EQ(result.selectionConfig.GetApplicationInfo(), "c/d");
 }
 
 /**
@@ -196,22 +235,123 @@ HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator007, TestSize.L
  * @tc.desc: database testcase 008
  * @tc.type: FUNC
  */
-HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator008, TestSize.Level1)
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator008, TestSize.Level0)
 {
     int uid = 100;
     std::string appInfo = "com.example.test/SelectionExtensionAbility";
     SelectionConfig dbSelectionConfig;
-    SetSelectionConfig(dbSelectionConfig, uid, true);
-    dbSelectionConfig.SetApplicationInfo(appInfo);
+    SetSelectionConfig(dbSelectionConfig, uid, true, appInfo);
     std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
     SelectionConfig sysSelectionConfig;
-    sysSelectionConfig.SetApplicationInfo(appInfo);
-    auto result = SelectionConfigComparator::Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
-    ASSERT_EQ(result.direction, SyncDirection::FromDbToSys);
-    ASSERT_TRUE(result.shouldRestartApp);
-    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
-    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    SetSelectionConfig(sysSelectionConfig, -1, false, appInfo);
+    auto result = SelectionConfigComparator::GetInstance().Compare(uid, sysSelectionConfig, dbSelectionConfigOpt);
+
+    ASSERT_FALSE(result.shouldCreate);
     ASSERT_FALSE(result.shouldStop);
+    ASSERT_TRUE(result.shouldRestartApp);
+    ASSERT_EQ(result.direction, SyncDirection::FromDbToSys);
+    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
+    ASSERT_EQ(result.selectionConfig.GetApplicationInfo(), appInfo);
+}
+
+/**
+ * @tc.name: SelectionConfigComparator009
+ * @tc.desc: database testcase 009
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator009, TestSize.Level0)
+{
+    int uid = 100;
+    int loginUid = 101;
+    std::string appInfo = "com.example.test/SelectionExtensionAbility";
+    SelectionConfig defaultSelectionConfig;
+    SetSelectionConfig(defaultSelectionConfig, 0, true, appInfo);
+    auto& comparator = SelectionConfigComparator::GetInstance();
+    comparator.Init(defaultSelectionConfig);
+
+    std::optional<SelectionConfig> dbSelectionConfigOpt = std::nullopt;
+    SelectionConfig sysSelectionConfig;
+    SetSelectionConfig(sysSelectionConfig, uid, false, appInfo);
+    auto result = SelectionConfigComparator::GetInstance().Compare(loginUid, sysSelectionConfig, dbSelectionConfigOpt);
+
+    ASSERT_TRUE(result.shouldCreate);
+    ASSERT_FALSE(result.shouldStop);
+    ASSERT_TRUE(result.shouldRestartApp);
+    ASSERT_EQ(result.direction, SyncDirection::NONE);
+    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    ASSERT_EQ(result.selectionConfig.GetUid(), 101);
+    ASSERT_EQ(result.selectionConfig.GetApplicationInfo(), appInfo);
+}
+
+/**
+ * @tc.name: SelectionConfigComparator010
+ * @tc.desc: database testcase 010
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator010, TestSize.Level0)
+{
+    int uid = 100;
+    SelectionConfig dbSelectionConfig;
+    SetSelectionConfig(dbSelectionConfig, uid, true, "a/b");
+    std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
+    SelectionConfig sysSelectionConfig;
+    SetSelectionConfig(sysSelectionConfig, uid, true, "a/b");
+
+    AbilityRuntimeInfo abilityRuntimeInfo;
+    abilityRuntimeInfo.userId = uid;
+    abilityRuntimeInfo.bundleName = "com.example.test/SelectionExtensionAbility";
+    abilityRuntimeInfo.abilityName = "appAbility";
+    std::optional<AbilityRuntimeInfo> abilityRuntimeInfoOpt = abilityRuntimeInfo;
+
+    auto result = SelectionConfigComparator::GetInstance().Compare(
+        uid,
+        sysSelectionConfig,
+        dbSelectionConfigOpt,
+        abilityRuntimeInfoOpt
+    );
+
+    ASSERT_FALSE(result.shouldCreate);
+    ASSERT_FALSE(result.shouldStart);
+    ASSERT_FALSE(result.shouldStop);
+    ASSERT_FALSE(result.shouldRestartApp);
+    ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
+    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
+    ASSERT_EQ(result.selectionConfig.GetApplicationInfo(), "a/b");
+}
+
+/**
+ * @tc.name: SelectionConfigComparator011
+ * @tc.desc: database testcase 011
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionConfigComparatorTest, SelectionConfigComparator011, TestSize.Level0)
+{
+    int uid = 100;
+    SelectionConfig dbSelectionConfig;
+    SetSelectionConfig(dbSelectionConfig, uid, true, "a/b");
+    std::optional<SelectionConfig> dbSelectionConfigOpt = dbSelectionConfig;
+    SelectionConfig sysSelectionConfig;
+    SetSelectionConfig(sysSelectionConfig, uid, true, "a/b");
+
+    std::optional<AbilityRuntimeInfo> abilityRuntimeInfoOpt = std::nullopt;
+
+    auto result = SelectionConfigComparator::GetInstance().Compare(
+        uid,
+        sysSelectionConfig,
+        dbSelectionConfigOpt,
+        abilityRuntimeInfoOpt
+    );
+
+    ASSERT_FALSE(result.shouldCreate);
+    ASSERT_FALSE(result.shouldStart);
+    ASSERT_FALSE(result.shouldStop);
+    ASSERT_FALSE(result.shouldRestartApp);
+    ASSERT_EQ(result.direction, SyncDirection::FromSysToDb);
+    ASSERT_TRUE(result.selectionConfig.GetEnable());
+    ASSERT_EQ(result.selectionConfig.GetUid(), 100);
+    ASSERT_EQ(result.selectionConfig.GetApplicationInfo(), "a/b");
 }
 }
 }

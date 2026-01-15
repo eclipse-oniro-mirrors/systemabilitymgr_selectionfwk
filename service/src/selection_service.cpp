@@ -16,11 +16,9 @@
 #include "selection_service.h"
 #include "selection_common.h"
 
-#include <accesstoken_kit.h>
 #include <chrono>
 #include <thread>
 #include <ipc_skeleton.h>
-#include <tokenid_kit.h>
 
 #include "ability_manager_client.h"
 #include "db_selection_config_repository.h"
@@ -164,29 +162,8 @@ sptr<ISelectionListener> SelectionService::GetListener()
     return listener_;
 }
 
-bool SelectionService::IsSystemCalling()
-{
-    const auto tokenId = IPCSkeleton::GetCallingTokenID();
-    const auto flag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    SELECTION_HILOGD("calling tokenId:%{private}u, flag:%{public}u", tokenId, flag);
-    if (flag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
-        flag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
-        return true;
-    }
-    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
-    bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
-    if (!isSystemApp) {
-        SELECTION_HILOGE("Calling tockenId is not system app or system service");
-    }
-    return isSystemApp;
-}
-
 ErrCode SelectionService::RegisterListener(const sptr<ISelectionListener>& listener)
 {
-    if (!IsSystemCalling()) {
-        return SelectionServiceError::NOT_SYSTEM_APP_ERROR;
-    }
-
     if (!SelectionAppValidator::GetInstance().Validate()) {
         return SelectionServiceError::UNAUTHENTICATED_ERROR;
     }
@@ -208,9 +185,6 @@ ErrCode SelectionService::RegisterListener(const sptr<ISelectionListener>& liste
 
 ErrCode SelectionService::UnregisterListener(const sptr<ISelectionListener>& listener)
 {
-    if (!IsSystemCalling()) {
-        return SelectionServiceError::NOT_SYSTEM_APP_ERROR;
-    }
     std::lock_guard<std::mutex> lock(mutex_);
     listener_ = nullptr;
     return 0;
@@ -218,9 +192,6 @@ ErrCode SelectionService::UnregisterListener(const sptr<ISelectionListener>& lis
 
 ErrCode SelectionService::IsCurrentSelectionApp(int pid, bool &resultValue)
 {
-    if (!IsSystemCalling()) {
-        return SelectionServiceError::NOT_SYSTEM_APP_ERROR;
-    }
     resultValue = (pid_.load() != -1 && pid == pid_.load());
     SELECTION_HILOGI("Checking IsCurrentSelectionApp: %{public}d", resultValue);
     return 0;
@@ -229,9 +200,6 @@ ErrCode SelectionService::IsCurrentSelectionApp(int pid, bool &resultValue)
 ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
 {
     SELECTION_HILOGI("[SelectionService] GetSelectionContent in");
-    if (!IsSystemCalling()) {
-        return SelectionServiceError::NOT_SYSTEM_APP_ERROR;
-    }
 
     if (!inputMonitor_) {
         return SelectionServiceError::INVALID_DATA;
@@ -249,9 +217,6 @@ ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
 ErrCode SelectionService::SetPanelShowingStatus(bool status)
 {
     SELECTION_HILOGI("[SelectionService] SetPanelShowingStatus in");
-    if (!IsSystemCalling()) {
-        return SelectionServiceError::NOT_SYSTEM_APP_ERROR;
-    }
 
     if (!inputMonitor_) {
         return SelectionServiceError::INVALID_DATA;
@@ -360,7 +325,7 @@ static void WatchTimeoutChange(const char *key, const char *value, void *context
     const std::string timeoutStr(value);
     uint32_t timeout = StrToUint(timeoutStr);
     SELECTION_CHECK(timeout != 0, return, "Invild timeout");
-    MemSelectionConfig::GetInstance().SetTriggered(timeout);
+    MemSelectionConfig::GetInstance().SetTimeout(timeout);
 }
 
 void SelectionService::PersistSelectionConfig()
@@ -487,7 +452,7 @@ bool SelectionService::IsAnySelectionPanelShowing()
 #endif
     SELECTION_CHECK(ret == OHOS::Rosen::WMError::WM_OK, return false,
         "GetVisibilityWindowInfo error, ret is: %{public}d", ret);
-    
+
     std::string currentBundleName;
     std::string currentAbilityName;
     SELECTION_CHECK(GetCurrentSelectionAppInfo(currentBundleName, currentAbilityName) == 0, return false,

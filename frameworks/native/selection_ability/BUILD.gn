@@ -95,7 +95,7 @@ ohos_shared_library("selection_ability") {
   ]
 
   if (selectionfwk_support_pass_windowId) {
-    define += [ "SELECTIONFWK_SUPPORT_PASS_WINDOWID" ]
+    defines += [ "SELECTIONFWK_SUPPORT_PASS_WINDOWID" ]
   }
 
   public_external_deps = [ "window_manager:libwm" ]

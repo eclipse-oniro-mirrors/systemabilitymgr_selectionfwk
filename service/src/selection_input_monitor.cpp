@@ -541,10 +541,10 @@ void SelectionInputMonitor::CloseTimerAndDisconnectExt() const
 {
     // Filter current visible windows by bundle name to check if selection panel exists
     if (SelectionService::GetInstance()->IsAnySelectionPanelShowing()) {
-        SELECTION_HILOGI("there is a panel showing, do not disconnect extention");
+        SELECTION_HILOGI("there is a panel showing, do not disconnect extension");
         return;
     }
-    SELECTION_HILOGI("there is no panel showing, close timer and disconnect extention");
+    SELECTION_HILOGI("there is no panel showing, close timer and disconnect extension");
     if (disconnectTimerId_ != 0) {
         SELECTION_HILOGI("CloseTimerAndDisconnectExt: unregister timer");
         SelectionFwkTimer::GetInstance()->UnRegister(disconnectTimerId_);
@@ -564,7 +564,7 @@ void SelectionInputMonitor::HandleWordSelected() const
     if (!SelectionService::GetInstance()->HasExtAbilityConnection()) {
         int32_t ret = SelectionService::GetInstance()->ConnectExtAbilityFromConfig();
         if (ret != 0) {
-            SELECTION_HILOGE("start selection extention ability failed");
+            SELECTION_HILOGE("start selection extension ability failed");
         }
     }
 

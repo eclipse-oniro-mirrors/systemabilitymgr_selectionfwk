@@ -128,7 +128,6 @@ private:
     int GetUserId();
     int LoadAccountLocalId();
     virtual bool CheckUserLoggedIn();
-    virtual bool IsSystemCalling();
     void SubscribeSysEventReceiver();
     void UnsubscribeSysEventReceiver();
     void SetScreenLockedFlag(bool isLocked);

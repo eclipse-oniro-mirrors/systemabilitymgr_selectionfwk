@@ -17,9 +17,9 @@ SELECTION_PROCESS_ABNORMAL:
   __BASE: {type: FAULT, level: CRITICAL, desc: The process of selecting words is abnormal, preserve: true}
   FAIL_REASON: {type: INT32, desc: Failure Reason}
   BUNDLE_NAME: {type: STRING, desc: Bundle Name}
-  ERROR_CODE : {type: INT32, desc: Error Code}
+  ERROR_CODE: {type: INT32, desc: Error Code}
 
 SELECTION_STATISTIC:
-  __BASE: {type: STATISTIC, level: CRITICAL, desc: Statistical information, preserce: true}
+  __BASE: {type: STATISTIC, level: CRITICAL, desc: Statistical information, preserve: true}
   SELECTION_TRIGGER_COUNT: {type: UINT32, desc: Trigger Count}
   FAILED_COUNT: {type: UINT32, desc: Failure Count}
