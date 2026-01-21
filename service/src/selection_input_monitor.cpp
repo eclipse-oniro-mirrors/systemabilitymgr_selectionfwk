@@ -706,7 +706,6 @@ void SelectionInputMonitor::FinishedWordSelection() const
     auto selectionInfo = baseInputMonitor_->GetSelectionInfo();
     if (selectionInfo.bundleName.empty()) {
         SELECTION_HILOGE("Failed to get Selected bundleName, skip notifying selection info.");
-        return;
     }
 
     if (IsAppInBlocklist(selectionInfo.bundleName)) {
