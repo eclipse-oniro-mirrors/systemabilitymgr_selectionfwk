@@ -164,6 +164,37 @@ int32_t SelectionPanel::SetUiContent(const std::string &contentInfo, napi_env en
     return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
 }
 
+int32_t SelectionPanel::SetUiContent(const std::string &contentInfo, ani_env* env)
+{
+    SELECTION_HILOGI("SelectionPanel SetUiContent start");
+    if (env == nullptr) {
+        SELECTION_HILOGE("env is nullptr, can not SetUiContent!");
+        return ErrorCode::ERROR_PANEL_DESTROYED;
+    }
+    auto window = GetWindow();
+    if (window == nullptr) {
+        SELECTION_HILOGE("window_ is nullptr, can not SetUiContent!");
+        return ErrorCode::ERROR_PANEL_DESTROYED;
+    }
+    if (IsDestroyed(window)) {
+        SELECTION_HILOGE("window is destroyed!");
+        return ErrorCode::ERROR_PANEL_DESTROYED;
+    }
+    if (!IsSelectionSystemAbilityExistent()) {
+        SELECTION_HILOGE("Selection SystemAbility is not existent");
+        return ErrorCode::ERROR_SELECTION_SERVICE;
+    }
+
+    WMError ret = window->AniSetUIContent(contentInfo, env, nullptr);
+    WMError wmError = window->SetTransparent(true);
+    if (isWaitSetUiContent_.load()) {
+        isWaitSetUiContent_.store(false);
+    }
+    SELECTION_HILOGI("SetTransparent ret: %{public}u.", wmError);
+    SELECTION_HILOGI("AniSetUIContent ret: %{public}d.", ret);
+    return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
+}
+
 PanelType SelectionPanel::GetPanelType()
 {
     return panelType_;

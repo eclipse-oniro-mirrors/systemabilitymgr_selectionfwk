@@ -15,6 +15,7 @@
 
 #include "selection_extension.h"
 #include "js_selection_extension.h"
+#include "ets_selection_extension.h"
 #include "runtime.h"
 #include "selection_log.h"
 
@@ -30,6 +31,9 @@ SelectionExtension* SelectionExtension::Create(const std::unique_ptr<Runtime>& r
         case Runtime::Language::JS:
             SELECTION_HILOGI("create JsSelectionExtension");
             return JsSelectionExtension::Create(runtime);
+        case Runtime::Language::ETS:
+            SELECTION_HILOGI("create EtsSelectionExtension");
+            return EtsSelectionExtension::Create(runtime);
         default:
             return new SelectionExtension();
     }

@@ -46,6 +46,8 @@ ohos_shared_library("selection_extension_ability_native") {
     "src/selection_extension_module_loader.cpp",
     "src/js_selection_extension.cpp",
     "src/js_selection_extension_context.cpp",
+    "src/ets_selection_extension_context.cpp",
+    "src/ets_selection_extension.cpp",
   ]
 
 
@@ -65,6 +67,9 @@ ohos_shared_library("selection_extension_ability_native") {
     "napi:ace_napi",
     "hilog:libhilog",
     "window_manager:libwm",
+    "runtime_core:ani",
+    "ability_runtime:ani_common",
+    "ipc:rpc_taihe",
   ]
 
   relative_install_dir = "extensionability/"

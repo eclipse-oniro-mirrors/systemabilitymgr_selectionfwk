@@ -48,6 +48,7 @@ public:
     int32_t CreatePanel(const std::shared_ptr<AbilityRuntime::Context> &context, const PanelInfo &panelInfo);
     int32_t DestroyPanel();
     int32_t SetUiContent(const std::string &contentInfo, napi_env env);
+    int32_t SetUiContent(const std::string &contentInfo, ani_env* env);
     int32_t ShowPanel();
     int32_t HidePanel();
     int32_t StartMoving();
