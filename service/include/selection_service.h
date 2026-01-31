@@ -56,6 +56,9 @@ public:
     int32_t WaitForConnect();
     int32_t WaitForDisconnect();
 
+    void InitDisconnectPromise();
+    void DestroyDisconnectPromise();
+
 public:
     bool needReconnectWithException = true;
     std::optional<AbilityRuntimeInfo> connectedAbilityInfo;

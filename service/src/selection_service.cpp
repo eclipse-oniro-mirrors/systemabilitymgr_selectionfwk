@@ -86,7 +86,6 @@ void SelectionExtensionAbilityConnection::OnAbilityDisconnectDone(const ElementN
     std::lock_guard<std::mutex> lock(disconnectMutex_);
     if (disconnectPromise_) {
         disconnectPromise_->set_value();
-        disconnectPromise_.reset();
     }
 
     auto disconnectAppInfo = element.GetBundleName() + "/" + element.GetAbilityName();
@@ -111,11 +110,30 @@ int32_t SelectionExtensionAbilityConnection::WaitForConnect()
     return 0;
 }
 
+void SelectionExtensionAbilityConnection::InitDisconnectPromise()
+{
+    SELECTION_HILOGI("InitDisconnectPromise");
+    std::lock_guard<std::mutex> lock(disconnectMutex_);
+    disconnectPromise_ = std::make_unique<std::promise<void>>();
+}
+
+void SelectionExtensionAbilityConnection::DestroyDisconnectPromise()
+{
+    SELECTION_HILOGI("DestroyDisconnectPromise");
+    std::lock_guard<std::mutex> lock(disconnectMutex_);
+    if (disconnectPromise_ != nullptr) {
+        disconnectPromise_.reset();
+    }
+}
+
 int32_t SelectionExtensionAbilityConnection::WaitForDisconnect()
 {
     SELECTION_HILOGI("WaitForDisconnect start.");
     std::unique_lock<std::mutex> lock(disconnectMutex_);
-    disconnectPromise_ = std::make_unique<std::promise<void>>();
+    if (!disconnectPromise_) {
+        SELECTION_HILOGE("disconnectPromise_ is null!");
+        return -1;
+    }
     auto future = disconnectPromise_->get_future();
     lock.unlock();
     auto status = future.wait_for(std::chrono::seconds(TIMEOUT_FOR_CONNECT_DISCONNECT));
@@ -410,13 +428,21 @@ void SelectionService::DoDisconnectCurrentExtAbility()
     SELECTION_CHECK(connectInner_ != nullptr, return, "connectInner_ is null");
 
     connectInner_->needReconnectWithException = false;
+    connectInner_->InitDisconnectPromise();
     int32_t ret = AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(connectInner_);
-    SELECTION_CHECK(ret == ERR_OK, return, "DisconnectServiceAbility failed, ret: %{public}d", ret);
+    if (ret != ERR_OK) {
+        connectInner_->DestroyDisconnectPromise();
+        SELECTION_HILOGE("DisconnectServiceAbility failed, ret: %{public}d", ret);
+        return;
+    }
     ret = connectInner_->WaitForDisconnect();
     if (ret != 0) {
-        HisyseventAdapter::GetInstance()->ReportShowPanelFailed(connectInner_->connectedAbilityInfo.value().bundleName,
+        SELECTION_HILOGI("hisysevent report DISCONNECT_EXTENSION_TIMEOUT");
+        HisyseventAdapter::GetInstance()->ReportShowPanelFailed("selection_service",
             ret, static_cast<int32_t>(SelectFailedReason::DISCONNECT_EXTENSION_TIMEOUT));
     }
+
+    connectInner_->DestroyDisconnectPromise();
     connectInner_ = nullptr;
     SELECTION_HILOGI("[selectevent] DisconnectAbility success.");
 }

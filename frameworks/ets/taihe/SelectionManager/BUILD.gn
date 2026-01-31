@@ -70,6 +70,7 @@ taihe_shared_library("selectionManager_taihe_native") {
     "runtime_core:ani",
     "samgr:samgr_proxy",
     "ability_runtime:abilitykit_native",
+    "graphic_2d:librender_service_base",
     "graphic_2d:librender_service_client",
     "ability_runtime:ani_base_context",
   ]

@@ -14,8 +14,8 @@ import("//build/ohos.gni")
 
 group("selection_taihe_group") {
     deps = [
-      # "SelectionManager:selectionManager_taihe",
-      # "SelectionPanel:selectionPanel_taihe",
+      "SelectionManager:selectionManager_taihe",
+      "SelectionPanel:selectionPanel_taihe",
     ]
 
 }
