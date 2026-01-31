@@ -94,8 +94,14 @@ ohos_shared_library("selection_ability") {
     "hisysevent:libhisysevent",
   ]
 
+  defines = []
+
   if (selectionfwk_support_pass_windowId) {
     defines += [ "SELECTIONFWK_SUPPORT_PASS_WINDOWID" ]
+  }
+
+  if (window_manager_use_sceneboard) {
+    defines += [ "SCENE_BOARD_ENABLE" ]
   }
 
   public_external_deps = [ "window_manager:libwm" ]

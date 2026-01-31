@@ -389,8 +389,11 @@ int32_t SelectionPanel::MoveTo(int32_t x, int32_t y)
     if (!IsSelectionSystemAbilityExistent()) {
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
-
+#ifdef SCENE_BOARD_ENABLE
     WMError ret = window->MoveWindowToGlobalDisplay(x, y);
+#else
+    WMError ret = window->MoveTo(x, y);
+#endif
     SELECTION_HILOGI("Moveto finish, ret = %{public}d", ret);
     return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
 }
