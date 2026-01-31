@@ -79,13 +79,13 @@ public:
     }
 
     void onDestroy(taihe::callback_view<void(UndefinedType_t const&)> callback) {
-        std::string type = "destroy";
+        std::string type = callbackType_Destroy;
         panelSubscribe(type, callback);
         SELECTION_HILOGI("register onDestroy success");
     }
 
     void offDestroy(::taihe::optional_view<::taihe::callback<void(UndefinedType_t const&)>> callback) {
-        std::string type = "destroy";
+        std::string type = callbackType_Destroy;
         if (callback.has_value()) {
             panelUnSubscribe(type, callback.value());
         } else {
@@ -95,13 +95,13 @@ public:
     }
 
     void onHide(taihe::callback_view<void(UndefinedType_t const&)> callback) {
-        std::string type = "hide";
+        std::string type = callbackType_Hide;
         panelSubscribe(type, callback);
         SELECTION_HILOGI("register onHide success");
     }
 
     void offHide(::taihe::optional_view<::taihe::callback<void(UndefinedType_t const&)>> callback) {
-        std::string type = "hide";
+        std::string type = callbackType_Hide;
         if (callback.has_value()) {
             panelUnSubscribe(type, callback.value());
         } else {
@@ -149,12 +149,12 @@ private:
 };
 
 void onSelectionComplete(::taihe::callback_view<void(::ohos::selectionInput::selectionManager::SelectionInfo const& a)> f) {
-    std::string type = "selectionComplete";
+    std::string type = callbackType_SelectionComplete;
     EtsSelectionEngineSetting::Subscribe(type, f);
 }
 
 void offSelectionComplete(::taihe::optional_view<::taihe::callback<void(::ohos::selectionInput::selectionManager::SelectionInfo const& a)>> f) {
-    std::string type = "selectionComplete";
+    std::string type = callbackType_SelectionComplete;
     if (f.has_value()) {
         EtsSelectionEngineSetting::UnSubscribe(type, f.value());
     } else {

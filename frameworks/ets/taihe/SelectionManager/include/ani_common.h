@@ -16,6 +16,7 @@
 #ifndef SELECTIONFWK_ETS_TAIHE_ANI_COMMON_H
 #define SELECTIONFWK_ETS_TAIHE_ANI_COMMON_H
 
+#include <string>
 #include "ohos.selectionInput.selectionManager.proj.hpp"
 #include "ohos.selectionInput.selectionManager.impl.hpp"
 #include "taihe/runtime.hpp"
@@ -28,6 +29,10 @@ namespace SelectionFwk {
 using UndefinedType_t = ::ohos::selectionInput::selectionManager::UndefinedType;
 using callbackType = taihe::callback<void(UndefinedType_t const&)>;
 using callbackTypePara = taihe::callback<void(const ::ohos::selectionInput::selectionManager::SelectionInfo &)>;
+
+const std::string callbackType_SelectionComplete = "selectionComplete";
+const std::string callbackType_Hide = "hidden";
+const std::string callbackType_Destroy = "destroyed";
 
 } // namespace SelectionFwk
 } // namespace OHOS

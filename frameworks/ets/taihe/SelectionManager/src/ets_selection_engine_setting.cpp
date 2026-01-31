@@ -41,7 +41,7 @@ static void convertSelectionInfo (const SelectionInfo &selectionInfo, ohos::sele
 int32_t EtsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selectionInfo)
 {
     //selectionComplete
-    const std::string type = "selectionComplete";
+    const std::string type = callbackType_SelectionComplete;
     auto callbackVec = EtsCbMap_[type];
     if (callbackVec.empty()) {
         SELECTION_HILOGE("callback of selecationComplete is empty");
