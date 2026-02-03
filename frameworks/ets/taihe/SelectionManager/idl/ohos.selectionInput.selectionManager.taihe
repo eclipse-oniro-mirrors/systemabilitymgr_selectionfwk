@@ -94,7 +94,7 @@ interface Panel {
                 try {
                     this.setUiContentSync(path);
                     resolve(undefined);
-                } catch (err: Error) {
+                } catch (err) {
                     reject(err as BusinessError);
                 }
             });
