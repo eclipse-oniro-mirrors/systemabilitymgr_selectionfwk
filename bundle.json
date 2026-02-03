@@ -51,8 +51,7 @@
         "memmgr",
         "resource_schedule_service",
         "hiappevent",
-        "runtime_core",
-        "bounds_checking_function"
+        "runtime_core"
       ],
       "third_party": [
       ]
