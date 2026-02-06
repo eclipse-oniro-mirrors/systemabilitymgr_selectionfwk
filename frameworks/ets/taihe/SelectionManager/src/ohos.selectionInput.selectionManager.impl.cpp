@@ -29,6 +29,9 @@ using namespace OHOS::SelectionFwk;
 namespace {
 
 std::map<std::string, std::vector<std::unique_ptr<callbackType>>> selectionManagerJsCbMap_;
+static std::deque<uint64_t> g_getSelectionContentCounter;
+static constexpr int MAX_CALLS_PER_WINDOW = 50;
+static constexpr int WINDOW_MS = 500;
 
 class PanelImpl {
 public:
@@ -162,10 +165,41 @@ void offSelectionComplete(::taihe::optional_view<::taihe::callback<void(::ohos::
     }
 }
 
+static uint64_t GetNowMs()
+{
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+}
+
+static void CheckGetSelectionContentFrequency()
+{
+    SELECTION_HILOGE("GetSelectionContent CheckGetSelectionContentFrequency");
+    uint64_t now = GetNowMs();
+    g_getSelectionContentCounter.push_back(now);
+
+    while (!g_getSelectionContentCounter.empty() && g_getSelectionContentCounter.front() + WINDOW_MS < now) {
+        g_getSelectionContentCounter.pop_front();
+    }
+
+    if (g_getSelectionContentCounter.size() > MAX_CALLS_PER_WINDOW &&
+        g_getSelectionContentCounter.back() - g_getSelectionContentCounter.front() <= WINDOW_MS) {
+        SELECTION_HILOGE("GetSelectionContent is called too frequent");
+        set_business_error(EXCEPTION_TOO_FREQUENT, JsUtils::ToMessage(EXCEPTION_TOO_FREQUENT));
+    }
+}
+
 ::taihe::string getSelectionContentSync() {
     SELECTION_HILOGI("GetSelectionContent");
+
+    CheckGetSelectionContentFrequency();
+
     std::string selectionContent;
-    SelectionClient::GetInstance().GetSelectionContent(selectionContent);
+    int32_t errCode = SelectionClient::GetInstance().GetSelectionContent(selectionContent);
+    if (errCode != EXCEPTION_SUCCESS) {
+        set_business_error(JsUtils::ConvertServiceErrorToJs(errCode),
+            JsUtils::ToMessage(JsUtils::ConvertServiceErrorToJs(errCode)));
+        return ::taihe::string("");
+    }
     return ::taihe::string(selectionContent);
 }
 
