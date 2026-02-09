@@ -260,8 +260,6 @@ napi_value JsPanel::MoveTo(napi_env env, napi_callback_info info)
         // 1 means the second param y<int32_t>
         PARAM_CHECK_RETURN(env, JsUtils::GetValue(env, argv[1], ctxt->y) == napi_ok, "y type must be number",
             TYPE_NONE, status);
-        PARAM_CHECK_RETURN(env, ctxt->x >= 0 && ctxt->y >= 0, "x/y must be positive",
-            TYPE_NONE, status);
         ctxt->info = { std::chrono::system_clock::now(), JsEvent::MOVE_TO };
         jsQueue_.Push(ctxt->info);
         return napi_ok;
