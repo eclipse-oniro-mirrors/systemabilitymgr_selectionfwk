@@ -14,13 +14,14 @@
  */
 
 #include "selectioninputability_fuzzer.h"
-#include "iservice_registry.h"
-#include "system_ability_definition.h"
-#include <fuzzer/FuzzedDataProvider.h>
-#include "selection_log.h"
-#include <vector>
 #include <cstdint>
 #include <iostream>
+#include <vector>
+
+#include <fuzzer/FuzzedDataProvider.h>
+#include "iservice_registry.h"
+#include "selection_log.h"
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace SelectionFwk {
