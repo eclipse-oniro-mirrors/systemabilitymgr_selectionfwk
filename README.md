@@ -12,7 +12,15 @@
 
 ![划词服务框架原理图](figures/selectionfwk-architecture.png)
 
-如上图所示，划词服务主要包含划词内容管理、划词事件处理、划词配置管理三个模块。其中，划词内容管理模块主要负责校验剪贴板服务传递的用户划词内容，确保其为纯文本且不为空，并过滤掉划词内容中的空白字符，然后传递给划词应用。划词事件处理模块主要负责处理多模输入模块传递的键鼠事件，通过事件驱动划词服务内部的状态机，以识别用户的双击、三击和单击滑动操作。划词配置管理模块主要负责管理划词服务的配置项，如划词触发方式、划词应用切换和划词服务开关等。所有的配置项均支持用户级绑定与持久化存储。有关划词服务及其他相关模块的详细介绍可参见[划词服务子系统概述](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/selection-services-intro-sys.md)。
+如上图所示，划词服务主要包含划词内容管理、划词事件处理、划词配置管理三个模块：
+
+- 划词内容管理模块：主要负责校验剪贴板服务传递的用户划词内容，确保其为纯文本且不为空，并过滤掉划词内容中的空白字符，然后传递给划词应用。
+
+- 划词事件处理模块：主要负责处理多模输入模块传递的键鼠事件，通过事件驱动划词服务内部的状态机，以识别用户的双击、三击和单击滑动操作。
+
+- 划词配置管理模块：主要负责管理划词服务的配置项，如划词触发方式、划词应用切换和划词服务开关等。所有的配置项均支持用户级绑定与持久化存储。
+
+有关划词服务的详细业务流程介绍可参见[划词服务概述](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/selection-services-intro.md)。
 
 
 ## 目录
@@ -72,7 +80,7 @@
 
 ### 接口说明
 
-划词服务提供了[selectionExtensionAbility](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionAbility-sys.md)、[selectionExtensionContext](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionContext-sys.md)、[selectionManager](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionManager-sys.md)、[selectionPanel](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionPanel-sys.md)四个模块的接口供开发者使用。其中，selectionExtensionAbility模块负责划词扩展的声明周期管理；selectionExtensionContext模块负责划词扩展的上下文管理；selectionManager模块是划词服务提供的核心模块，负责监听划词完成事件、获取划词内容、管理划词面板等；selectionPanel模块提供了划词面板的属性和信息。selectionManager模块中的常用接口如下表所示：
+划词服务提供了[selectionExtensionAbility](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionAbility.md)、[selectionExtensionContext](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionExtensionContext.md)、[selectionManager](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionManager.md)、[selectionPanel](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis-basic-services-kit/js-apis-selectionInput-selectionPanel.md)四个模块的接口供开发者使用。其中，selectionExtensionAbility模块负责划词扩展的声明周期管理；selectionExtensionContext模块负责划词扩展的上下文管理；selectionManager模块是划词服务提供的核心模块，负责监听划词完成事件、获取划词内容、管理划词面板等；selectionPanel模块提供了划词面板的属性和信息。selectionManager模块中的常用接口如下表所示：
 
 | 名称 | 描述 |
 | ---- | ---- |
@@ -86,7 +94,7 @@
 
 ### 使用说明
 
-具体使用方法请参考[实现一个划词扩展能力](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/selection-services-application-guide-sys.md)。
+具体使用方法请参考[实现一个划词扩展能力](https://gitcode.com/openharmony/docs/blob/master/zh-cn/application-dev/basic-services/selectionInput/selection-services-application-guide.md)。
 
 
 ## 相关仓

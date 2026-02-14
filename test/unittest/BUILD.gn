@@ -94,5 +94,6 @@ group("selection_manager_ut") {
   deps = [
     ":selection_service_unit_test",
     "mock:selection_service_unit_mock_test",
+    "PerformanceTest:performanceTest"
   ]
 }

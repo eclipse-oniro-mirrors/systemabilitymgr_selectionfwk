@@ -60,6 +60,11 @@ Note:If the text contains special characters, please escape them according to th
             <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies" >
                 <filteritem type="filepath" name="figures/selectionfwk-architecture-en.png" desc="PNG文件,不参与打包不影响兼容性"/>
                 <filteritem type="filepath" name="figures/selectionfwk-architecture.png" desc="PNG文件,不参与打包不影响兼容性"/>
+                <filteritem type="filepath" name="test/unittest/PerformanceTest/entry/src/main/resources/base/media/startIcon.png" desc="PNG文件,不参与打包不影响兼容性"/>
+                <filteritem type="filepath" name="test/unittest/PerformanceTest/entry/src/main/resources/base/media/background.png" desc="PNG文件,不参与打包不影响兼容性"/>
+                <filteritem type="filepath" name="test/unittest/PerformanceTest/entry/src/main/resources/base/media/foreground.png" desc="PNG文件,不参与打包不影响兼容性"/>
+                <filteritem type="filepath" name="test/unittest/PerformanceTest/AppScope/resources/base/media/foreground.png" desc="PNG文件,不参与打包不影响兼容性"/>
+                <filteritem type="filepath" name="test/unittest/PerformanceTest/AppScope/resources/base/media/background.png" desc="PNG文件,不参与打包不影响兼容性"/>
             </filefilter>
         </filefilterlist>
     </oatconfig>
