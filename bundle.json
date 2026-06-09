@@ -52,7 +52,8 @@
         "resource_schedule_service",
         "hiappevent",
         "udmf",
-        "runtime_core"
+        "runtime_core",
+        "taihe_ffi_gen"
       ],
       "third_party": [
       ]
