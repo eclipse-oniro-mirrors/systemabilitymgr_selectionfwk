@@ -42,6 +42,7 @@ int32_t EtsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selecti
 {
     //selectionComplete
     const std::string type = callbackType_SelectionComplete;
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     auto callbackVec = EtsCbMap_[type];
     if (callbackVec.empty()) {
         SELECTION_HILOGE("callback of selecationComplete is empty");

@@ -203,6 +203,7 @@ void EtsSelectionExtension::BindContext(ani_env *env)
     }
     if (env->Object_SetField_Ref(etsObj_->aniObj, contextField, contextRef) != ANI_OK) {
         SELECTION_HILOGE("Object_SetField_Ref contextObj failed");
+        env->GlobalReference_Delete(contextRef);
     }
     SELECTION_HILOGI("BindContext end");
 }

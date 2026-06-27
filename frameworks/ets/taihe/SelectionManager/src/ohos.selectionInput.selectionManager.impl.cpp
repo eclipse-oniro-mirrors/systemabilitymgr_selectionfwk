@@ -42,6 +42,7 @@ public:
 
     void setUiContentSync(::taihe::string_view path) {
         SELECTION_HILOGI("taihe::setUiContent start");
+        SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         ani_env *env = get_env();
         int32_t errCode = selectionPanel_->SetUiContent(std::string(path), env);
         if (errCode != EXCEPTION_SUCCESS) {
@@ -51,6 +52,7 @@ public:
 
     void showSync() {
         SELECTION_HILOGI("taihe::Show start");
+        SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         int32_t errCode = SelectionAbility::GetInstance()->ShowPanel(selectionPanel_);
         if (errCode != EXCEPTION_SUCCESS) {
             set_business_error(JsUtils::Convert(errCode), JsUtils::ToMessage(JsUtils::Convert(errCode)));
@@ -59,6 +61,7 @@ public:
 
     void hideSync() {
         SELECTION_HILOGI("taihe::Hide start");
+        SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         int32_t errCode = SelectionAbility::GetInstance()->HidePanel(selectionPanel_);
         if (errCode != EXCEPTION_SUCCESS) {
             set_business_error(JsUtils::Convert(errCode), JsUtils::ToMessage(JsUtils::Convert(errCode)));
@@ -67,6 +70,7 @@ public:
 
     void startMovingSync() {
         SELECTION_HILOGI("taihe::startMoving start");
+        SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         int32_t errCode = selectionPanel_->StartMoving();
         if (errCode != EXCEPTION_SUCCESS) {
             set_business_error(JsUtils::Convert(errCode), JsUtils::ToMessage(JsUtils::Convert(errCode)));
@@ -75,6 +79,7 @@ public:
 
     void moveToGlobalDisplaySync(int32_t x, int32_t y) {
         SELECTION_HILOGI("taihe::moveToGlobalDisplay start");
+        SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         int32_t errCode = selectionPanel_->MoveTo(x, y);
         if (errCode != EXCEPTION_SUCCESS) {
             set_business_error(JsUtils::Convert(errCode), JsUtils::ToMessage(JsUtils::Convert(errCode)));
@@ -113,6 +118,7 @@ public:
     }
 
     void destroyPanel() {
+        SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         int32_t errCode = SelectionAbility::GetInstance()->DestroyPanel(selectionPanel_);
         if (errCode != EXCEPTION_SUCCESS) {
             set_business_error(JsUtils::Convert(errCode), JsUtils::ToMessage(JsUtils::Convert(errCode)));
@@ -124,6 +130,7 @@ public:
 
     void panelSubscribe(const std::string& type, callbackType &&cbObject) {
         SELECTION_HILOGI("panelSubscribe: register %{public}s callback", type.c_str());
+        SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         std::shared_ptr<PanelListenerImpl> observer = PanelListenerImpl::GetInstance();
         auto windowId = selectionPanel_->GetWindowId();
         observer->Subscribe(windowId, type, std::forward<callbackType>(cbObject));
@@ -136,12 +143,14 @@ public:
 
     void panelUnSubscribe(const std::string& type, const callbackType &cbObject) {
         SELECTION_HILOGI("panelUnSubscribe: Unregister %{public}s callback", type.c_str());
+        SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         std::shared_ptr<PanelListenerImpl> observer = PanelListenerImpl::GetInstance();
         observer->RemoveInfo(type, selectionPanel_->GetWindowId(), cbObject);
     }
 
     void panelUnSubscribe(const std::string& type) {
         SELECTION_HILOGI("panelUnSubscribe: Unregister %{public}s callback", type.c_str());
+        SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         std::shared_ptr<PanelListenerImpl> observer = PanelListenerImpl::GetInstance();
         observer->RemoveInfo(type, selectionPanel_->GetWindowId());
         selectionPanel_->ClearPanelListener(type);

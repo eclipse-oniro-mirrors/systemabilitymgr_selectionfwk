@@ -137,6 +137,7 @@ napi_value AsyncCall::SyncCall(napi_env env, AsyncCall::Context::ExecAction exec
     }
     AsyncCall::OnExecute(env, context_);
     AsyncCall::OnComplete(env, context_->ctx->status_, context_);
+    context_ = nullptr;
     return promise;
 }
 

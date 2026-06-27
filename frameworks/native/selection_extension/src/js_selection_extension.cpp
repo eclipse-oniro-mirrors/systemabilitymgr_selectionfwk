@@ -167,8 +167,8 @@ napi_value JsSelectionExtension::CallObjectMethod(const char* methodName, const 
     }
 
     napi_value method = nullptr;
-    napi_get_named_property(env, obj, methodName, &method);
-    if (method == nullptr) {
+    napi_status status = napi_get_named_property(env, obj, methodName, &method);
+    if (status != napi_ok || method == nullptr) {
         SELECTION_HILOGE("failed to get '%{public}s' from JsSelectionExtension object!", methodName);
         return nullptr;
     }
