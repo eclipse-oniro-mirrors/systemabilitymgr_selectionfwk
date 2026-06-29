@@ -202,6 +202,9 @@ ErrCode SelectionService::RegisterListener(const sptr<ISelectionListener>& liste
 
 ErrCode SelectionService::UnregisterListener(const sptr<ISelectionListener>& listener)
 {
+    if (!SelectionAppValidator::GetInstance().Validate()) {
+        return SelectionServiceError::UNAUTHENTICATED_ERROR;
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     listener_ = nullptr;
     return 0;
@@ -217,6 +220,9 @@ ErrCode SelectionService::IsCurrentSelectionApp(int pid, bool &resultValue)
 ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
 {
     SELECTION_HILOGI("[SelectionService] GetSelectionContent in");
+    if (!SelectionAppValidator::GetInstance().Validate()) {
+        return SelectionServiceError::UNAUTHENTICATED_ERROR;
+    }
 
     if (!inputMonitor_) {
         return SelectionServiceError::INVALID_DATA;
@@ -853,6 +859,10 @@ void SelectionService::InputMonitorInit()
     }
 
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sam == nullptr) {
+        SELECTION_HILOGE("get system ability manager failed!");
+        return;
+    }
     auto remoteObj = sam->CheckSystemAbility(MULTIMODAL_INPUT_SERVICE_ID);
     if (remoteObj == nullptr) {
         SELECTION_HILOGE("CheckSystemAbility MULTIMODAL_INPUT_SERVICE_ID failed.");

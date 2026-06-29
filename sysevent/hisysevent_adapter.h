@@ -43,8 +43,8 @@ public:
     void StartHisyseventTimer();
 
 private:
-    uint32_t failCount_ = 0;
-    uint32_t selectionCount_ = 0;
+    std::atomic<uint32_t> selectionCount_{0};
+    std::atomic<uint32_t> failCount_{0};
 };
 }
 

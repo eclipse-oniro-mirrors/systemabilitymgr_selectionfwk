@@ -66,8 +66,8 @@ void HisyseventAdapter::ReportStatisticInfo()
 {
     int ret = HiSysEventWrite(HiSysEvent::Domain::SELECTIONFWK, SELECTION_STATISTIC,
         HiSysEvent::EventType::STATISTIC,
-        SELECTION_TRIGGER_COUNT, selectionCount_,
-        FAILED_COUNT, failCount_);
+        SELECTION_TRIGGER_COUNT, selectionCount_.load(),
+        FAILED_COUNT, failCount_.load());
     if (ret != 0) {
         SELECTION_HILOGE("HiSysEventWrite error, ret: %{public}d", ret);
     }

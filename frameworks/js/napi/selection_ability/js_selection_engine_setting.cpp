@@ -136,7 +136,7 @@ napi_status JsSelectionEngineSetting::GetContext(napi_env env, napi_value in,
     napi_status status = OHOS::AbilityRuntime::IsStageContext(env, in, stageMode);
     if (status != napi_ok || (!stageMode)) {
         SELECTION_HILOGE("it's not in stage mode.");
-        return status;
+        return napi_invalid_arg;
     }
     context = OHOS::AbilityRuntime::GetStageModeContext(env, in);
     if (context == nullptr) {
@@ -361,27 +361,29 @@ void JsSelectionEngineSetting::RegisterListener(napi_value callback, std::string
 void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::string type)
 {
     SELECTION_HILOGI("unregister listener: %{public}s.", type.c_str());
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
-        SELECTION_HILOGE("methodName %{public}s is not unregistered!", type.c_str());
-        return;
-    }
-
-    if (callback == nullptr) {
-        jsCbMap_.erase(type);
-        SELECTION_HILOGE("callback is nullptr!");
-        return;
-    }
-
-    for (auto item = jsCbMap_[type].begin(); item != jsCbMap_[type].end(); item++) {
-        if ((callback != nullptr) &&
-            (JsUtils::Equals((*item)->env_, callback, (*item)->callback_, (*item)->threadId_))) {
-            jsCbMap_[type].erase(item);
-            break;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
+            SELECTION_HILOGE("methodName %{public}s is not unregistered!", type.c_str());
+            return;
         }
-    }
-    if (jsCbMap_[type].empty()) {
-        jsCbMap_.erase(type);
+
+        if (callback == nullptr) {
+            jsCbMap_.erase(type);
+            SELECTION_HILOGE("callback is nullptr!");
+            return;
+        }
+
+        for (auto item = jsCbMap_[type].begin(); item != jsCbMap_[type].end(); item++) {
+            if ((callback != nullptr) &&
+                (JsUtils::Equals((*item)->env_, callback, (*item)->callback_, (*item)->threadId_))) {
+                jsCbMap_[type].erase(item);
+                break;
+            }
+        }
+        if (jsCbMap_[type].empty()) {
+            jsCbMap_.erase(type);
+        }
     }
 
     auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();

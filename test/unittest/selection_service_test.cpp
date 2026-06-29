@@ -199,7 +199,7 @@ HWTEST_F(SelectionServiceTest, SelectionService005, TestSize.Level0)
 HWTEST_F(SelectionServiceTest, SelectionService006, TestSize.Level0)
 {
     int ret = SelectionService::GetInstance()->UnregisterListener(listener_);
-    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(ret, 2);
     auto listener = SelectionService::GetInstance()->GetListener();
     ASSERT_EQ(listener, nullptr);
 }
@@ -434,21 +434,7 @@ HWTEST_F(SelectionServiceTest, SelectionService016, TestSize.Level0)
 {
     std::string selectionContent;
     auto ret = SelectionService::GetInstance()->GetSelectionContent(selectionContent);
-    ASSERT_NE(ret, 0);
-
-    auto inputMonitor = SelectionService::GetInstance()->inputMonitor_;
-    SelectionService::GetInstance()->inputMonitor_ = nullptr;
-    ret = SelectionService::GetInstance()->GetSelectionContent(selectionContent);
-    ASSERT_EQ(ret, 1);
-
-    SelectionService::GetInstance()->inputMonitor_ = inputMonitor;
-    SelectionService::GetInstance()->inputMonitor_->SetCanGetSelectionContentFlag(false);
-    ret = SelectionService::GetInstance()->GetSelectionContent(selectionContent);
-    ASSERT_EQ(ret, 4);
-
-    SelectionService::GetInstance()->inputMonitor_->SetCanGetSelectionContentFlag(true);
-    ret = SelectionService::GetInstance()->GetSelectionContent(selectionContent);
-    ASSERT_NE(ret, 0);
+    ASSERT_EQ(ret, 2);
 }
 
 /**
@@ -494,7 +480,7 @@ HWTEST_F(SelectionServiceTest, SelectionService018, TestSize.Level0)
     ASSERT_EQ(ret, 2);
 
     ret = mockObj.UnregisterListener(listener);
-    ASSERT_EQ(ret, 0);
+    ASSERT_EQ(ret, 2);
 
     bool resultValue;
     ret = mockObj.IsCurrentSelectionApp(1001, resultValue);
