@@ -1,0 +1,13 @@
+{
+    "description": "Config for hypium test cases",
+    "environment": [
+        {
+            "type": "device",
+            "label": "2in1"
+        }
+    ],
+    "driver": {
+        "type": "DeviceTest",
+        "py_file": ["selectionfwk_user_switch_0500.py"]
+    }
+}
