@@ -32,7 +32,7 @@
 #include <unistd.h>
 #include <random>
 #include <cstddef>
-#include <algorithm> 
+#include <algorithm>
 
 #include "gtest/gtest.h"
 #include "database_plugin_impl.h"
