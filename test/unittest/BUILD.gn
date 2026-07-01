@@ -45,6 +45,7 @@ ohos_unittest("selection_service_unit_test") {
   sources = [
     "ability_manager_plugin_impl_test.cpp",
     "database_plugin_impl_test.cpp",
+    "database_plugin_ai_test.cpp",
     "focus_monitor_test.cpp",
     "pasteboard_plugin_impl_test.cpp",
     "plugin_exports_test.cpp",
