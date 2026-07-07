@@ -42,12 +42,15 @@ ohos_static_library("selection_config_static") {
     subsystem_name = "systemabilitymgr"
 
     # CFI配置：与共享库保持一致
+    branch_protector_ret = "pac_ret"
     sanitize = {
+        boundary_sanitize = true
         cfi = true
         cfi_cross_dso = true
         cfi_vcall_icall_only = true
         ubsan = true
         debug = false
+        integer_overflow = true
     }
 }
 
@@ -82,6 +85,7 @@ ohos_source_set("selection_plugins_impl_src") {
         "hisysevent:libhisysevent",
     ]
 
+    branch_protector_ret = "pac_ret"
     sanitize = {
         boundary_sanitize = true
         cfi = true
@@ -89,6 +93,7 @@ ohos_source_set("selection_plugins_impl_src") {
         cfi_vcall_icall_only = true
         ubsan = true
         debug = false
+        integer_overflow = true
     }
 
     part_name = "selectionfwk"
@@ -141,6 +146,7 @@ ohos_shared_library("selection_plugins_impl") {
         cfi_vcall_icall_only = true
         ubsan = true
         debug = false
+        integer_overflow = true
     }
 
     # 隐藏符号以减小符号表暴露范围；plugin_exports.cpp 中的 extern "C" 函数

@@ -32,10 +32,15 @@ ohos_taihe("run_taihe") {
 }
 
 taihe_shared_library("selectionManager_taihe_native") {
+  branch_protector_ret = "pac_ret"
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
   cflags_cc = [
     "-fdata-sections",
