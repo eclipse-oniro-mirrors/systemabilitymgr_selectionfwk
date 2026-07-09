@@ -23,6 +23,7 @@ config("selection_sa_config") {
 }
 
 ohos_source_set("selection_service_src") {
+  branch_protector_ret = "pac_ret"
   sanitize = {
     boundary_sanitize = true
     cfi = true

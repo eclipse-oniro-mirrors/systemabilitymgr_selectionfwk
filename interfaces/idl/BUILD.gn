@@ -40,11 +40,15 @@ config("selection_service_config") {
 }
 
 ohos_source_set("selection_listener_proxy") {
+  branch_protector_ret = "pac_ret"
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     cfi_vcall_icall_only = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
   cflags_cc = [
     "-fdata-sections",
@@ -73,11 +77,15 @@ ohos_source_set("selection_listener_proxy") {
 }
 
 ohos_source_set("selection_listener_stub") {
+  branch_protector_ret = "pac_ret"
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     cfi_vcall_icall_only = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
   cflags_cc = [
     "-fdata-sections",
@@ -106,11 +114,15 @@ ohos_source_set("selection_listener_stub") {
 }
 
 ohos_source_set("selection_service_proxy") {
+  branch_protector_ret = "pac_ret"
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     cfi_vcall_icall_only = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
   cflags_cc = [
     "-fdata-sections",
@@ -139,11 +151,15 @@ ohos_source_set("selection_service_proxy") {
 }
 
 ohos_source_set("selection_service_stub") {
+  branch_protector_ret = "pac_ret"
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     cfi_vcall_icall_only = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
   cflags_cc = [
     "-fdata-sections",
