@@ -996,7 +996,8 @@ bool SelectionService::LoadPluginSo()
 {
     std::lock_guard<std::mutex> lock(pluginMutex_);
     if (pluginSo_) {
-        return true;  // 已加载
+        ResetPluginUnloadTimerInner();
+        return true;  // 已加载 重置定时器
     }
 
     pluginSo_ = dlopen(PLUGIN_SO_PATH, RTLD_LAZY);
@@ -1029,12 +1030,13 @@ bool SelectionService::LoadPluginSo()
     }
 
     SELECTION_HILOGI("Plugin so loaded successfully");
-    ResetPluginUnloadTimer();  // 启动/重置5分钟卸载定时器
+    ResetPluginUnloadTimerInner();  // 启动/重置5分钟卸载定时器
     return true;
 }
 
 void SelectionService::UnloadPluginSo()
 {
+    std::lock_guard<std::mutex> lock(pluginMutex_);
     // 取消卸载定时器
     if (pluginUnloadTimerId_ != 0) {
         SelectionFwkTimer::GetInstance()->UnRegister(pluginUnloadTimerId_);
@@ -1068,6 +1070,12 @@ void SelectionService::UnloadPluginSo()
 
 void SelectionService::ResetPluginUnloadTimer()
 {
+    std::lock_guard<std::mutex> lock(pluginMutex_);
+    ResetPluginUnloadTimerInner();
+}
+
+void SelectionService::ResetPluginUnloadTimerInner()
+{
     // 取消旧的定时器
     if (pluginUnloadTimerId_ != 0) {
         SelectionFwkTimer::GetInstance()->UnRegister(pluginUnloadTimerId_);
@@ -1096,7 +1104,6 @@ void SelectionService::OnPluginUnloadTimer()
         DisconnectCurrentExtAbility();
     }
     UnloadPluginSo();
-    pluginUnloadTimerId_ = 0;
 }
 
 int SelectionService::GetDatabaseConfig(int32_t uid, SelectionConfig& config)

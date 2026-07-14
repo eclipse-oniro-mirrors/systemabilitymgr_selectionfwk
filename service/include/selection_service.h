@@ -120,6 +120,7 @@ public:
 
     // 插件卸载定时器管理（供SelectionInputMonitor 调用）
     void ResetPluginUnloadTimer();
+    void ResetPluginUnloadTimerInner();
 
     // 数据库配置操作方法（供 SelectionConfigComparator 调用）
     int GetDatabaseConfig(int32_t uid, SelectionConfig& config);

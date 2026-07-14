@@ -644,11 +644,11 @@ int32_t SelectionInputMonitor::GetSelectionContent(std::string& selectionContent
 int32_t SelectionInputMonitor::SetPanelShowingStatus(bool status) const
 {
     SELECTION_HILOGI("set panel showing status: %{public}d", status);
-    isPanelShowing_ = status;
+    isPanelShowing_.store(status);
     return 0;
 }
 
 bool SelectionInputMonitor::GetPanelShowingStatus() const
 {
-    return isPanelShowing_;
+    return isPanelShowing_.load();
 }
