@@ -160,12 +160,12 @@ bool SelectionPasteboardManager::Initialize()
  
 bool SelectionPasteboardManager::CanGetSelectionContent() const
 {
-    return canGetSelectionContentFlag_;
+    return canGetSelectionContentFlag_.load();
 }
  
 void SelectionPasteboardManager::SetCanGetSelectionContentFlag(bool flag)
 {
-    canGetSelectionContentFlag_ = flag;
+    canGetSelectionContentFlag_.store(flag);
 }
  
 void SelectionPasteboardManager::Cleanup()

@@ -85,7 +85,7 @@ private:
     bool initialized_;
     int32_t fd_;
     struct uinput_user_dev uidev_;
-    bool canGetSelectionContentFlag_;
+    std::atomic<bool> canGetSelectionContentFlag_;
     // Async injection state
     std::future<int32_t> injectCtrlCFuture_;
     std::atomic<bool> injectFailed_;

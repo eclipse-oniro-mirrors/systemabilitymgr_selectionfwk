@@ -129,7 +129,7 @@ private:
 private:
     std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
 
-    mutable bool canGetSelectionContentFlag_ = false;
+    mutable std::atomic<bool> canGetSelectionContentFlag_ = false;
     mutable std::atomic<bool> isPanelShowing_ { false };
 };
 }
