@@ -35,6 +35,7 @@ bool DatabasePluginImpl::Initialize()
 void DatabasePluginImpl::Cleanup()
 {
     SELECTION_HILOGI("DatabasePluginImpl::Cleanup called");
+    std::lock_guard<std::mutex> guard(databaseMutex_);
     selectionDatabase_.reset();
     SELECTION_HILOGI("DatabasePluginImpl::Cleanup completed");
 }
@@ -53,12 +54,11 @@ int DatabasePluginImpl::Save(int uid, const SelectionConfig &info)
 {
     SELECTION_HILOGI("DatabasePluginImpl::Save called, uid=%{public}d", uid);
 
+    std::lock_guard<std::mutex> guard(databaseMutex_);
     if (selectionDatabase_ == nullptr) {
         SELECTION_HILOGE("Database not initialized");
         return SELECTION_CONFIG_RDB_NO_INIT;
     }
-
-    std::lock_guard<std::mutex> guard(databaseMutex_);
 
     ValuesBucket values;
     values.Clear();
@@ -160,6 +160,7 @@ std::optional<SelectionConfig> DatabasePluginImpl::GetOneByUserId(int uid)
 
 bool DatabasePluginImpl::IsAvailable() const
 {
+    std::lock_guard<std::mutex> guard(databaseMutex_);
     return selectionDatabase_ != nullptr;
 }
 
