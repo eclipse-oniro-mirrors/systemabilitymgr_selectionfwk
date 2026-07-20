@@ -49,7 +49,6 @@ private:
 
     std::mutex panelsMutex_;
     std::deque<std::shared_ptr<SelectionPanel>> panels_;
-
 };
 } // namespace SelectionFwk
 } // namespace OHOS
