@@ -240,8 +240,7 @@ ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
 ErrCode SelectionService::SetPanelShowingStatus(bool status)
 {
     SELECTION_HILOGI("[SelectionService] SetPanelShowingStatus in");
-
-    return RET_OK;
+    return 0;
 }
 
 int32_t SelectionService::Dump(int32_t fd, const std::vector<std::u16string> &args)
