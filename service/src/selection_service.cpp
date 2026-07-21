@@ -237,18 +237,6 @@ ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
     return ret;
 }
 
-ErrCode SelectionService::SetPanelShowingStatus(bool status)
-{
-    SELECTION_HILOGI("[SelectionService] SetPanelShowingStatus in");
-
-    if (!inputMonitor_) {
-        return SelectionServiceError::INVALID_DATA;
-    }
-
-    auto ret = inputMonitor_->SetPanelShowingStatus(status);
-    return ret;
-}
-
 int32_t SelectionService::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
     SELECTION_HILOGI("Dump start.");

@@ -114,8 +114,6 @@ public:
 
     bool GetCanGetSelectionContentFlag() const;
     void SetCanGetSelectionContentFlag(bool flag) const;
-    int32_t SetPanelShowingStatus(bool status) const;
-    bool GetPanelShowingStatus() const;
 
 private:
     void FinishedWordSelection() const;
@@ -130,7 +128,6 @@ private:
     std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
 
     mutable std::atomic<bool> canGetSelectionContentFlag_ = false;
-    mutable bool isPanelShowing_ = false;
 };
 }
 

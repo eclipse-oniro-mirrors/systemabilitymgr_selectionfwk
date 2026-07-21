@@ -15,7 +15,6 @@ import("//build/ohos.gni")
 
 declare_args() {
   word_selection_feature_test_one = true
-  selectionfwk_support_pass_windowId = false
 }
 
 

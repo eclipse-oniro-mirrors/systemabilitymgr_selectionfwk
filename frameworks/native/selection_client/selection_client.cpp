@@ -81,29 +81,3 @@ int32_t SelectionClient::GetSelectionContent(std::string& selectionContent)
     }
     return ret;
 }
-
-int32_t SelectionClient::SetPanelShowingStatus(bool status)
-{
-    SELECTION_HILOGI("SelectionClient::SetPanelShowingStatus");
-    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (systemAbilityManager == nullptr) {
-        SELECTION_HILOGE("system ability manager is nullptr!");
-        return ErrorCode::ERROR_SELECTION_SERVICE;
-    }
-    sptr<IRemoteObject> systemAbility = nullptr;
-    systemAbility = systemAbilityManager->GetSystemAbility(SELECTION_FWK_SA_ID);
-    if (systemAbility == nullptr) {
-        SELECTION_HILOGE("get system ability is nullptr!");
-        return ErrorCode::ERROR_SELECTION_SERVICE;
-    }
-    auto abilityManager = iface_cast<ISelectionService>(systemAbility);
-    if (abilityManager == nullptr) {
-        SELECTION_HILOGE("abilityManager is nullptr!");
-        return ErrorCode::ERROR_SELECTION_SERVICE;
-    }
-    auto ret = abilityManager->SetPanelShowingStatus(status);
-    if (ret != ErrorCode::NO_ERROR) {
-        SELECTION_HILOGE("Failed to call SetPanelShowingStatus, errCode: %{public}d.", ret);
-    }
-    return ret;
-}

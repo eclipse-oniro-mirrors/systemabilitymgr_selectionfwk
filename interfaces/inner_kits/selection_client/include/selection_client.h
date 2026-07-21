@@ -25,7 +25,6 @@ public:
     SELECTION_API static SelectionClient& GetInstance();
     bool IsCurrentSelectionApp(int pid);
     int32_t GetSelectionContent(std::string& selectionContent);
-    int32_t SetPanelShowingStatus(bool status);
 };
 
 #endif // SELECTION_CLIENT_H
