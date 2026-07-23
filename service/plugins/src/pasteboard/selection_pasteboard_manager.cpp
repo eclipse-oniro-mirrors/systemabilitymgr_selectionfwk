@@ -110,7 +110,7 @@ bool SelectionPasteboardDisposableObserver::IsAllWhitespace(const std::string &s
 void SelectionPasteboardDisposableObserver::OnTextReceived(const std::string &text, int32_t errCode)
 {
     SELECTION_HILOGW("[selectevent] Pasteboard call sa. Text received "
-        "length: %{public}lu, errCode: %{public}d.", text.length(), errCode);
+        "length: %{public}zu, errCode: %{public}d.", text.length(), errCode);
     if (errCode != 0) {
         HisyseventAdapter::GetInstance()->ReportShowPanelFailed(bundleName_, errCode,
             static_cast<int32_t>(SelectFailedReason::TEXT_RECEIVE_FAILED));
