@@ -150,7 +150,6 @@ private:
     void SyncConfigToDatabase(int32_t userId, const SelectionConfig& config);
     void ProcessSyncResult(const ComparisionResult& result);
 
-    // 🔧 插件加载辅助方法（简化版：直接使用 dlopen）
     static constexpr const char* PLUGIN_SO_PATH = "libselection_plugins_impl.z.so";
     static constexpr uint32_t PLUGIN_UNLOAD_TIMEOUT_MS = 300000;  // 5分钟卸载超时
     bool LoadPluginSo();
@@ -183,7 +182,7 @@ private:
     std::map<int32_t, std::function<void(int32_t, const std::string&)>> systemAbilityChangeHandlers_;
     std::shared_ptr<SelectionInputMonitor> inputMonitor_;
 
-    // 🔧 插件 .so 句柄和函数指针（替代 plugin_manager）
+    // 插件 .so 句柄和函数指针
     void* pluginSo_ = nullptr;
     int32_t pluginUnloadTimerId_ {0};  // 插件自动卸载定时器ID
     DatabaseSaveConfigFunc databaseSave_ = nullptr;

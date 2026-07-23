@@ -161,6 +161,7 @@ private:
 };
 
 void onSelectionComplete(::taihe::callback_view<void(::ohos::selectionInput::selectionManager::SelectionInfo const& a)> f) {
+    SELECTION_HILOGI("onSelectionComplete");
     std::string type = callbackType_SelectionComplete;
     EtsSelectionEngineSetting::Subscribe(type, f);
 }

@@ -348,7 +348,6 @@ void SelectionService::PersistSelectionConfig()
     auto selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
     SELECTION_HILOGI("========== PersistSelectionConfig: Start ==========");
 
-    // 🔧 使用简化的插件加载方式
     if (!LoadPluginSo()) {
         SELECTION_HILOGW("Using in-memory config as fallback, service continues to run");
         return;
@@ -414,7 +413,6 @@ int32_t SelectionService::DoConnectNewExtAbility(const std::string& bundleName, 
         return SELECTION_CONFIG_FAILURE;
     }
 
-    // 🔧 使用简化的插件加载方式
     if (!LoadPluginSo() || !abilityConnect_) {
         SELECTION_HILOGE("Ability manager plugin not available");
         connectInner_ = nullptr;
@@ -662,7 +660,6 @@ void SelectionService::SynchronizeSelectionConfig()
 
 std::optional<SelectionConfig> SelectionService::LoadDatabaseSelectionConfig()
 {
-    // 🔧 使用简化的插件加载方式
     if (!LoadPluginSo()) {
         SELECTION_HILOGW("Using system default config as fallback");
         return std::nullopt;
@@ -696,7 +693,6 @@ void SelectionService::SyncConfigToDatabase(int32_t userId, const SelectionConfi
 {
     SELECTION_HILOGI("SyncConfigToDatabase: %{public}s", config.ToString().c_str());
 
-    // 🔧 使用简化的插件加载方式
     if (!LoadPluginSo() || !databaseSave_) {
         SELECTION_HILOGW("Config saved to system params as fallback");
         return;
@@ -972,6 +968,7 @@ void SelectionService::UnloadService()
 void SelectionService::PerformParamBootCompleted(const char* key, const char* value, void* context)
 {
     SELECTION_CHECK(key != nullptr && value != nullptr, return, "key or value is nullptr");
+    SELECTION_HILOGI("%{public}s: value=[%{public}s]". key, value);
     if (strcmp(value, "true") != 0) {
         return;
     }
@@ -979,7 +976,6 @@ void SelectionService::PerformParamBootCompleted(const char* key, const char* va
     Init();
 }
 
-// 🔧 插件加载辅助方法实现（简化版：直接使用 dlopen）
 bool SelectionService::LoadPluginSo()
 {
     std::lock_guard<std::mutex> lock(pluginMutex_);
