@@ -980,7 +980,7 @@ void SelectionService::UnloadService()
 void SelectionService::PerformParamBootCompleted(const char* key, const char* value, void* context)
 {
     SELECTION_CHECK(key != nullptr && value != nullptr, return, "key or value is nullptr");
-    SELECTION_HILOGI("%{public}s: value=[%{public}s]". key, value);
+    SELECTION_HILOGI("%{public}s: value=[%{public}s]", key, value);
     if (strcmp(value, "true") != 0) {
         return;
     }
