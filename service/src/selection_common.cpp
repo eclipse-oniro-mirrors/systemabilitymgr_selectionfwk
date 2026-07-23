@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 #include <string>
-#include "selection_log.h"
 #include "selection_common.h"
+#include "selection_log.h"
 namespace OHOS {
 namespace SelectionFwk {
 
