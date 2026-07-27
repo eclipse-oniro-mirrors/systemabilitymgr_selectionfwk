@@ -1417,7 +1417,8 @@ HWTEST_F(SelectionConfigDataBaseConsistencyTest, TestConsistencyUpdatePreservesF
     SELECTION_HILOGI("TestConsistencyUpdatePreservesFields passed");
 }
 
-HWTEST_F(SelectionConfigDataBaseConsistencyTest, TestConsistencyDeleteDoesNotAffectOthers, testing::ext::TestSize.Level0)
+HWTEST_F(SelectionConfigDataBaseConsistencyTest,
+    TestConsistencyDeleteDoesNotAffectOthers, testing::ext::TestSize.Level0)
 {
     SELECTION_HILOGI("TestConsistencyDeleteDoesNotAffectOthers started");
     EXPECT_GT(db_->Insert(CreateTestBucket(100030, 1, 0, "com.consist.del")), 0);
