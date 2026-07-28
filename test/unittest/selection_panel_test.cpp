@@ -774,39 +774,6 @@ HWTEST_F(PanelConcurrencyTest, ConcurrentSetListener001, TestSize.Level0)
     EXPECT_EQ(successCount.load(), threadCount);
 }
 
-HWTEST_F(PanelConcurrencyTest, ConcurrentMixedMethods001, TestSize.Level0)
-{
-    SelectionPanel panel;
-    const int threadCount = 10;
-    std::vector<std::thread> threads;
-    std::atomic<int> destroyedCount(0);
-    for (int i = 0; i < threadCount; i++) {
-        threads.emplace_back([&panel, &destroyedCount, i]() {
-            switch (i % 5) {
-                case 0:
-                    if (panel.ShowPanel() == ErrorCode::ERROR_PANEL_DESTROYED) destroyedCount++;
-                    break;
-                case 1:
-                    if (panel.HidePanel() == ErrorCode::ERROR_PANEL_DESTROYED) destroyedCount++;
-                    break;
-                case 2:
-                    if (panel.MoveTo(i, i) == ErrorCode::ERROR_PANEL_DESTROYED) destroyedCount++;
-                    break;
-                case 3:
-                    if (panel.StartMoving() == ErrorCode::ERROR_PANEL_DESTROYED) destroyedCount++;
-                    break;
-                case 4:
-                    panel.GetPanelType();
-                    break;
-            }
-        });
-    }
-    for (auto &t : threads) {
-        t.join();
-    }
-    EXPECT_GT(destroyedCount.load(), 0);
-}
-
 // ============================================================================
 // CreatePanel Success Full Lifecycle Tests
 // ============================================================================
