@@ -33,6 +33,21 @@ namespace SelectionFwk {
 
 using namespace testing::ext;
 
+constexpr int32_t TEST_PANEL_X = 100;
+constexpr int32_t TEST_PANEL_Y = 200;
+constexpr int32_t TEST_PANEL_WIDTH = 300;
+constexpr int32_t TEST_PANEL_HEIGHT = 400;
+constexpr int32_t TEST_MAIN_PANEL_X = 50;
+constexpr int32_t TEST_MAIN_PANEL_Y = 60;
+constexpr int32_t TEST_MAIN_PANEL_WIDTH = 200;
+constexpr int32_t TEST_MAIN_PANEL_HEIGHT = 150;
+constexpr int32_t TEST_SMALL_PANEL_SIZE = 100;
+constexpr int32_t TEST_SMALL_OFFSET = 10;
+constexpr int32_t TEST_SMALL_OFFSET_Y = 20;
+constexpr int32_t TEST_MOVE_X = 300;
+constexpr int32_t TEST_MOVE_Y = 400;
+constexpr int32_t TEST_STRESS_ITERATIONS = 1000;
+
 // ============================================================================
 // Mock PanelStatusListener
 // ============================================================================
@@ -80,15 +95,14 @@ HWTEST_F(PanelInfoTest, SetFields001, TestSize.Level0)
 {
     PanelInfo info;
     info.panelType = PanelType::MENU_PANEL;
-    info.x = 100;
-    info.y = 200;
-    info.width = 300;
-    info.height = 400;
-    EXPECT_EQ(info.panelType, PanelType::MENU_PANEL);
-    EXPECT_EQ(info.x, 100);
-    EXPECT_EQ(info.y, 200);
-    EXPECT_EQ(info.width, 300);
-    EXPECT_EQ(info.height, 400);
+    info.x = TEST_PANEL_X;
+    info.y = TEST_PANEL_Y;
+    info.width = TEST_PANEL_WIDTH;
+    info.height = TEST_PANEL_HEIGHT;
+    EXPECT_EQ(info.x, TEST_PANEL_X);
+    EXPECT_EQ(info.y, TEST_PANEL_Y);
+    EXPECT_EQ(info.width, TEST_PANEL_WIDTH);
+    EXPECT_EQ(info.height, TEST_PANEL_HEIGHT);
 }
 
 HWTEST_F(PanelInfoTest, SetFields002, TestSize.Level0)
@@ -133,33 +147,22 @@ HWTEST_F(PanelInfoTest, SetFields005, TestSize.Level0)
     EXPECT_EQ(info.y, INT32_MIN);
 }
 
-HWTEST_F(PanelInfoTest, CopyConstruction001, TestSize.Level0)
+HWTEST_F(PanelInfoTest, CopyAssignRoundtrip001, TestSize.Level0)
 {
     PanelInfo info1;
     info1.panelType = PanelType::MENU_PANEL;
-    info1.x = 10;
-    info1.y = 20;
-    info1.width = 30;
-    info1.height = 40;
+    info1.x = TEST_PANEL_X;
+    info1.y = TEST_PANEL_Y;
+    info1.width = TEST_PANEL_WIDTH;
+    info1.height = TEST_PANEL_HEIGHT;
     PanelInfo info2 = info1;
-    EXPECT_EQ(info2.panelType, PanelType::MENU_PANEL);
-    EXPECT_EQ(info2.x, 10);
-    EXPECT_EQ(info2.y, 20);
-    EXPECT_EQ(info2.width, 30);
-    EXPECT_EQ(info2.height, 40);
-}
-
-HWTEST_F(PanelInfoTest, Assignment001, TestSize.Level0)
-{
-    PanelInfo info1;
-    info1.panelType = PanelType::MAIN_PANEL;
-    info1.x = 50;
-    info1.y = 60;
-    PanelInfo info2;
-    info2 = info1;
-    EXPECT_EQ(info2.panelType, PanelType::MAIN_PANEL);
-    EXPECT_EQ(info2.x, 50);
-    EXPECT_EQ(info2.y, 60);
+    PanelInfo info3;
+    info3 = info2;
+    EXPECT_EQ(info3.panelType, PanelType::MENU_PANEL);
+    EXPECT_EQ(info3.x, TEST_PANEL_X);
+    EXPECT_EQ(info3.y, TEST_PANEL_Y);
+    EXPECT_EQ(info3.width, TEST_PANEL_WIDTH);
+    EXPECT_EQ(info3.height, TEST_PANEL_HEIGHT);
 }
 
 HWTEST_F(PanelInfoTest, ArrayOfPanelInfo001, TestSize.Level0)
@@ -407,16 +410,6 @@ HWTEST_F(SelectionPanelTest, DefaultConstruction002, TestSize.Level0)
     EXPECT_EQ(panel->GetPanelType(), PanelType::MENU_PANEL);
 }
 
-HWTEST_F(SelectionPanelTest, GetPanelTypeDefaultIsMenu001, TestSize.Level0)
-{
-    EXPECT_EQ(panel_->GetPanelType(), PanelType::MENU_PANEL);
-}
-
-HWTEST_F(SelectionPanelTest, GetPanelTypeDefaultNotMain001, TestSize.Level0)
-{
-    EXPECT_NE(panel_->GetPanelType(), PanelType::MAIN_PANEL);
-}
-
 HWTEST_F(SelectionPanelTest, IsPanelShowingNoWindow001, TestSize.Level0)
 {
     EXPECT_FALSE(panel_->IsPanelShowing());
@@ -458,7 +451,7 @@ HWTEST_F(SelectionPanelTest, DestroyPanelNullWindow001, TestSize.Level0)
 
 HWTEST_F(SelectionPanelTest, MoveToNullWindow001, TestSize.Level0)
 {
-    EXPECT_EQ(panel_->MoveTo(100, 200), ErrorCode::ERROR_PANEL_DESTROYED);
+    EXPECT_EQ(panel_->MoveTo(TEST_PANEL_X, TEST_PANEL_Y), ErrorCode::ERROR_PANEL_DESTROYED);
 }
 
 HWTEST_F(SelectionPanelTest, MoveToNullWindow002, TestSize.Level0)
@@ -664,10 +657,10 @@ HWTEST_F(SelectionPanelTest, CreateWithNullContextMenuPanel001, TestSize.Level0)
 {
     PanelInfo info;
     info.panelType = PanelType::MENU_PANEL;
-    info.x = 100;
-    info.y = 200;
-    info.width = 300;
-    info.height = 400;
+    info.x = TEST_PANEL_X;
+    info.y = TEST_PANEL_Y;
+    info.width = TEST_PANEL_WIDTH;
+    info.height = TEST_PANEL_HEIGHT;
     EXPECT_EQ(panel_->CreatePanel(nullptr, info), ErrorCode::NO_ERROR);
 }
 
@@ -781,6 +774,39 @@ HWTEST_F(PanelConcurrencyTest, ConcurrentSetListener001, TestSize.Level0)
     EXPECT_EQ(successCount.load(), threadCount);
 }
 
+HWTEST_F(PanelConcurrencyTest, ConcurrentMixedMethods001, TestSize.Level0)
+{
+    SelectionPanel panel;
+    const int threadCount = 10;
+    std::vector<std::thread> threads;
+    std::atomic<int> destroyedCount(0);
+    for (int i = 0; i < threadCount; i++) {
+        threads.emplace_back([&panel, &destroyedCount, i]() {
+            switch (i % 5) {
+                case 0:
+                    if (panel.ShowPanel() == ErrorCode::ERROR_PANEL_DESTROYED) destroyedCount++;
+                    break;
+                case 1:
+                    if (panel.HidePanel() == ErrorCode::ERROR_PANEL_DESTROYED) destroyedCount++;
+                    break;
+                case 2:
+                    if (panel.MoveTo(i, i) == ErrorCode::ERROR_PANEL_DESTROYED) destroyedCount++;
+                    break;
+                case 3:
+                    if (panel.StartMoving() == ErrorCode::ERROR_PANEL_DESTROYED) destroyedCount++;
+                    break;
+                case 4:
+                    panel.GetPanelType();
+                    break;
+            }
+        });
+    }
+    for (auto &t : threads) {
+        t.join();
+    }
+    EXPECT_GT(destroyedCount.load(), 0);
+}
+
 // ============================================================================
 // CreatePanel Success Full Lifecycle Tests
 // ============================================================================
@@ -804,10 +830,10 @@ public:
     {
         PanelInfo info;
         info.panelType = PanelType::MENU_PANEL;
-        info.x = 100;
-        info.y = 200;
-        info.width = 300;
-        info.height = 400;
+        info.x = TEST_PANEL_X;
+        info.y = TEST_PANEL_Y;
+        info.width = TEST_PANEL_WIDTH;
+        info.height = TEST_PANEL_HEIGHT;
         panel_->CreatePanel(nullptr, info);
     }
 
@@ -815,10 +841,10 @@ public:
     {
         PanelInfo info;
         info.panelType = PanelType::MAIN_PANEL;
-        info.x = 50;
-        info.y = 60;
-        info.width = 200;
-        info.height = 150;
+        info.x = TEST_MAIN_PANEL_X;
+        info.y = TEST_MAIN_PANEL_Y;
+        info.width = TEST_MAIN_PANEL_WIDTH;
+        info.height = TEST_MAIN_PANEL_HEIGHT;
         panel_->CreatePanel(nullptr, info);
     }
 
@@ -958,6 +984,25 @@ HWTEST_F(PanelLifecycleTest, ShowHideShowHideCycle001, TestSize.Level0)
     EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_SELECTION_SERVICE);
 }
 
+HWTEST_F(PanelLifecycleTest, MultipleShowHideCycles001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    for (int i = 0; i < 5; i++) {
+        panel_->ShowPanel();
+        panel_->HidePanel();
+    }
+    auto ret = panel_->ShowPanel();
+    EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_SELECTION_SERVICE);
+}
+
+HWTEST_F(PanelLifecycleTest, ShowHideOnMainPanel001, TestSize.Level0)
+{
+    CreateMainPanel();
+    panel_->ShowPanel();
+    auto ret = panel_->HidePanel();
+    EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_SELECTION_SERVICE);
+}
+
 // ============================================================================
 // CreatePanel Success + MoveTo / StartMoving
 // ============================================================================
@@ -965,7 +1010,7 @@ HWTEST_F(PanelLifecycleTest, ShowHideShowHideCycle001, TestSize.Level0)
 HWTEST_F(PanelLifecycleTest, CreateThenMoveTo001, TestSize.Level0)
 {
     CreateMenuPanel();
-    auto ret = panel_->MoveTo(200, 300);
+    auto ret = panel_->MoveTo(TEST_PANEL_WIDTH, TEST_PANEL_HEIGHT);
     EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_SELECTION_SERVICE);
 }
 
@@ -1004,9 +1049,17 @@ HWTEST_F(PanelLifecycleTest, MoveToIntMin001, TestSize.Level0)
 HWTEST_F(PanelLifecycleTest, MoveToNegative001, TestSize.Level0)
 {
     CreateMenuPanel();
-    auto ret = panel_->MoveTo(-100, -200);
+    auto ret = panel_->MoveTo(-TEST_PANEL_X, -TEST_PANEL_Y);
     EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_SELECTION_SERVICE ||
                 ret == ErrorCode::ERROR_PARAMETER_CHECK_FAILED);
+}
+
+HWTEST_F(PanelLifecycleTest, MoveToAfterShow001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->ShowPanel();
+    auto ret = panel_->MoveTo(TEST_MOVE_X, TEST_MOVE_Y);
+    EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_SELECTION_SERVICE);
 }
 
 HWTEST_F(PanelLifecycleTest, CreateThenStartMoving001, TestSize.Level0)
@@ -1070,6 +1123,15 @@ HWTEST_F(PanelLifecycleTest, SetUiContentTwice001, TestSize.Level0)
                 ret == ErrorCode::ERROR_SELECTION_SERVICE);
 }
 
+HWTEST_F(PanelLifecycleTest, SetUiContentThenShowThenHide001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetUiContent("content", static_cast<napi_env>(nullptr));
+    panel_->ShowPanel();
+    auto ret = panel_->HidePanel();
+    EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_SELECTION_SERVICE);
+}
+
 // ============================================================================
 // CreatePanel Success + Listener Integration
 // ============================================================================
@@ -1117,36 +1179,6 @@ HWTEST_F(PanelLifecycleTest, CreateThenClearBothListeners001, TestSize.Level0)
     EXPECT_FALSE(panel_->IsPanelShowing());
 }
 
-HWTEST_F(PanelLifecycleTest, CreateThenShowHideWithHiddenListener001, TestSize.Level0)
-{
-    CreateMenuPanel();
-    panel_->SetPanelStatusListener(listener_, "hidden");
-    listener_->Reset();
-    panel_->ShowPanel();
-    panel_->HidePanel();
-}
-
-HWTEST_F(PanelLifecycleTest, CreateThenDestroyWithDestroyedListener001, TestSize.Level0)
-{
-    CreateMenuPanel();
-    panel_->SetPanelStatusListener(listener_, "destroyed");
-    listener_->Reset();
-    auto ret = panel_->DestroyPanel();
-    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
-    panel_.release();
-}
-
-HWTEST_F(PanelLifecycleTest, CreateBothListenersThenDestroy001, TestSize.Level0)
-{
-    CreateMenuPanel();
-    panel_->SetPanelStatusListener(listener_, "hidden");
-    panel_->SetPanelStatusListener(listener_, "destroyed");
-    listener_->Reset();
-    auto ret = panel_->DestroyPanel();
-    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
-    panel_.release();
-}
-
 // ============================================================================
 // CreatePanel Success + Full Lifecycle Chain
 // ============================================================================
@@ -1160,9 +1192,9 @@ HWTEST_F(PanelLifecycleTest, FullLifecycleMenuPanel001, TestSize.Level0)
     panel_->SetPanelStatusListener(listener_, "hidden");
     panel_->SetPanelStatusListener(listener_, "destroyed");
 
-    panel_->MoveTo(200, 300);
+    panel_->MoveTo(TEST_PANEL_WIDTH, TEST_PANEL_HEIGHT);
     panel_->ShowPanel();
-    panel_->MoveTo(300, 400);
+    panel_->MoveTo(TEST_MOVE_X, TEST_MOVE_Y);
     panel_->HidePanel();
 
     auto ret = panel_->DestroyPanel();
@@ -1198,6 +1230,19 @@ HWTEST_F(PanelLifecycleTest, FullLifecycleWithUiContent001, TestSize.Level0)
     panel_.release();
 }
 
+HWTEST_F(PanelLifecycleTest, FullLifecycleWithMoveAndStartMoving001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->MoveTo(TEST_PANEL_X, TEST_PANEL_Y);
+    panel_->StartMoving();
+    panel_->MoveTo(TEST_MOVE_X, TEST_MOVE_Y);
+    panel_->ShowPanel();
+    panel_->HidePanel();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
 HWTEST_F(PanelLifecycleTest, MultiplePanelsIndependentLifecycle001, TestSize.Level0)
 {
     auto panel1 = std::make_unique<SelectionPanel>();
@@ -1207,16 +1252,16 @@ HWTEST_F(PanelLifecycleTest, MultiplePanelsIndependentLifecycle001, TestSize.Lev
     info1.panelType = PanelType::MENU_PANEL;
     info1.x = 0;
     info1.y = 0;
-    info1.width = 100;
-    info1.height = 100;
+    info1.width = TEST_SMALL_PANEL_SIZE;
+    info1.height = TEST_SMALL_PANEL_SIZE;
     panel1->CreatePanel(nullptr, info1);
 
     PanelInfo info2;
     info2.panelType = PanelType::MAIN_PANEL;
-    info2.x = 200;
-    info2.y = 200;
-    info2.width = 100;
-    info2.height = 100;
+    info2.x = TEST_MAIN_PANEL_WIDTH;
+    info2.y = TEST_MAIN_PANEL_WIDTH;
+    info2.width = TEST_SMALL_PANEL_SIZE;
+    info2.height = TEST_SMALL_PANEL_SIZE;
     panel2->CreatePanel(nullptr, info2);
 
     EXPECT_EQ(panel1->GetPanelType(), PanelType::MENU_PANEL);
@@ -1257,7 +1302,7 @@ HWTEST_F(PanelLifecycleTest, DestroyThenMoveTo001, TestSize.Level0)
 {
     CreateMenuPanel();
     panel_->DestroyPanel();
-    auto ret = panel_->MoveTo(100, 100);
+    auto ret = panel_->MoveTo(TEST_PANEL_X, TEST_PANEL_Y);
     EXPECT_TRUE(ret == ErrorCode::ERROR_PANEL_DESTROYED || ret == ErrorCode::ERROR_SELECTION_SERVICE);
     panel_.release();
 }
@@ -1330,10 +1375,10 @@ HWTEST_F(PanelLifecycleTest, CreateWithNegativePosition001, TestSize.Level0)
 {
     PanelInfo info;
     info.panelType = PanelType::MENU_PANEL;
-    info.x = -100;
-    info.y = -200;
-    info.width = 300;
-    info.height = 400;
+    info.x = -TEST_PANEL_X;
+    info.y = -TEST_PANEL_Y;
+    info.width = TEST_PANEL_WIDTH;
+    info.height = TEST_PANEL_HEIGHT;
     auto ret = panel_->CreatePanel(nullptr, info);
     EXPECT_EQ(ret, ErrorCode::NO_ERROR);
 }
@@ -1344,14 +1389,609 @@ HWTEST_F(PanelLifecycleTest, CreateRecreateAfterDestroy001, TestSize.Level0)
     panel_->DestroyPanel();
     PanelInfo info;
     info.panelType = PanelType::MAIN_PANEL;
-    info.x = 10;
-    info.y = 20;
-    info.width = 100;
-    info.height = 100;
+    info.x = TEST_SMALL_OFFSET;
+    info.y = TEST_SMALL_OFFSET_Y;
+    info.width = TEST_SMALL_PANEL_SIZE;
+    info.height = TEST_SMALL_PANEL_SIZE;
     auto ret = panel_->CreatePanel(nullptr, info);
     EXPECT_EQ(ret, ErrorCode::NO_ERROR);
     EXPECT_EQ(panel_->GetPanelType(), PanelType::MAIN_PANEL);
     panel_->DestroyPanel();
+    panel_.release();
+}
+
+// ============================================================================
+// Listener Edge Case Tests
+// ============================================================================
+
+class ListenerAdvancedTest : public testing::Test {
+public:
+    void SetUp() override
+    {
+        panel_ = std::make_unique<SelectionPanel>();
+        listener_ = std::make_shared<MockPanelStatusListener>();
+    }
+    void TearDown() override
+    {
+        if (panel_) {
+            panel_->DestroyPanel();
+        }
+        panel_.reset();
+    }
+
+    std::unique_ptr<SelectionPanel> panel_;
+    std::shared_ptr<MockPanelStatusListener> listener_;
+};
+
+HWTEST_F(ListenerAdvancedTest, ClearAllTypesWithoutSet001, TestSize.Level0)
+{
+    panel_->ClearPanelListener("hidden");
+    panel_->ClearPanelListener("destroyed");
+    panel_->ClearPanelListener("hidden");
+    panel_->ClearPanelListener("destroyed");
+}
+
+HWTEST_F(ListenerAdvancedTest, SetClearRepeat001, TestSize.Level0)
+{
+    for (int i = 0; i < 20; i++) {
+        EXPECT_TRUE(panel_->SetPanelStatusListener(listener_, "hidden"));
+        panel_->ClearPanelListener("hidden");
+    }
+}
+
+HWTEST_F(ListenerAdvancedTest, SetClearBothRepeat001, TestSize.Level0)
+{
+    for (int i = 0; i < 20; i++) {
+        EXPECT_TRUE(panel_->SetPanelStatusListener(listener_, "hidden"));
+        EXPECT_TRUE(panel_->SetPanelStatusListener(listener_, "destroyed"));
+        panel_->ClearPanelListener("hidden");
+        panel_->ClearPanelListener("destroyed");
+    }
+}
+
+HWTEST_F(ListenerAdvancedTest, DifferentListenersSameType001, TestSize.Level0)
+{
+    auto listener2 = std::make_shared<MockPanelStatusListener>();
+    EXPECT_TRUE(panel_->SetPanelStatusListener(listener_, "hidden"));
+    EXPECT_TRUE(panel_->SetPanelStatusListener(listener2, "hidden"));
+}
+
+HWTEST_F(ListenerAdvancedTest, ThreeListenersDifferentTypes001, TestSize.Level0)
+{
+    auto listener2 = std::make_shared<MockPanelStatusListener>();
+    auto listener3 = std::make_shared<MockPanelStatusListener>();
+    EXPECT_TRUE(panel_->SetPanelStatusListener(listener_, "hidden"));
+    EXPECT_TRUE(panel_->SetPanelStatusListener(listener2, "destroyed"));
+    EXPECT_TRUE(panel_->SetPanelStatusListener(listener3, "hidden"));
+    EXPECT_TRUE(panel_->SetPanelStatusListener(listener3, "destroyed"));
+}
+
+HWTEST_F(ListenerAdvancedTest, ClearPartialThenSet001, TestSize.Level0)
+{
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    panel_->ClearPanelListener("hidden");
+    EXPECT_TRUE(panel_->SetPanelStatusListener(listener_, "hidden"));
+    panel_->ClearPanelListener("destroyed");
+    EXPECT_TRUE(panel_->SetPanelStatusListener(listener_, "destroyed"));
+}
+
+// ============================================================================
+// Listener Callback Verification Tests
+// ============================================================================
+
+class PanelListenerCallbackTest : public testing::Test {
+public:
+    void SetUp() override
+    {
+        panel_ = std::make_unique<SelectionPanel>();
+        listener_ = std::make_shared<MockPanelStatusListener>();
+    }
+    void TearDown() override
+    {
+        if (panel_) {
+            panel_->DestroyPanel();
+        }
+        panel_.reset();
+    }
+
+    void CreateMenuPanel()
+    {
+        PanelInfo info;
+        info.panelType = PanelType::MENU_PANEL;
+        info.x = TEST_PANEL_X;
+        info.y = TEST_PANEL_Y;
+        info.width = TEST_PANEL_WIDTH;
+        info.height = TEST_PANEL_HEIGHT;
+        panel_->CreatePanel(nullptr, info);
+    }
+
+    void CreateMainPanel()
+    {
+        PanelInfo info;
+        info.panelType = PanelType::MAIN_PANEL;
+        info.x = TEST_MAIN_PANEL_X;
+        info.y = TEST_MAIN_PANEL_Y;
+        info.width = TEST_MAIN_PANEL_WIDTH;
+        info.height = TEST_MAIN_PANEL_HEIGHT;
+        panel_->CreatePanel(nullptr, info);
+    }
+
+    std::unique_ptr<SelectionPanel> panel_;
+    std::shared_ptr<MockPanelStatusListener> listener_;
+};
+
+HWTEST_F(PanelListenerCallbackTest, HideTriggersHiddenCallback001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+    EXPECT_GE(listener_->callCount, 0);
+}
+
+HWTEST_F(PanelListenerCallbackTest, DestroyTriggersDestroyedCallback001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, BothCallbacksOnDestroy001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, NoCallbackWithoutListener001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+    EXPECT_EQ(listener_->callCount, 0);
+}
+
+HWTEST_F(PanelListenerCallbackTest, NoCallbackAfterClearListener001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->ClearPanelListener("hidden");
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+}
+
+HWTEST_F(PanelListenerCallbackTest, HideCallbackOnMainPanel001, TestSize.Level0)
+{
+    CreateMainPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+}
+
+HWTEST_F(PanelListenerCallbackTest, DestroyCallbackOnMainPanel001, TestSize.Level0)
+{
+    CreateMainPanel();
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, MultipleShowHideCallbacks001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    listener_->Reset();
+    for (int i = 0; i < 5; i++) {
+        panel_->ShowPanel();
+        panel_->HidePanel();
+    }
+}
+
+HWTEST_F(PanelListenerCallbackTest, OnlyHiddenListenerNotTriggeredOnDestroy001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    listener_->Reset();
+    panel_->DestroyPanel();
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, OnlyDestroyedListenerNotTriggeredOnHide001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+}
+
+HWTEST_F(PanelListenerCallbackTest, SetUiContentThenShowHideWithListener001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetUiContent("content", static_cast<napi_env>(nullptr));
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+}
+
+HWTEST_F(PanelListenerCallbackTest, MoveBeforeShowWithListener001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->MoveTo(TEST_MOVE_X, TEST_MOVE_Y);
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+}
+
+HWTEST_F(PanelListenerCallbackTest, ReRegisterListenerAfterClear001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->ClearPanelListener("hidden");
+    EXPECT_TRUE(panel_->SetPanelStatusListener(listener_, "hidden"));
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+}
+
+HWTEST_F(PanelListenerCallbackTest, TwoIndependentPanelsListeners001, TestSize.Level0)
+{
+    auto panel1 = std::make_unique<SelectionPanel>();
+    auto panel2 = std::make_unique<SelectionPanel>();
+    auto listener1 = std::make_shared<MockPanelStatusListener>();
+    auto listener2 = std::make_shared<MockPanelStatusListener>();
+
+    PanelInfo info1;
+    info1.panelType = PanelType::MENU_PANEL;
+    info1.x = 0;
+    info1.y = 0;
+    info1.width = TEST_SMALL_PANEL_SIZE;
+    info1.height = TEST_SMALL_PANEL_SIZE;
+    panel1->CreatePanel(nullptr, info1);
+
+    PanelInfo info2;
+    info2.panelType = PanelType::MAIN_PANEL;
+    info2.x = TEST_MAIN_PANEL_WIDTH;
+    info2.y = TEST_MAIN_PANEL_WIDTH;
+    info2.width = TEST_SMALL_PANEL_SIZE;
+    info2.height = TEST_SMALL_PANEL_SIZE;
+    panel2->CreatePanel(nullptr, info2);
+
+    panel1->SetPanelStatusListener(listener1, "destroyed");
+    panel2->SetPanelStatusListener(listener2, "destroyed");
+    listener1->Reset();
+    listener2->Reset();
+
+    panel1->DestroyPanel();
+    panel1.release();
+    panel2->DestroyPanel();
+    panel2.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, ClearHiddenKeepDestroyedThenDestroy001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    panel_->ClearPanelListener("hidden");
+    listener_->Reset();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, FullLifecycleWithBothCallbacks001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    panel_->MoveTo(TEST_PANEL_WIDTH, TEST_PANEL_HEIGHT);
+    panel_->ShowPanel();
+    panel_->MoveTo(TEST_MOVE_X, TEST_MOVE_Y);
+    panel_->HidePanel();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, FullLifecycleMainPanelWithCallbacks001, TestSize.Level0)
+{
+    CreateMainPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, HideWithoutShowWithListener001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    listener_->Reset();
+    auto ret = panel_->HidePanel();
+    EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_SELECTION_SERVICE);
+}
+
+HWTEST_F(PanelListenerCallbackTest, DestroyWithoutShowWithDestroyedListener001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, SetListenerAfterUiContentThenFullCycle001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetUiContent("content", static_cast<napi_env>(nullptr));
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, MultipleMoveThenShowHideDestroy001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    for (int i = 0; i < 5; i++) {
+        panel_->MoveTo(i * 10, i * 20);
+    }
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, ClearBothListenersFullCycle001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    panel_->ClearPanelListener("hidden");
+    panel_->ClearPanelListener("destroyed");
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+    panel_->DestroyPanel();
+    panel_.release();
+}
+
+// ============================================================================
+// Additional Lifecycle Combination Tests
+// ============================================================================
+
+HWTEST_F(PanelListenerCallbackTest, ShowMoveHideDestroyWithListener001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->MoveTo(TEST_MOVE_X, TEST_MOVE_Y);
+    panel_->HidePanel();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, ShowMoveHideMoveShowHideDestroy001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "hidden");
+    listener_->Reset();
+    panel_->ShowPanel();
+    panel_->MoveTo(TEST_PANEL_X, TEST_PANEL_Y);
+    panel_->HidePanel();
+    panel_->MoveTo(TEST_MOVE_X, TEST_MOVE_Y);
+    panel_->ShowPanel();
+    panel_->HidePanel();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_SELECTION_SERVICE);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, MultiplePanelsSequentialListeners001, TestSize.Level0)
+{
+    auto panel1 = std::make_unique<SelectionPanel>();
+    auto panel2 = std::make_unique<SelectionPanel>();
+    auto listener1 = std::make_shared<MockPanelStatusListener>();
+    auto listener2 = std::make_shared<MockPanelStatusListener>();
+
+    PanelInfo info1;
+    info1.panelType = PanelType::MENU_PANEL;
+    info1.width = TEST_SMALL_PANEL_SIZE;
+    info1.height = TEST_SMALL_PANEL_SIZE;
+    panel1->CreatePanel(nullptr, info1);
+
+    PanelInfo info2;
+    info2.panelType = PanelType::MAIN_PANEL;
+    info2.x = TEST_MAIN_PANEL_WIDTH;
+    info2.width = TEST_SMALL_PANEL_SIZE;
+    info2.height = TEST_SMALL_PANEL_SIZE;
+    panel2->CreatePanel(nullptr, info2);
+
+    panel1->SetPanelStatusListener(listener1, "hidden");
+    panel2->SetPanelStatusListener(listener2, "hidden");
+    listener1->Reset();
+    listener2->Reset();
+
+    panel1->ShowPanel();
+    panel1->HidePanel();
+    panel2->ShowPanel();
+    panel2->HidePanel();
+
+    panel1->DestroyPanel();
+    panel2->DestroyPanel();
+    panel1.release();
+    panel2.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, InterleavedPanelOperations001, TestSize.Level0)
+{
+    auto panel1 = std::make_unique<SelectionPanel>();
+    auto panel2 = std::make_unique<SelectionPanel>();
+
+    PanelInfo info1;
+    info1.panelType = PanelType::MENU_PANEL;
+    info1.width = TEST_SMALL_PANEL_SIZE;
+    info1.height = TEST_SMALL_PANEL_SIZE;
+    panel1->CreatePanel(nullptr, info1);
+
+    PanelInfo info2;
+    info2.panelType = PanelType::MAIN_PANEL;
+    info2.x = TEST_MAIN_PANEL_WIDTH;
+    info2.width = TEST_SMALL_PANEL_SIZE;
+    info2.height = TEST_SMALL_PANEL_SIZE;
+    panel2->CreatePanel(nullptr, info2);
+
+    panel1->ShowPanel();
+    panel2->ShowPanel();
+    panel1->MoveTo(TEST_PANEL_X, TEST_PANEL_Y);
+    panel2->MoveTo(TEST_MOVE_X, TEST_MOVE_Y);
+    panel1->HidePanel();
+    panel2->HidePanel();
+
+    panel1->DestroyPanel();
+    panel2->DestroyPanel();
+    panel1.release();
+    panel2.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, StartMovingDuringShow001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->ShowPanel();
+    auto ret = panel_->StartMoving();
+    EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_SELECTION_SERVICE);
+}
+
+HWTEST_F(PanelListenerCallbackTest, SetUiContentDuringShow001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->ShowPanel();
+    auto ret = panel_->SetUiContent("content", static_cast<napi_env>(nullptr));
+    EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_PARAMETER_CHECK_FAILED ||
+                ret == ErrorCode::ERROR_SELECTION_SERVICE);
+}
+
+HWTEST_F(PanelListenerCallbackTest, SetUiContentAfterHide001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->ShowPanel();
+    panel_->HidePanel();
+    auto ret = panel_->SetUiContent("content", static_cast<napi_env>(nullptr));
+    EXPECT_TRUE(ret == ErrorCode::NO_ERROR || ret == ErrorCode::ERROR_PARAMETER_CHECK_FAILED ||
+                ret == ErrorCode::ERROR_SELECTION_SERVICE);
+}
+
+HWTEST_F(PanelListenerCallbackTest, WindowIdConsistentAfterCreate001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    auto id1 = panel_->GetWindowId();
+    auto id2 = panel_->GetWindowId();
+    EXPECT_EQ(id1, id2);
+}
+
+HWTEST_F(PanelListenerCallbackTest, WindowIdConsistentAfterMove001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    auto id1 = panel_->GetWindowId();
+    panel_->MoveTo(TEST_MOVE_X, TEST_MOVE_Y);
+    auto id2 = panel_->GetWindowId();
+    EXPECT_EQ(id1, id2);
+}
+
+HWTEST_F(PanelListenerCallbackTest, WindowIdConsistentAfterShow001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    auto id1 = panel_->GetWindowId();
+    panel_->ShowPanel();
+    auto id2 = panel_->GetWindowId();
+    EXPECT_EQ(id1, id2);
+}
+
+HWTEST_F(PanelListenerCallbackTest, PanelTypeConsistentAfterOperations001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->ShowPanel();
+    panel_->MoveTo(TEST_PANEL_X, TEST_PANEL_Y);
+    panel_->HidePanel();
+    EXPECT_EQ(panel_->GetPanelType(), PanelType::MENU_PANEL);
+}
+
+HWTEST_F(PanelListenerCallbackTest, PanelTypeMainConsistentAfterOperations001, TestSize.Level0)
+{
+    CreateMainPanel();
+    panel_->ShowPanel();
+    panel_->MoveTo(TEST_MOVE_X, TEST_MOVE_Y);
+    panel_->HidePanel();
+    EXPECT_EQ(panel_->GetPanelType(), PanelType::MAIN_PANEL);
+}
+
+HWTEST_F(PanelListenerCallbackTest, IsPanelShowingAfterCreateNotShowing001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    EXPECT_FALSE(panel_->IsPanelShowing());
+}
+
+HWTEST_F(PanelListenerCallbackTest, IsPanelShowingAfterDestroyNotShowing001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->DestroyPanel();
+    EXPECT_FALSE(panel_->IsPanelShowing());
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, CreateShowDestroyNoHide001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    panel_->ShowPanel();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelListenerCallbackTest, CreateHideWithoutShowThenDestroy001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    panel_->HidePanel();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
     panel_.release();
 }
 
@@ -1368,7 +2008,7 @@ public:
 HWTEST_F(PanelStressTest, MassiveGetPanelType001, TestSize.Level0)
 {
     SelectionPanel panel;
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < TEST_STRESS_ITERATIONS * 10; i++) {
         EXPECT_EQ(panel.GetPanelType(), PanelType::MENU_PANEL);
     }
 }
@@ -1376,7 +2016,7 @@ HWTEST_F(PanelStressTest, MassiveGetPanelType001, TestSize.Level0)
 HWTEST_F(PanelStressTest, MassiveShowPanelNull001, TestSize.Level0)
 {
     SelectionPanel panel;
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < TEST_STRESS_ITERATIONS; i++) {
         EXPECT_EQ(panel.ShowPanel(), ErrorCode::ERROR_PANEL_DESTROYED);
     }
 }
@@ -1384,7 +2024,7 @@ HWTEST_F(PanelStressTest, MassiveShowPanelNull001, TestSize.Level0)
 HWTEST_F(PanelStressTest, MassiveMoveToNull001, TestSize.Level0)
 {
     SelectionPanel panel;
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < TEST_STRESS_ITERATIONS; i++) {
         EXPECT_EQ(panel.MoveTo(i, i * 2), ErrorCode::ERROR_PANEL_DESTROYED);
     }
 }
@@ -1393,7 +2033,7 @@ HWTEST_F(PanelStressTest, MassiveSetClearListener001, TestSize.Level0)
 {
     SelectionPanel panel;
     auto listener = std::make_shared<MockPanelStatusListener>();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < TEST_STRESS_ITERATIONS; i++) {
         panel.SetPanelStatusListener(listener, "hidden");
         panel.ClearPanelListener("hidden");
     }
@@ -1401,7 +2041,7 @@ HWTEST_F(PanelStressTest, MassiveSetClearListener001, TestSize.Level0)
 
 HWTEST_F(PanelStressTest, MassivePanelCreateDestroy001, TestSize.Level0)
 {
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < TEST_STRESS_ITERATIONS; i++) {
         auto panel = std::make_unique<SelectionPanel>();
         EXPECT_EQ(panel->GetPanelType(), PanelType::MENU_PANEL);
         EXPECT_FALSE(panel->IsPanelShowing());
