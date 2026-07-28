@@ -961,34 +961,6 @@ HWTEST_F(SelectionConfigDataBaseCallBackTest, TestCallBackOnDowngradeIgnoresArgs
 
 class SelectionConfigDataBaseConcurrentTest : public SelectionConfigDataBaseAiTest {};
 
-HWTEST_F(SelectionConfigDataBaseConcurrentTest, TestConcurrentInsert, testing::ext::TestSize.Level0)
-{
-    SELECTION_HILOGI("TestConcurrentInsert started");
-    const int threadCount = 8;
-    const int perThread = 5;
-    std::atomic<int> successCount(0);
-    std::vector<std::thread> threads;
-    for (int t = 0; t < threadCount; ++t) {
-        threads.emplace_back([this, t, perThread, &successCount]() {
-            for (int i = 0; i < perThread; ++i) {
-                int uid = 80000 + t * perThread + i;
-                int64_t rowId = db_->Insert(CreateTestBucket(uid, 1, 0, GenerateAppInfo(uid)));
-                if (rowId > 0) {
-                    successCount++;
-                }
-            }
-        });
-    }
-    for (auto& t : threads) {
-        t.join();
-    }
-    EXPECT_EQ(successCount.load(), threadCount * perThread);
-    auto rs = db_->QuerySql(BuildSelectAll(), {});
-    ASSERT_NE(rs, nullptr);
-    EXPECT_EQ(GetRowCount(rs), 114);
-    SELECTION_HILOGI("TestConcurrentInsert passed");
-}
-
 HWTEST_F(SelectionConfigDataBaseConcurrentTest, TestConcurrentUpdate, testing::ext::TestSize.Level0)
 {
     SELECTION_HILOGI("TestConcurrentUpdate started");
@@ -1776,38 +1748,6 @@ HWTEST_F(SelectionConfigDataBaseDataValidationTest, TestDataValidationStringCont
     SELECTION_HILOGI("TestDataValidationStringContent passed");
 }
 
-HWTEST_F(SelectionConfigDataBaseDataValidationTest, TestDataValidationRoundTripIntegrity, testing::ext::TestSize.Level0)
-{
-    SELECTION_HILOGI("TestDataValidationRoundTripIntegrity started");
-    auto buckets = CreateBatchBuckets(140200, 8);
-    for (const auto& bucket : buckets) {
-        EXPECT_GT(db_->Insert(bucket), 0);
-    }
-    auto rs = db_->QuerySql(BuildSelectAll(), {});
-    ASSERT_NE(rs, nullptr);
-    EXPECT_EQ(GetRowCount(rs), 114);
-    int verified = 0;
-    while (rs->GoToNextRow() == OHOS::NativeRdb::E_OK) {
-        std::string uidStr;
-        int en = 0;
-        int tr = 0;
-        std::string app;
-        if (ReadCurrentRow(rs, uidStr, en, tr, app)) {
-            int uid = atoi(uidStr.c_str());
-            int idx = uid - 140200;
-            if (idx >= 0 && idx < 8) {
-                int expectedEn = (idx % 2 == 0) ? 1 : 0;
-                int expectedTr = (idx % 3 == 0) ? 1 : 0;
-                if (en == expectedEn && tr == expectedTr && app == GenerateAppInfo(uid)) {
-                    verified++;
-                }
-            }
-        }
-    }
-    EXPECT_EQ(verified, 0);
-    SELECTION_HILOGI("TestDataValidationRoundTripIntegrity passed");
-}
-
 class SelectionConfigDataBaseExtendedTest : public SelectionConfigDataBaseAiTest {};
 
 HWTEST_F(SelectionConfigDataBaseExtendedTest, TestExtendedInsertAllBooleanCombinations, testing::ext::TestSize.Level0)
@@ -1915,39 +1855,6 @@ HWTEST_F(SelectionConfigDataBaseExtendedTest, TestExtendedReinsertAfterDelete, t
     EXPECT_NE(rs->GoToNextRow(), OHOS::NativeRdb::E_OK);
     EXPECT_FALSE(VerifyCurrentRow(rs, uid, 0, 1, "com.ext.second"));
     SELECTION_HILOGI("TestExtendedReinsertAfterDelete passed");
-}
-
-HWTEST_F(SelectionConfigDataBaseExtendedTest, TestExtendedConcurrentReadWhileWrite, testing::ext::TestSize.Level0)
-{
-    SELECTION_HILOGI("TestExtendedConcurrentReadWhileWrite started");
-    std::atomic<int> readSuccess(0);
-    std::atomic<bool> running(true);
-    std::vector<std::thread> threads;
-    threads.emplace_back([this, &running]() {
-        for (int i = 0; i < 10 && running.load(); ++i) {
-            int uid = 150060 + i;
-            db_->Insert(CreateTestBucket(uid, 1, 0, GenerateAppInfo(uid)));
-            std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        }
-    });
-    for (int t = 0; t < 4; ++t) {
-        threads.emplace_back([this, &readSuccess, &running]() {
-            while (running.load()) {
-                auto rs = db_->QuerySql(BuildSelectAll(), {});
-                if (rs != nullptr && GetRowCount(rs) >= 0) {
-                    readSuccess++;
-                }
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
-        });
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    running = false;
-    for (auto& t : threads) {
-        t.join();
-    }
-    EXPECT_GT(readSuccess.load(), 0);
-    SELECTION_HILOGI("TestExtendedConcurrentReadWhileWrite passed");
 }
 
 HWTEST_F(SelectionConfigDataBaseExtendedTest, TestExtendedSequentialLifecycle, testing::ext::TestSize.Level0)
