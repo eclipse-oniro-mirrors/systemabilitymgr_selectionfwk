@@ -60,6 +60,7 @@ ohos_unittest("selection_service_unit_test") {
     "selection_service_test.cpp",
     "sys_selection_config_repository_test.cpp",
     "system_ability_status_change_listener_test.cpp",
+    "selectionfwk_config_database_test.cpp",
   ]
   deps = [
     "${selection_fwk_root_path}/service:selection_service_src",
