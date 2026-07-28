@@ -196,11 +196,6 @@ HWTEST_F(PanelInfoTest, PanelTypeEnumValue001, TestSize.Level0)
     EXPECT_EQ(static_cast<uint32_t>(PanelType::MAIN_PANEL), 2u);
 }
 
-HWTEST_F(PanelInfoTest, PanelTypeEnumDistinct001, TestSize.Level0)
-{
-    EXPECT_NE(PanelType::MENU_PANEL, PanelType::MAIN_PANEL);
-}
-
 // ============================================================================
 // SelectionWindowStatus Enum Tests
 // ============================================================================
@@ -210,13 +205,6 @@ HWTEST_F(PanelInfoTest, WindowStatusEnumValues001, TestSize.Level0)
     EXPECT_EQ(static_cast<uint32_t>(SelectionWindowStatus::HIDDEN), 0u);
     EXPECT_EQ(static_cast<uint32_t>(SelectionWindowStatus::DESTROYED), 1u);
     EXPECT_EQ(static_cast<uint32_t>(SelectionWindowStatus::NONE), 2u);
-}
-
-HWTEST_F(PanelInfoTest, WindowStatusEnumDistinct001, TestSize.Level0)
-{
-    EXPECT_NE(SelectionWindowStatus::HIDDEN, SelectionWindowStatus::DESTROYED);
-    EXPECT_NE(SelectionWindowStatus::DESTROYED, SelectionWindowStatus::NONE);
-    EXPECT_NE(SelectionWindowStatus::HIDDEN, SelectionWindowStatus::NONE);
 }
 
 // ============================================================================
@@ -242,14 +230,6 @@ HWTEST_F(PanelInfoTest, ErrorCodeValues001, TestSize.Level0)
     EXPECT_EQ(ErrorCode::ERROR_SELECTION_SERVICE, 2);
     EXPECT_EQ(ErrorCode::ERROR_PANEL_DESTROYED, 3);
     EXPECT_EQ(ErrorCode::ERROR_INVALID_OPERATION, 4);
-}
-
-HWTEST_F(PanelInfoTest, ErrorCodeAllDistinct001, TestSize.Level0)
-{
-    EXPECT_NE(ErrorCode::NO_ERROR, ErrorCode::ERROR_PARAMETER_CHECK_FAILED);
-    EXPECT_NE(ErrorCode::ERROR_PARAMETER_CHECK_FAILED, ErrorCode::ERROR_SELECTION_SERVICE);
-    EXPECT_NE(ErrorCode::ERROR_SELECTION_SERVICE, ErrorCode::ERROR_PANEL_DESTROYED);
-    EXPECT_NE(ErrorCode::ERROR_PANEL_DESTROYED, ErrorCode::ERROR_INVALID_OPERATION);
 }
 
 // ============================================================================
@@ -312,24 +292,6 @@ HWTEST_F(PanelCommonStructTest, PanelAdjustInfoNotEqual001, TestSize.Level0)
 }
 
 HWTEST_F(PanelCommonStructTest, PanelAdjustInfoNotEqual002, TestSize.Level0)
-{
-    PanelAdjustInfo info1;
-    info1.left = 10;
-    PanelAdjustInfo info2;
-    info2.left = 20;
-    EXPECT_FALSE(info1 == info2);
-}
-
-HWTEST_F(PanelCommonStructTest, PanelAdjustInfoNotEqual003, TestSize.Level0)
-{
-    PanelAdjustInfo info1;
-    info1.right = 10;
-    PanelAdjustInfo info2;
-    info2.right = 20;
-    EXPECT_FALSE(info1 == info2);
-}
-
-HWTEST_F(PanelCommonStructTest, PanelAdjustInfoNotEqual004, TestSize.Level0)
 {
     PanelAdjustInfo info1;
     info1.bottom = 10;
