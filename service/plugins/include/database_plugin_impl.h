@@ -56,7 +56,7 @@ private:
         int32_t shortcutKeysIndex;
     };
 
-    std::mutex databaseMutex_;
+    mutable std::mutex databaseMutex_;
     std::shared_ptr<class SelectionConfigDataBase> selectionDatabase_;
 
     int ProcessQueryResult(const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
