@@ -68,6 +68,23 @@ constexpr int32_t BASE64_INVALID_CHAR { -1 };
 constexpr uint64_t FNV_OFFSET_BASIS { 14695981039346656037ULL };
 constexpr uint64_t FNV_PRIME { 1099511628211ULL };
 constexpr int32_t INVALID_FILE_SIZE { -1 };
+constexpr size_t HEX_PREFIX_LEN { 2 };
+constexpr int32_t DECIMAL_BASE { 10 };
+constexpr int32_t BITS_PER_BYTE { 8 };
+constexpr int32_t BASE64_TRIPLE_BYTES { 3 };
+constexpr int32_t BASE64_GROUP_SIZE { 4 };
+constexpr int32_t BASE64_ENCODED_BITS { 6 };
+constexpr uint32_t BASE64_BIT_MASK { 0x3F };
+constexpr uint32_t BYTE_MASK { 0xFF };
+constexpr int32_t BASE64_SHIFT_18 { 18 };
+constexpr int32_t BASE64_SHIFT_16 { 16 };
+constexpr int32_t BASE64_SHIFT_12 { 12 };
+constexpr int32_t BASE64_SHIFT_8 { 8 };
+constexpr int32_t BASE64_SHIFT_6 { 6 };
+constexpr int32_t BASE64_ALPHA_OFFSET { 26 };
+constexpr int32_t BASE64_DIGIT_OFFSET { 52 };
+constexpr int32_t BASE64_PLUS_VALUE { 62 };
+constexpr int32_t BASE64_SLASH_VALUE { 63 };
 
 const char BASE64_TABLE[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -244,8 +261,8 @@ bool SelectionUtil::IsHexString(const std::string &str)
         return false;
     }
     size_t start = 0;
-    if (str.size() > 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
-        start = 2;
+    if (str.size() > HEX_PREFIX_LEN && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
+        start = HEX_PREFIX_LEN;
     }
     if (start >= str.size()) {
         return false;
@@ -362,7 +379,7 @@ bool SelectionUtil::StrToUint32(const std::string &str, uint32_t &value)
     }
     errno = 0;
     char *endPtr = nullptr;
-    unsigned long temp = strtoul(str.c_str(), &endPtr, 10);
+    unsigned long temp = strtoul(str.c_str(), &endPtr, DECIMAL_BASE);
     if (errno != 0 || *endPtr != '\0') {
         SELECTION_HILOGE("strtoul conversion failed: %{public}s", str.c_str());
         return false;
@@ -386,7 +403,7 @@ bool SelectionUtil::StrToInt32(const std::string &str, int32_t &value)
     }
     errno = 0;
     char *endPtr = nullptr;
-    long temp = strtol(str.c_str(), &endPtr, 10);
+    long temp = strtol(str.c_str(), &endPtr, DECIMAL_BASE);
     if (errno != 0 || *endPtr != '\0') {
         SELECTION_HILOGE("strtol conversion failed: %{public}s", str.c_str());
         return false;
@@ -411,8 +428,8 @@ bool SelectionUtil::StrToUint64(const std::string &str, uint64_t &value)
     }
     errno = 0;
     char *endPtr = nullptr;
-    unsigned long long temp = strtoull(str.c_str(), &endPtr, 10);
-    if (errno != 0 || *endPtr != '\0') {
+    unsigned long long temp = strtoull(str.c_str(), &endPtr, DECIMAL_BASE);
+    if (errno != 0 || *endPtr != '\0' || temp > std::numeric_limits<uint64_t>::max()) {
         SELECTION_HILOGE("strtoull conversion failed: %{public}s", str.c_str());
         return false;
     }
@@ -431,8 +448,9 @@ bool SelectionUtil::StrToInt64(const std::string &str, int64_t &value)
     }
     errno = 0;
     char *endPtr = nullptr;
-    long long temp = strtoll(str.c_str(), &endPtr, 10);
-    if (errno != 0 || *endPtr != '\0') {
+    long long temp = strtoll(str.c_str(), &endPtr, DECIMAL_BASE);
+    if (errno != 0 || *endPtr != '\0' || temp < std::numeric_limits<int64_t>::min() ||
+        temp > std::numeric_limits<int64_t>::max()) {
         SELECTION_HILOGE("strtoll conversion failed: %{public}s", str.c_str());
         return false;
     }
@@ -523,19 +541,19 @@ std::string SelectionUtil::Base64Encode(const std::string &input)
     while (i < inLen) {
         uint32_t triple = 0;
         int32_t padding = 0;
-        for (int32_t j = 0; j < 3; ++j) {
-            triple <<= 8;
+        for (int32_t j = 0; j < BASE64_TRIPLE_BYTES; ++j) {
+            triple <<= BITS_PER_BYTE;
             if (i < inLen) {
                 triple |= src[i++];
             } else {
                 ++padding;
             }
         }
-        for (int32_t j = 3; j >= 0; --j) {
+        for (int32_t j = BASE64_GROUP_SIZE - 1; j >= 0; --j) {
             if (padding > 0 && j < padding) {
                 output.push_back(static_cast<char>(BASE64_PAD_CHAR));
             } else {
-                uint32_t index = (triple >> (j * 6)) & 0x3F;
+                uint32_t index = (triple >> (j * BASE64_ENCODED_BITS)) & BASE64_BIT_MASK;
                 output.push_back(BASE64_TABLE[index]);
             }
         }
@@ -549,54 +567,75 @@ static int32_t DecodeBase64Char(char c)
         return c - 'A';
     }
     if (c >= 'a' && c <= 'z') {
-        return c - 'a' + 26;
+        return c - 'a' + BASE64_ALPHA_OFFSET;
     }
     if (c >= '0' && c <= '9') {
-        return c - '0' + 52;
+        return c - '0' + BASE64_DIGIT_OFFSET;
     }
     if (c == '+') {
-        return 62;
+        return BASE64_PLUS_VALUE;
     }
     if (c == '/') {
-        return 63;
+        return BASE64_SLASH_VALUE;
     }
     return BASE64_INVALID_CHAR;
+}
+
+static bool DecodeBase64CharChecked(char c, int32_t &val)
+{
+    if (c == BASE64_PAD_CHAR) {
+        val = 0;
+        return true;
+    }
+    val = DecodeBase64Char(c);
+    if (val == BASE64_INVALID_CHAR) {
+        return false;
+    }
+    return true;
+}
+
+static bool DecodeBase64Group(const std::string &input, size_t pos, int32_t vals[], int32_t &padCount)
+{
+    padCount = 0;
+    for (int32_t j = 0; j < BASE64_GROUP_SIZE; ++j) {
+        char c = input[pos + static_cast<size_t>(j)];
+        if (c == BASE64_PAD_CHAR) {
+            vals[j] = 0;
+            ++padCount;
+            continue;
+        }
+        if (!DecodeBase64CharChecked(c, vals[j])) {
+            SELECTION_HILOGE("invalid base64 character at position %{public}zu", pos + static_cast<size_t>(j));
+            return false;
+        }
+    }
+    return true;
 }
 
 std::string SelectionUtil::Base64Decode(const std::string &input)
 {
     std::string output;
     size_t inLen = input.size();
-    if (inLen == 0 || inLen % 4 != 0) {
+    if (inLen == 0 || inLen % BASE64_GROUP_SIZE != 0) {
         SELECTION_HILOGE("invalid base64 input length: %{public}zu", inLen);
         return output;
     }
-    for (size_t i = 0; i < inLen; i += 4) {
-        int32_t vals[4];
+    for (size_t i = 0; i < inLen; i += BASE64_GROUP_SIZE) {
+        int32_t vals[BASE64_GROUP_SIZE];
         int32_t padCount = 0;
-        for (int32_t j = 0; j < 4; ++j) {
-            char c = input[i + j];
-            if (c == BASE64_PAD_CHAR) {
-                vals[j] = 0;
-                ++padCount;
-            } else {
-                vals[j] = DecodeBase64Char(c);
-                if (vals[j] == BASE64_INVALID_CHAR) {
-                    SELECTION_HILOGE("invalid base64 character at position %{public}zu", i + j);
-                    return "";
-                }
-            }
+        if (!DecodeBase64Group(input, i, vals, padCount)) {
+            return "";
         }
-        uint32_t triple = (static_cast<uint32_t>(vals[0]) << 18) |
-                          (static_cast<uint32_t>(vals[1]) << 12) |
-                          (static_cast<uint32_t>(vals[2]) << 6) |
+        uint32_t triple = (static_cast<uint32_t>(vals[0]) << BASE64_SHIFT_18) |
+                          (static_cast<uint32_t>(vals[1]) << BASE64_SHIFT_12) |
+                          (static_cast<uint32_t>(vals[2]) << BASE64_SHIFT_6) |
                           static_cast<uint32_t>(vals[3]);
-        output.push_back(static_cast<char>((triple >> 16) & 0xFF));
-        if (padCount < 2) {
-            output.push_back(static_cast<char>((triple >> 8) & 0xFF));
+        output.push_back(static_cast<char>((triple >> BASE64_SHIFT_16) & BYTE_MASK));
+        if (padCount < BASE64_TRIPLE_BYTES - 1) {
+            output.push_back(static_cast<char>((triple >> BASE64_SHIFT_8) & BYTE_MASK));
         }
         if (padCount < 1) {
-            output.push_back(static_cast<char>(triple & 0xFF));
+            output.push_back(static_cast<char>(triple & BYTE_MASK));
         }
     }
     return output;
@@ -933,7 +972,7 @@ uint64_t SelectionUtil::GetThisThreadId()
     }
     errno = 0;
     char *endPtr = nullptr;
-    unsigned long long tid = strtoull(threadLocalId.c_str(), &endPtr, 10);
+    unsigned long long tid = strtoull(threadLocalId.c_str(), &endPtr, DECIMAL_BASE);
     if (errno != 0 || *endPtr != '\0') {
         SELECTION_HILOGE("strtoull failed for thread id");
         return 0;
