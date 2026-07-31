@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-// 本文件不参与编译，仅作为参考实现存档
 // 包含事件总线、对象池、速率限制器、LRU缓存、状态机、熔断器等工具类
 
 #include <algorithm>
