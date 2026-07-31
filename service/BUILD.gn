@@ -53,9 +53,9 @@ ohos_source_set("selection_service_src") {
     "src/selection_config_comparator.cpp",
     "src/selection_common.cpp",
     "src/system_ability_status_change_listener.cpp",
+    "../utils/src/selection_util.cpp",
     "../sysevent/hisysevent_adapter.cpp",
     "../utils/src/selection_timer.cpp",
-    "../utils/src/selection_util.cpp",
   ]
   deps = [
     "plugins:selection_config_static",
@@ -137,9 +137,9 @@ ohos_shared_library("selection_service") {
     "src/selection_config_comparator.cpp",
     "src/selection_common.cpp",
     "src/system_ability_status_change_listener.cpp",
+    "../utils/src/selection_util.cpp",
     "../sysevent/hisysevent_adapter.cpp",
     "../utils/src/selection_timer.cpp",
-    "../utils/src/selection_util.cpp",
   ]
   deps = [
     "plugins:selection_config_static",
