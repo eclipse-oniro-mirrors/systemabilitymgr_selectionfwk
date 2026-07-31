@@ -190,7 +190,7 @@ public:
     using Factory = std::function<std::shared_ptr<T>()>;
     using Resetter = std::function<void(std::shared_ptr<T>&)>;
 
-    SelectionObjectPool(Factory factory, Resetter resetter = nullptr,
+    explicit SelectionObjectPool(Factory factory, Resetter resetter = nullptr,
         size_t maxIdleSize = 16, size_t preAllocSize = 0)
         : factory_(std::move(factory)), resetter_(std::move(resetter)), maxIdleSize_(maxIdleSize)
     {
@@ -341,8 +341,9 @@ public:
     {
         std::lock_guard<std::mutex> lock(mutex_);
         Refill();
-        if (tokens_ >= 1.0) {
-            tokens_ -= 1.0;
+        static constexpr double singleTokenCost = 1.0;
+        if (tokens_ >= singleTokenCost) {
+            tokens_ -= singleTokenCost;
             return true;
         }
         return false;
@@ -398,7 +399,8 @@ std::unique_ptr<SelectionRateLimiter> SelectionRateLimiter::Create(
 template<typename Key, typename Value>
 class SelectionLruCache {
 public:
-    explicit SelectionLruCache(size_t capacity) : capacity_(capacity == 0 ? 64 : capacity) {}
+    static constexpr size_t defaultCacheCapacity_ = 64;
+    explicit SelectionLruCache(size_t capacity) : capacity_(capacity == 0 ? defaultCacheCapacity_ : capacity) {}
 
     void Put(const Key& key, const Value& value)
     {
@@ -537,7 +539,8 @@ private:
     State currentState_;
     std::vector<Transition> transitions_;
     std::deque<std::tuple<State, Event, State>> history_;
-    size_t maxHistorySize_ = 128;
+    static constexpr size_t defaultMaxHistorySize_ = 128;
+    size_t maxHistorySize_ = defaultMaxHistorySize_;
     mutable std::mutex mutex_;
 };
 
@@ -550,10 +553,14 @@ enum class SelectionCircuitState { CLOSED, OPEN, HALF_OPEN };
 class SelectionCircuitBreaker {
 public:
     struct Config {
-        uint32_t failureThreshold = 5;
-        uint32_t resetTimeoutMs = 30000;
-        uint32_t halfOpenMaxRequests = 1;
-        uint32_t successThreshold = 3;
+        static constexpr uint32_t defaultFailureThreshold = 5;
+        static constexpr uint32_t defaultResetTimeoutMs = 30000;
+        static constexpr uint32_t defaultHalfOpenMaxRequests = 1;
+        static constexpr uint32_t defaultSuccessThreshold = 3;
+        uint32_t failureThreshold = defaultFailureThreshold;
+        uint32_t resetTimeoutMs = defaultResetTimeoutMs;
+        uint32_t halfOpenMaxRequests = defaultHalfOpenMaxRequests;
+        uint32_t successThreshold = defaultSuccessThreshold;
     };
 
     explicit SelectionCircuitBreaker(const Config& cfg) : config_(cfg) {}
@@ -654,10 +661,14 @@ private:
 class SelectionRetryPolicy {
 public:
     struct Config {
-        uint32_t maxRetries = 3;
-        uint32_t initialDelayMs = 100;
-        uint32_t maxDelayMs = 5000;
-        double backoffMultiplier = 2.0;
+        static constexpr uint32_t defaultMaxRetries = 3;
+        static constexpr uint32_t defaultInitialDelayMs = 100;
+        static constexpr uint32_t defaultMaxDelayMs = 5000;
+        static constexpr double defaultBackoffMultiplier = 2.0;
+        uint32_t maxRetries = defaultMaxRetries;
+        uint32_t initialDelayMs = defaultInitialDelayMs;
+        uint32_t maxDelayMs = defaultMaxDelayMs;
+        double backoffMultiplier = defaultBackoffMultiplier;
     };
 
     explicit SelectionRetryPolicy(const Config& cfg) : config_(cfg) {}
@@ -689,9 +700,9 @@ private:
 
 class SelectionContentTrimmer {
 public:
-    static constexpr uint32_t MAX_SELECTION_BYTES = 6000;
+    static constexpr uint32_t maxSelectionBytes_ = 6000;
 
-    static std::string TrimToLimit(const std::string& content, uint32_t maxBytes = MAX_SELECTION_BYTES)
+    static std::string TrimToLimit(const std::string& content, uint32_t maxBytes = maxSelectionBytes_)
     {
         if (content.size() <= maxBytes) {
             return content;
@@ -699,7 +710,7 @@ public:
         return content.substr(0, FindSafeUtf8Boundary(content, maxBytes));
     }
 
-    static bool IsWithinLimit(const std::string& content, uint32_t maxBytes = MAX_SELECTION_BYTES)
+    static bool IsWithinLimit(const std::string& content, uint32_t maxBytes = maxSelectionBytes_)
     {
         return content.size() <= maxBytes;
     }
@@ -724,12 +735,14 @@ public:
         return (pos + expectedLen > maxBytes) ? pos : maxBytes;
     }
 
+    static constexpr uint8_t printableCharMin_ = 0x20;
+
     static std::string SanitizeContent(const std::string& content)
     {
         std::string result;
         result.reserve(content.size());
         for (unsigned char c : content) {
-            if (c >= 0x20 || c == '\t' || c == '\n' || c == '\r') {
+            if (c >= printableCharMin_ || c == '\t' || c == '\n' || c == '\r') {
                 result.push_back(static_cast<char>(c));
             }
         }
@@ -737,14 +750,40 @@ public:
     }
 
 private:
-    static bool IsUtf8ContinuationByte(uint8_t byte) { return (byte & 0xC0) == 0x80; }
+    static constexpr uint32_t utf8OneByteMask_ = 0x80;
+    static constexpr uint32_t utf8OneByteVal_ = 0x00;
+    static constexpr uint32_t utf8TwoByteMask_ = 0xE0;
+    static constexpr uint32_t utf8TwoByteVal_ = 0xC0;
+    static constexpr uint32_t utf8ThreeByteMask_ = 0xF0;
+    static constexpr uint32_t utf8ThreeByteVal_ = 0xE0;
+    static constexpr uint32_t utf8FourByteMask_ = 0xF8;
+    static constexpr uint32_t utf8FourByteVal_ = 0xF0;
+    static constexpr uint32_t utf8OneByteLen_ = 1;
+    static constexpr uint32_t utf8TwoByteLen_ = 2;
+    static constexpr uint32_t utf8ThreeByteLen_ = 3;
+    static constexpr uint32_t utf8FourByteLen_ = 4;
+    static constexpr uint8_t utf8ContinuationMask_ = 0xC0;
+    static constexpr uint8_t utf8ContinuationVal_ = 0x80;
+
+    static bool IsUtf8ContinuationByte(uint8_t byte)
+    {
+        return (byte & utf8ContinuationMask_) == utf8ContinuationVal_;
+    }
     static uint32_t Utf8CharExpectedLen(uint8_t first)
     {
-        if ((first & 0x80) == 0x00) return 1;
-        if ((first & 0xE0) == 0xC0) return 2;
-        if ((first & 0xF0) == 0xE0) return 3;
-        if ((first & 0xF8) == 0xF0) return 4;
-        return 1;
+        if ((first & utf8OneByteMask_) == utf8OneByteVal_) {
+            return utf8OneByteLen_;
+        }
+        if ((first & utf8TwoByteMask_) == utf8TwoByteVal_) {
+            return utf8TwoByteLen_;
+        }
+        if ((first & utf8ThreeByteMask_) == utf8ThreeByteVal_) {
+            return utf8ThreeByteLen_;
+        }
+        if ((first & utf8FourByteMask_) == utf8FourByteVal_) {
+            return utf8FourByteLen_;
+        }
+        return utf8OneByteLen_;
     }
 };
 
@@ -818,7 +857,7 @@ public:
         auto it = metrics_.find(name);
         if (it != metrics_.end() && it->second.type == MetricType::HISTOGRAM) {
             it->second.samples.push_back(sample);
-            if (it->second.samples.size() > MAX_HISTOGRAM_SAMPLES) {
+            if (it->second.samples.size() > maxHistogramSamples_) {
                 it->second.samples.erase(it->second.samples.begin());
             }
         }
@@ -856,11 +895,13 @@ public:
         stats.min = sorted.front();
         stats.max = sorted.back();
         int64_t sum = 0;
-        for (auto s : sorted) { sum += s; }
+        for (auto s : sorted) {
+            sum += s;
+        }
         stats.mean = static_cast<double>(sum) / static_cast<double>(sorted.size());
-        stats.p50 = Percentile(sorted, 0.50);
-        stats.p95 = Percentile(sorted, 0.95);
-        stats.p99 = Percentile(sorted, 0.99);
+        stats.p50 = Percentile(sorted, percentileP50);
+        stats.p95 = Percentile(sorted, percentileP95);
+        stats.p99 = Percentile(sorted, percentileP99);
         return stats;
     }
 
@@ -881,16 +922,23 @@ private:
 
     static double Percentile(const std::vector<int64_t>& sorted, double p)
     {
-        if (sorted.empty()) return 0.0;
+        if (sorted.empty()) {
+            return 0.0;
+        }
         double idx = p * static_cast<double>(sorted.size() - 1);
         size_t lo = static_cast<size_t>(std::floor(idx));
         size_t hi = static_cast<size_t>(std::ceil(idx));
-        if (lo == hi || hi >= sorted.size()) return static_cast<double>(sorted[lo]);
+        if (lo == hi || hi >= sorted.size()) {
+            return static_cast<double>(sorted[lo]);
+        }
         double frac = idx - static_cast<double>(lo);
         return static_cast<double>(sorted[lo]) * (1.0 - frac) + static_cast<double>(sorted[hi]) * frac;
     }
 
-    static constexpr size_t MAX_HISTOGRAM_SAMPLES = 1024;
+    static constexpr size_t maxHistogramSamples_ = 1024;
+    static constexpr double percentileP50 = 0.50;
+    static constexpr double percentileP95 = 0.95;
+    static constexpr double percentileP99 = 0.99;
     std::unordered_map<std::string, MetricEntry> metrics_;
     mutable std::mutex mutex_;
 };
@@ -901,7 +949,7 @@ private:
 
 class SelectionScopedTimer {
 public:
-    SelectionScopedTimer(const std::string& tag)
+    explicit SelectionScopedTimer(const std::string& tag)
         : tag_(tag), startTime_(std::chrono::steady_clock::now()) {}
 
     SelectionScopedTimer(const std::string& tag, std::function<void(const std::string&, uint64_t)> cb)
@@ -942,14 +990,21 @@ public:
     ~SelectionDeferredExecutor()
     {
         for (auto it = actions_.rbegin(); it != actions_.rend(); ++it) {
-            if (*it) { (*it)(); }
+            if (*it) {
+                (*it)();
+            }
         }
     }
     void Defer(std::function<void()> action)
     {
-        if (action) { actions_.push_back(std::move(action)); }
+        if (action) {
+            actions_.push_back(std::move(action));
+        }
     }
-    void CancelAll() { actions_.clear(); }
+    void CancelAll()
+    {
+        actions_.clear();
+    }
     SelectionDeferredExecutor(const SelectionDeferredExecutor&) = delete;
     SelectionDeferredExecutor& operator=(const SelectionDeferredExecutor&) = delete;
 private:
@@ -1009,7 +1064,9 @@ public:
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it = plugins_.find(name);
-        if (it == plugins_.end()) return false;
+        if (it == plugins_.end()) {
+            return false;
+        }
         it->second.isLoaded = true;
         it->second.handle = handle;
         return true;
@@ -1019,7 +1076,9 @@ public:
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it = plugins_.find(name);
-        if (it == plugins_.end()) return false;
+        if (it == plugins_.end()) {
+            return false;
+        }
         it->second.isLoaded = false;
         it->second.handle = nullptr;
         return true;
@@ -1029,7 +1088,9 @@ public:
     {
         std::lock_guard<std::mutex> lock(mutex_);
         std::vector<SelectionPluginInfo> result;
-        for (const auto& [n, info] : plugins_) { result.push_back(info); }
+        for (const auto& [n, info] : plugins_) {
+            result.push_back(info);
+        }
         return result;
     }
 
@@ -1071,7 +1132,9 @@ public:
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it = uidToUserId_.find(uid);
-        if (it == uidToUserId_.end()) return;
+        if (it == uidToUserId_.end()) {
+            return;
+        }
         int32_t userId = it->second;
         uidToUserId_.erase(it);
         auto uit = userIdToUids_.find(userId);
@@ -1101,8 +1164,12 @@ public:
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it = userIdToUids_.find(userId);
-        if (it == userIdToUids_.end()) return;
-        for (auto uid : it->second) { uidToUserId_.erase(uid); }
+        if (it == userIdToUids_.end()) {
+            return;
+        }
+        for (auto uid : it->second) {
+            uidToUserId_.erase(uid);
+        }
         userIdToUids_.erase(it);
     }
 
@@ -1128,9 +1195,10 @@ private:
 // ============================================================================
 
 struct SelectionPanelCapability {
+    static constexpr uint32_t defaultMaxContentSize = 6000;
     bool supportsTextSelection = false;
     bool supportsImageSelection = false;
-    uint32_t maxContentSize = 6000;
+    uint32_t maxContentSize = defaultMaxContentSize;
 };
 
 struct SelectionPanelEntry {
@@ -1154,7 +1222,9 @@ public:
     {
         std::lock_guard<std::mutex> lock(mutex_);
         std::string key = MakeKey(bundleName, abilityName, userId);
-        if (panels_.count(key) > 0) return false;
+        if (panels_.count(key) > 0) {
+            return false;
+        }
         SelectionPanelEntry entry{bundleName, abilityName, userId, cap, true};
         panels_[key] = std::move(entry);
         return true;
@@ -1179,7 +1249,9 @@ public:
         std::lock_guard<std::mutex> lock(mutex_);
         std::vector<SelectionPanelEntry> result;
         for (const auto& [k, v] : panels_) {
-            if (v.userId == userId) result.push_back(v);
+            if (v.userId == userId) {
+                result.push_back(v);
+            }
         }
         return result;
     }
@@ -1189,7 +1261,9 @@ public:
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it = panels_.find(MakeKey(bundleName, abilityName, userId));
-        if (it == panels_.end()) return false;
+        if (it == panels_.end()) {
+            return false;
+        }
         it->second.isActive = active;
         return true;
     }
