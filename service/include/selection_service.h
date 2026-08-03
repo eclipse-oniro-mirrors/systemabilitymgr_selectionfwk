@@ -184,7 +184,7 @@ private:
 
     // 插件 .so 句柄和函数指针
     void* pluginSo_ = nullptr;
-    uint32_t pluginUnloadTimerId_ {0};
+    uint32_t pluginUnloadTimerId_ {0};  // 插件自动卸载定时器ID
     DatabaseSaveConfigFunc databaseSave_ = nullptr;
     DatabaseGetConfigFunc databaseGet_ = nullptr;
     DatabaseIsAvailableFunc databaseAvailable_ = nullptr;
