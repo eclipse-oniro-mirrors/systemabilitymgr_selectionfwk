@@ -40,7 +40,7 @@ const std::map<int32_t, int32_t> JsUtils::SERVICE_ERROR_CODE_MAP = {
 
 const std::map<int32_t, std::string> JsUtils::ERROR_CODE_CONVERT_MESSAGE_MAP = {
     { EXCEPTION_PARAMCHECK, "The parameters check fails." },
-    { EXCEPTION_SELECTION_SERVICE, "Selection service exception." },
+    { EXCEPTION_SELECTION_SERVICE, "Selection service invocation exception." },
     { EXCEPTION_NOT_SYSTEM_APP, "Permission denied. Called by non-system application."},
     { EXCEPTION_PANEL_DESTROYED, "This selection window has been destroyed." },
     { EXCEPTION_INVALID_OPERATION, "The application calling the API does not match the application \
