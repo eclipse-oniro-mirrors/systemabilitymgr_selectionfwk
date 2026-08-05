@@ -83,6 +83,7 @@ taihe_shared_library("selectionManager_taihe_native") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog_base",
+    "hilog:libhilog",
     "ipc:ipc_single",
     "runtime_core:ani",
     "samgr:samgr_proxy",
