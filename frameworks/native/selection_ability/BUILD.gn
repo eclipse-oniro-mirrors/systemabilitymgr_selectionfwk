@@ -71,6 +71,7 @@ ohos_shared_library("selection_ability") {
   ]
 
   external_deps = [
+    "window_manager:libwm",
     "c_utils:utils",
     "ipc:ipc_single",
     "hilog:libhilog",
@@ -100,10 +101,7 @@ ohos_shared_library("selection_ability") {
   defines = []
 
   if (window_manager_use_sceneboard) {
-    external_deps += [ "window_manager:libwm_lite" ]
     defines += [ "SCENE_BOARD_ENABLE" ]
-  } else {
-    external_deps += [ "window_manager:libwm" ]
   }
 
   part_name = "selectionfwk"
