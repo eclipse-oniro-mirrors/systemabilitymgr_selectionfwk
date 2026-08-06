@@ -18,7 +18,7 @@
 
 #include <cstdint>
 
-#include "wm/wm_common.h"
+#include "wm_common.h"
 
 namespace OHOS {
 namespace SelectionFwk {
