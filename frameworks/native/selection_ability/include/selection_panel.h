@@ -28,7 +28,11 @@
 #include "refbase.h"
 #include "context.h"
 #include "wm/wm_common.h"
+#ifdef SCENE_BOARD_ENABLE
 #include "wm/window.h"
+#else
+#include "window.h"
+#endif
 #include "ui/rs_surface_node.h"
 #include "panel_status_listener.h"
 
