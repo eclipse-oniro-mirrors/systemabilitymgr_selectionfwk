@@ -62,7 +62,7 @@ int32_t SelectionPanel::CreatePanel(
     baseOp->SetWindowRect(windowRect);
     WMError wmError = WMError::WM_OK;
     auto windowName = windowTypeToName[panelInfo.panelType];
-    sptr<Rosen::Window> window = Rosen::Window::Create(windowName, baseOp, context, wmError);
+    sptr<Rosen::Window> window = Rosen::Window::Create(windowName, baseOp, context, wmError, nullptr);
     SELECTION_HILOGI("Window creation returns %{public}d", wmError);
     if (!window) {
         HisyseventAdapter::GetInstance()->ReportShowPanelFailed(windowName, static_cast<int32_t>(wmError),
