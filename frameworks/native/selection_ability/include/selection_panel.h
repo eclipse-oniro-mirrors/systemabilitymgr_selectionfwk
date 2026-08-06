@@ -27,8 +27,8 @@
 #include "panel_info.h"
 #include "refbase.h"
 #include "context.h"
-#include "wm_common.h"
-#include "window.h"
+#include "wm/wm_common.h"
+#include "wm/window.h"
 #include "ui/rs_surface_node.h"
 #include "panel_status_listener.h"
 
