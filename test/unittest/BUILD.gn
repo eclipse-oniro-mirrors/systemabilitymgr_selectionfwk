@@ -72,6 +72,7 @@ ohos_unittest("selection_service_unit_test") {
     "${selection_fwk_root_path}/frameworks/native/selection_ability:selection_ability",
   ]
   external_deps = [
+    "window_manager:libwm",
     "ability_base:want",
     "ability_runtime:ability_manager",
     "c_utils:utils",
@@ -93,10 +94,7 @@ ohos_unittest("selection_service_unit_test") {
 
   defines = []
   if (window_manager_use_sceneboard) {
-    external_deps += [ "window_manager:libwm_lite" ]
     defines += [ "SCENE_BOARD_ENABLE" ]
-  } else {
-    external_deps += [ "window_manager:libwm" ]
   }
 
   part_name = "selectionfwk"
