@@ -40,16 +40,6 @@ std::string SelectionConfig::GetApplicationInfo() const
     return applicationInfo_;
 }
 
-uint32_t SelectionConfig::GetTimeout() const
-{
-    return timeout_;
-}
-
-void SelectionConfig::SetTimeout(uint32_t timeout)
-{
-    timeout_ = timeout;
-}
-
 void SelectionConfig::SetEnabled(bool enabled)
 {
     isEnabled_ = enabled;
@@ -112,18 +102,6 @@ std::string MemSelectionConfig::GetApplicationInfo() const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return delegate_.GetApplicationInfo();
-}
-
-uint32_t MemSelectionConfig::GetTimeout() const
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    return delegate_.GetTimeout();
-}
-
-void MemSelectionConfig::SetTimeout(uint32_t timeout)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    delegate_.SetTimeout(timeout);
 }
 
 void MemSelectionConfig::SetEnabled(bool enabled)

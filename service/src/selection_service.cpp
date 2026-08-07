@@ -44,7 +44,6 @@
 
 #define SELECTION_MAX_TRY_TIMES 50
 #define SELECTION_SLEEP_TIME 100
-#define SELECTION_UINT32_MAX UINT32_MAX
 
 using namespace OHOS;
 using namespace OHOS::SelectionFwk;
@@ -318,27 +317,6 @@ static void WatchAppSwitch(const char *key, const char *value, void *context)
     selectionService->DisconnectCurrentExtAbility();
 }
 
-static uint32_t StrToUint(const std::string &value)
-{
-    errno = 0;
-    char *pEnd = nullptr;
-    uint64_t result = std::strtoul(value.c_str(), &pEnd, 0);
-    if (pEnd == value.c_str() || result > SELECTION_UINT32_MAX || errno == ERANGE) {
-        return 0;
-    }
-    return static_cast<uint32_t>(result);
-}
-
-static void WatchTimeoutChange(const char *key, const char *value, void *context)
-{
-    SELECTION_CHECK(key != nullptr && value != nullptr, return, "key or value is nullptr");
-    SELECTION_HILOGI("WatchTimeoutChange begin, %{public}s: value=%{public}s", key, value);
-    const std::string timeoutStr(value);
-    uint32_t timeout = StrToUint(timeoutStr);
-    SELECTION_CHECK(timeout != 0, return, "Invild timeout");
-    MemSelectionConfig::GetInstance().SetTimeout(timeout);
-}
-
 void SelectionService::PersistSelectionConfig()
 {
     if (!CheckUserLoggedIn()) {
@@ -585,9 +563,6 @@ void SelectionService::WatchParams()
     }
     if (WatchParameter(SYS_SELECTION_APP, WatchAppSwitch, this) != 0) {
         SELECTION_HILOGE("Failed to watch SYS_SELECTION_APP");
-    }
-    if (WatchParameter(SYS_SELECTION_TIMEOUT, WatchTimeoutChange, this) != 0) {
-        SELECTION_HILOGE("Failed to watch SYS_SELECTION_TIMEOUT");
     }
     SELECTION_HILOGI("WatchParams end");
 }

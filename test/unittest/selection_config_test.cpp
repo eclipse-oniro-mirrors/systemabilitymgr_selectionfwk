@@ -75,10 +75,6 @@ HWTEST_F(SelectionConfigTest, SelectionConfig001, TestSize.Level0)
     MemSelectionConfig::GetInstance().SetEnabled(true);
     bool enabled = MemSelectionConfig::GetInstance().GetEnable();
     ASSERT_EQ(enabled, true);
-
-    uint32_t timeout = 500;
-    MemSelectionConfig::GetInstance().SetTimeout(timeout);
-    ASSERT_EQ(MemSelectionConfig::GetInstance().GetTimeout(), 500);
 }
 }
 }

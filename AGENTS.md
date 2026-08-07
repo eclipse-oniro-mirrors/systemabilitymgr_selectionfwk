@@ -36,7 +36,7 @@ There is no separate lint step. Static analysis (CFI, UBSan, integer_overflow, b
 | `common/` | `libselection_common.a` (static) | Shared utils, NAPI helpers |
 | `sa_profile/8500.json` | SA profile | SA 8500, `libselection_service.z.so`, boot phase `BootStartPhase`, **start-on-demand** on `sys.selection.switch=on` and `usual.event.USER_SWITCHED` |
 | `etc/init/selection_service.cfg` | init config | uid/gid `sysselection`, SELinux `u:r:selection_service:s0`, `apl: system_basic`; creates `/data/service/el1/public/selection_service` |
-| `etc/para/selection.para` | system params | `sys.selection.switch`, `sys.selection.trigger`, `sys.selection.app`, `sys.selection.uid`, `sys.selection.timeout` |
+| `etc/para/selection.para` | system params | `sys.selection.switch`, `sys.selection.trigger`, `sys.selection.app`, `sys.selection.uid` |
 | `sysevent/` / `hiappevent_agent/` | hisysevent / hiappevent adapters | Domain `SELECTIONFWK` (see `hisysevent-SELECTIONFWK.yaml`) |
 | `utils/` | `selection_timer` | Linked into service + plugins |
 
@@ -84,7 +84,7 @@ Frequent-change paths (by recent commit frequency): `service/src`, `service/incl
 | Taihe FFI | C/Rust-style FFI codegen (dep `taihe_ffi_gen`) for the `selectionManager`/`selectionPanel` JS modules. IDL in `frameworks/ets/taihe/*/idl/`. |
 | sceneboard | Global GN switch `window_manager_use_sceneboard`; picks `libwm_lite` vs `libwm` and defines `SCENE_BOARD_ENABLE`. |
 | CFI / UBSan / integer_overflow | Build-time sanitizers in every `sanitize` block. CFI cross-DSO requires matching configs across DSO boundaries. |
-| `sys.selection.*` | System parameters driving switch/trigger/app/uid/timeout. Defaults in `etc/para/selection.para`. |
+| `sys.selection.*` | System parameters driving switch/trigger/app/uid. Defaults in `etc/para/selection.para`. |
 | `BootStartPhase` | SA boot phase for 8500; starts on-demand, not at init. |
 | `usual.event.USER_SWITCHED` | Common event that also triggers SA 8500 load (multi-user config switch). |
 
