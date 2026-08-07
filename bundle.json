@@ -54,7 +54,8 @@
         "hiappevent",
         "udmf",
         "runtime_core",
-        "taihe_ffi_gen"
+        "taihe_ffi_gen",
+        "ets_frontend"
       ],
       "third_party": [
       ]
