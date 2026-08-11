@@ -91,6 +91,7 @@ taihe_shared_library("selectionManager_taihe_native") {
     "graphic_2d:librender_service_base",
     "graphic_2d:librender_service_client",
     "ability_runtime:ani_base_context",
+    "icu:shared_icuuc",
   ]
   if (defined(global_parts_info) &&
       defined(global_parts_info.bundlemanager_bundle_framework)) {
