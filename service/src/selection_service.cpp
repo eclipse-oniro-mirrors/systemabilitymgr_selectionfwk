@@ -740,7 +740,6 @@ void SelectionService::SyncConfigToDatabase(int32_t userId, const SelectionConfi
         SELECTION_HILOGW("Config saved to system params as fallback");
         return;
     }
-
     auto ret = databaseSave_(userId, &config);
     if (ret != SELECTION_CONFIG_OK) {
         SELECTION_HILOGE("Save database failed. ret = %{public}d", ret);
