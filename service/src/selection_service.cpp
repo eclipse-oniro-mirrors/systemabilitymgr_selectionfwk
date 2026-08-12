@@ -360,9 +360,18 @@ void SelectionService::PersistSelectionConfig()
     auto selectionConfig = MemSelectionConfig::GetInstance().GetSelectionConfig();
     SELECTION_HILOGI("========== PersistSelectionConfig: Start ==========");
 
-    if (!LoadPluginSo()) {
-        SELECTION_HILOGW("Using in-memory config as fallback, service continues to run");
-        return;
+    std::shared_lock<std::shared_mutex> readLock(pluginMutex_);
+    if (!pluginSo_) {
+        readLock.unlock();
+        if (!LoadPluginSo()) {
+            SELECTION_HILOGW("Using in-memory config as fallback, service continues to run");
+            return;
+        }
+        readLock.lock();
+        if (!pluginSo_) {
+            SELECTION_HILOGW("Plugin unloaded during operation, using in-memory config as fallback");
+            return;
+        }
     }
 
     if (databaseSave_) {
@@ -425,8 +434,15 @@ int32_t SelectionService::DoConnectNewExtAbility(const std::string& bundleName, 
         return SELECTION_CONFIG_FAILURE;
     }
 
-    if (!LoadPluginSo() || !abilityConnect_) {
+    if (!LoadPluginSo()) {
         SELECTION_HILOGE("Ability manager plugin not available");
+        connectInner_ = nullptr;
+        return SELECTION_CONFIG_FAILURE;
+    }
+
+    std::shared_lock<std::shared_mutex> readLock(pluginMutex_);
+    if (!pluginSo_ || !abilityConnect_) {
+        SELECTION_HILOGE("Ability manager plugin not available after load");
         connectInner_ = nullptr;
         return SELECTION_CONFIG_FAILURE;
     }
@@ -458,7 +474,9 @@ void SelectionService::DoDisconnectCurrentExtAbility()
     connectInner_->InitDisconnectPromise();
 
     // 如果插件已卸载，直接清理连接对象，不重新加载插件
+    std::shared_lock<std::shared_mutex> readLock(pluginMutex_);
     if (!abilityDisconnect_) {
+        readLock.unlock();
         SELECTION_HILOGW("Ability manager plugin not available, clean up connection only");
         connectInner_->DestroyDisconnectPromise();
         connectInner_ = nullptr;
@@ -466,6 +484,7 @@ void SelectionService::DoDisconnectCurrentExtAbility()
     }
 
     int32_t ret = abilityDisconnect_(&connectInner_);
+    readLock.unlock();
     if (ret != ERR_OK) {
         connectInner_->DestroyDisconnectPromise();
         SELECTION_HILOGE("DisconnectServiceAbility failed, ret: %{public}d", ret);
@@ -672,9 +691,18 @@ void SelectionService::SynchronizeSelectionConfig()
 
 std::optional<SelectionConfig> SelectionService::LoadDatabaseSelectionConfig()
 {
-    if (!LoadPluginSo()) {
-        SELECTION_HILOGW("Using system default config as fallback");
-        return std::nullopt;
+    std::shared_lock<std::shared_mutex> readLock(pluginMutex_);
+    if (!pluginSo_) {
+        readLock.unlock();
+        if (!LoadPluginSo()) {
+            SELECTION_HILOGW("Using system default config as fallback");
+            return std::nullopt;
+        }
+        readLock.lock();
+        if (!pluginSo_) {
+            SELECTION_HILOGW("Plugin unloaded during operation, using fallback");
+            return std::nullopt;
+        }
     }
 
     if (!databaseGet_) {
@@ -703,9 +731,12 @@ void SelectionService::SyncConfigToSystem(const SelectionConfig& config)
 
 void SelectionService::SyncConfigToDatabase(int32_t userId, const SelectionConfig& config)
 {
-    SELECTION_HILOGI("SyncConfigToDatabase: %{public}s", config.ToString().c_str());
-
-    if (!LoadPluginSo() || !databaseSave_) {
+    if (!LoadPluginSo()) {
+        SELECTION_HILOGW("Config saved to system params as fallback");
+        return;
+    }
+    std::shared_lock<std::shared_mutex> readLock(pluginMutex_);
+    if (!pluginSo_ || !databaseSave_) {
         SELECTION_HILOGW("Config saved to system params as fallback");
         return;
     }
@@ -990,8 +1021,9 @@ void SelectionService::PerformParamBootCompleted(const char* key, const char* va
 
 bool SelectionService::LoadPluginSo()
 {
-    std::lock_guard<std::mutex> lock(pluginMutex_);
+    std::unique_lock<std::shared_mutex> lock(pluginMutex_);
     if (pluginSo_) {
+        ResetPluginUnloadTimer();  //新增已加载分支也重置
         return true;  // 已加载
     }
 
@@ -1031,10 +1063,11 @@ bool SelectionService::LoadPluginSo()
 
 void SelectionService::UnloadPluginSo()
 {
+    std::unique_lock<std::shared_mutex> lock(pluginMutex_);
     // 取消卸载定时器
-    if (pluginUnloadTimerId_ != 0) {
-        SelectionFwkTimer::GetInstance()->UnRegister(pluginUnloadTimerId_);
-        pluginUnloadTimerId_ = 0;
+    if (pluginUnloadTimerId_.load() != 0) {
+        SelectionFwkTimer::GetInstance()->UnRegister(pluginUnloadTimerId_.load());
+        pluginUnloadTimerId_.store(0);
     }
 
     if (pluginSo_) {
@@ -1065,15 +1098,15 @@ void SelectionService::UnloadPluginSo()
 void SelectionService::ResetPluginUnloadTimer()
 {
     // 取消旧的定时器
-    if (pluginUnloadTimerId_ != 0) {
-        SelectionFwkTimer::GetInstance()->UnRegister(pluginUnloadTimerId_);
-        pluginUnloadTimerId_ = 0;
+    if (pluginUnloadTimerId_.load() != 0) {
+        SelectionFwkTimer::GetInstance()->UnRegister(pluginUnloadTimerId_.load());
+        pluginUnloadTimerId_.store(0);
     }
 
     // 启动新的定时器：5分钟后自动卸载插件
-    pluginUnloadTimerId_ = SelectionFwkTimer::GetInstance()->Register([this]() {
+    pluginUnloadTimerId_.store(SelectionFwkTimer::GetInstance()->Register([this]() {
         OnPluginUnloadTimer();
-    }, PLUGIN_UNLOAD_TIMEOUT_MS);
+    }, PLUGIN_UNLOAD_TIMEOUT_MS));
 
     SELECTION_HILOGI("Plugin unload timer reset: %{public}d ms", PLUGIN_UNLOAD_TIMEOUT_MS);
 }
@@ -1092,13 +1125,19 @@ void SelectionService::OnPluginUnloadTimer()
         DisconnectCurrentExtAbility();
     }
     UnloadPluginSo();
-    pluginUnloadTimerId_ = 0;
+    // pluginUnloadTimerId_ is already set to 0 inside UnloadPluginSo()
 }
 
 int SelectionService::GetDatabaseConfig(int32_t uid, SelectionConfig& config)
 {
-    if (!LoadPluginSo() || !databaseGet_) {
+    if (!LoadPluginSo()) {
         SELECTION_HILOGE("Database plugin not available");
+        return SELECTION_CONFIG_RDB_NO_INIT;
+    }
+
+    std::shared_lock<std::shared_mutex> readLock(pluginMutex_);
+    if (!pluginSo_ || !databaseGet_) {
+        SELECTION_HILOGE("Database plugin not available after load");
         return SELECTION_CONFIG_RDB_NO_INIT;
     }
 
@@ -1107,14 +1146,19 @@ int SelectionService::GetDatabaseConfig(int32_t uid, SelectionConfig& config)
     if (ret != 0) {
         SELECTION_HILOGE("DatabaseGetConfig failed, ret=%{public}d", ret);
     }
-    ResetPluginUnloadTimer();  // 重置5分钟卸载定时器
     return ret;
 }
 
 int SelectionService::SaveDatabaseConfig(int32_t uid, const SelectionConfig& config)
 {
-    if (!LoadPluginSo() || !databaseSave_) {
+    if (!LoadPluginSo()) {
         SELECTION_HILOGE("Database plugin not available");
+        return SELECTION_CONFIG_RDB_NO_INIT;
+    }
+
+    std::shared_lock<std::shared_mutex> readLock(pluginMutex_);
+    if (!pluginSo_ || !databaseSave_) {
+        SELECTION_HILOGE("Database plugin not available after load");
         return SELECTION_CONFIG_RDB_NO_INIT;
     }
 
@@ -1122,13 +1166,16 @@ int SelectionService::SaveDatabaseConfig(int32_t uid, const SelectionConfig& con
     if (ret != 0) {
         SELECTION_HILOGE("DatabaseSaveConfig failed, ret=%{public}d", ret);
     }
-    ResetPluginUnloadTimer();  // 重置5分钟卸载定时器
     return ret;
 }
 
 bool SelectionService::IsDatabaseAvailable()
 {
-    if (!LoadPluginSo() || !databaseAvailable_) {
+    if (!LoadPluginSo()) {
+        return false;
+    }
+    std::shared_lock<std::shared_mutex> readLock(pluginMutex_);
+    if (!pluginSo_ || !databaseAvailable_) {
         return false;
     }
     return databaseAvailable_() != 0;
@@ -1140,8 +1187,14 @@ int SelectionService::GetPasteboardContent(std::string& content, uint32_t window
     constexpr uint32_t BYTES_PER_CHINESE_CHAR = 3;
     constexpr uint32_t bufferSize = MAX_PASTERBOARD_TEXT_LENGTH * BYTES_PER_CHINESE_CHAR + 1;
 
-    if (!LoadPluginSo() || !pasteboardGetContent_) {
+    if (!LoadPluginSo()) {
         SELECTION_HILOGE("Pasteboard plugin not available");
+        return SelectionServiceError::INVALID_DATA;
+    }
+
+    std::shared_lock<std::shared_mutex> readLock(pluginMutex_);
+    if (!pluginSo_ || !pasteboardGetContent_) {
+        SELECTION_HILOGE("Pasteboard plugin not available after load");
         return SelectionServiceError::INVALID_DATA;
     }
 
@@ -1150,24 +1203,29 @@ int SelectionService::GetPasteboardContent(std::string& content, uint32_t window
     if (ret == 0) {
         content = buffer;
     }
-    ResetPluginUnloadTimer();  // 重置5分钟卸载定时器
     return ret;
 }
 
 bool SelectionService::CanGetPasteboardContent()
 {
-    if (!LoadPluginSo() || !pasteboardCanGetContent_) {
+    if (!LoadPluginSo()) {
+        return false;
+    }
+    std::shared_lock<std::shared_mutex> readLock(pluginMutex_);
+    if (!pluginSo_ || !pasteboardCanGetContent_) {
         return false;
     }
     bool result = pasteboardCanGetContent_() != 0;
-    ResetPluginUnloadTimer();  // 重置5分钟卸载定时器
     return result;
 }
 
 void SelectionService::SetPasteboardFlag(bool flag)
 {
-    if (LoadPluginSo() && pasteboardSetFlag_) {
+    if (!LoadPluginSo()) {
+        return;
+    }
+    std::shared_lock<std::shared_mutex> readLock(pluginMutex_);
+    if (pluginSo_ && pasteboardSetFlag_) {
         pasteboardSetFlag_(flag ? 1 : 0);
-        ResetPluginUnloadTimer();  // 重置5分钟卸载定时器
     }
 }
