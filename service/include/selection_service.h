@@ -18,6 +18,7 @@
 
 #include <map>
 #include <mutex>
+#include <shared_mutex>
 #include <future>
 #include <string>
 
@@ -185,7 +186,7 @@ private:
 
     // 插件 .so 句柄和函数指针
     void* pluginSo_ = nullptr;
-    uint32_t pluginUnloadTimerId_ {0};  // 插件自动卸载定时器ID
+    std::atomic<uint32_t> pluginUnloadTimerId_ {0};  // 插件自动卸载定时器ID
     DatabaseSaveConfigFunc databaseSave_ = nullptr;
     DatabaseGetConfigFunc databaseGet_ = nullptr;
     DatabaseIsAvailableFunc databaseAvailable_ = nullptr;
@@ -198,7 +199,7 @@ private:
 
     int32_t inputMonitorId_ {-1};
     mutable std::mutex mutex_;
-    mutable std::mutex pluginMutex_;
+    mutable std::shared_mutex pluginMutex_;
     static sptr<ISelectionListener> listener_;
     sptr<SelectionExtensionAbilityConnection> connectInner_ {nullptr};
     std::mutex connectMutex_;
