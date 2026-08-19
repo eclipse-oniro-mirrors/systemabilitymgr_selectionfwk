@@ -54,7 +54,7 @@ function offSelectionComplete(@optional f: Optional<(a: SelectionInfo) => void>)
 
 @promise function getSelectionContent(): String;
 
-@gpromise function createPanel(ctx: @sts_type("Context") Opaque, info: PanelInfo): Panel;
+@promise function createPanel(ctx: @sts_type("Context") Opaque, info: PanelInfo): Panel;
 
 @promise function destroyPanel(panel: Panel);
 
