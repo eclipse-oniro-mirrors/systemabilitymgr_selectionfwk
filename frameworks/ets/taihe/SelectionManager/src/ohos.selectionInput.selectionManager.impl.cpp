@@ -50,7 +50,8 @@ public:
         }
     }
 
-    void showSync() {
+    void show()
+    {
         SELECTION_HILOGI("taihe::Show start");
         SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         int32_t errCode = SelectionAbility::GetInstance()->ShowPanel(selectionPanel_);
@@ -59,7 +60,8 @@ public:
         }
     }
 
-    void hideSync() {
+    void hide()
+    {
         SELECTION_HILOGI("taihe::Hide start");
         SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         int32_t errCode = SelectionAbility::GetInstance()->HidePanel(selectionPanel_);
@@ -68,7 +70,8 @@ public:
         }
     }
 
-    void startMovingSync() {
+    void startMoving()
+    {
         SELECTION_HILOGI("taihe::startMoving start");
         SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         int32_t errCode = selectionPanel_->StartMoving();
@@ -77,7 +80,8 @@ public:
         }
     }
 
-    void moveToGlobalDisplaySync(int32_t x, int32_t y) {
+    void moveToGlobalDisplay(int32_t x, int32_t y)
+    {
         SELECTION_HILOGI("taihe::moveToGlobalDisplay start");
         SELECTION_CHECK(selectionPanel_ != nullptr, return, "selectionPanel_ is null");
         int32_t errCode = selectionPanel_->MoveTo(x, y);
@@ -198,7 +202,8 @@ static void CheckGetSelectionContentFrequency()
     }
 }
 
-::taihe::string getSelectionContentSync() {
+::taihe::string getSelectionContent()
+{
     SELECTION_HILOGI("GetSelectionContent");
 
     CheckGetSelectionContentFrequency();
@@ -215,7 +220,9 @@ static void CheckGetSelectionContentFrequency()
 
 const int MENU_PANEL = 1;
 
-::ohos::selectionInput::selectionManager::Panel createPanelSync(uintptr_t ctx, ::ohos::selectionInput::SelectionPanel::PanelInfo const& info) {
+::ohos::selectionInput::selectionManager::Panel createPanel(uintptr_t ctx,
+    ::ohos::selectionInput::SelectionPanel::PanelInfo const& info)
+{
     // The parameters in the make_holder function should be of the same type
     // as the parameters in the constructor of the actual implementation class.
     //ctx->Context, info->panelInfo
@@ -235,7 +242,8 @@ const int MENU_PANEL = 1;
     return taihe::make_holder<PanelImpl, ::ohos::selectionInput::selectionManager::Panel>(selectionPanel);
 }
 
-void destroyPanelSync(::ohos::selectionInput::selectionManager::weak::Panel panel) {
+void destroyPanel(::ohos::selectionInput::selectionManager::weak::Panel panel)
+{
     panel->destroyPanel();
 }
 }  // namespace
@@ -244,7 +252,7 @@ void destroyPanelSync(::ohos::selectionInput::selectionManager::weak::Panel pane
 // NOLINTBEGIN
 TH_EXPORT_CPP_API_onSelectionComplete(onSelectionComplete);
 TH_EXPORT_CPP_API_offSelectionComplete(offSelectionComplete);
-TH_EXPORT_CPP_API_getSelectionContentSync(getSelectionContentSync);
-TH_EXPORT_CPP_API_createPanelSync(createPanelSync);
-TH_EXPORT_CPP_API_destroyPanelSync(destroyPanelSync);
+TH_EXPORT_CPP_API_getSelectionContent(getSelectionContent);
+TH_EXPORT_CPP_API_createPanel(createPanel);
+TH_EXPORT_CPP_API_destroyPanel(destroyPanel);
 // NOLINTEND
