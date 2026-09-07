@@ -43,6 +43,7 @@ private:
     static std::mutex selectionMutex_;
     static std::shared_ptr<EtsSelectionEngineSetting> selectionDelegate_;
     std::recursive_mutex mutex_;
+    static std::recursive_mutex listenerMutex_;
     static sptr<ISelectionListener> listenerStub_;
 };
 } // namespace SelectionFwk

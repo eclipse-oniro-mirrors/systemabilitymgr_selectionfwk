@@ -22,6 +22,7 @@ namespace SelectionFwk {
 
 std::shared_ptr<EtsSelectionEngineSetting> EtsSelectionEngineSetting::selectionDelegate_ = nullptr;
 std::mutex EtsSelectionEngineSetting::selectionMutex_;
+std::recursive_mutex EtsSelectionEngineSetting::listenerMutex_;
 sptr<ISelectionListener> EtsSelectionEngineSetting::listenerStub_ = nullptr;
 
 static void convertSelectionInfo (const SelectionInfo &selectionInfo, ohos::selectionInput::selectionManager::SelectionInfo& info)
@@ -127,13 +128,18 @@ SFErrorCode EtsSelectionEngineSetting::RegisterListenerToService(std::shared_ptr
         SELECTION_HILOGE("selection system ability is nullptr!");
         return EXCEPTION_SELECTION_SERVICE;
     }
-    listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionEnging);
-    if (listenerStub_ == nullptr) {
-        SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
-        return EXCEPTION_SELECTION_SERVICE;
+    sptr<ISelectionListener> listenerStub;
+    {
+        std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+        listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionEnging);
+        if (listenerStub_ == nullptr) {
+            SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
+            return EXCEPTION_SELECTION_SERVICE;
+        }
+        listenerStub = listenerStub_;
     }
     SELECTION_HILOGI("Begin calling SA RegisterListener!");
-    if (proxy->RegisterListener(listenerStub_) != ERR_OK) {
+    if (proxy->RegisterListener(listenerStub) != ERR_OK) {
         return EXCEPTION_SELECTION_SERVICE;
     }
 
@@ -179,12 +185,15 @@ void EtsSelectionEngineSetting::UnRegisterListener(const std::string &type, cons
     }
 
     auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();
-    if (proxy == nullptr || listenerStub_ == nullptr) {
-        SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
-        return;
+    {
+        std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+        if (proxy == nullptr || listenerStub_ == nullptr) {
+            SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
+            return;
+        }
+        proxy->UnregisterListener(listenerStub_);
+        listenerStub_ = nullptr;
     }
-    proxy->UnregisterListener(listenerStub_);
-    listenerStub_ = nullptr;
 }
 
 void EtsSelectionEngineSetting::UnRegisterListener(const std::string &type)
