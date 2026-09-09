@@ -52,6 +52,7 @@ std::mutex JsSelectionEngineSetting::selectionMutex_;
 std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::selectionDelegate_{ nullptr };
 std::mutex JsSelectionEngineSetting::eventHandlerMutex_;
 std::shared_ptr<AppExecFwk::EventHandler> JsSelectionEngineSetting::handler_{ nullptr };
+std::recursive_mutex JsSelectionEngineSetting::listenerMutex_;
 sptr<ISelectionListener> JsSelectionEngineSetting::listenerStub_ { nullptr };
 static SelectionClient &g_selectionClient = SelectionClient::GetInstance();
 static std::deque<uint64_t> g_getSelectionContentCounter;
@@ -387,12 +388,15 @@ void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::stri
     }
 
     auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();
-    if (proxy == nullptr || listenerStub_ == nullptr) {
-        SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
-        return;
+    {
+        std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+        if (proxy == nullptr || listenerStub_ == nullptr) {
+            SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
+            return;
+        }
+        proxy->UnregisterListener(listenerStub_);
+        listenerStub_ = nullptr;
     }
-    proxy->UnregisterListener(listenerStub_);
-    listenerStub_ = nullptr;
 }
 
 std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::GetJsSelectionEngineSetting()
@@ -423,13 +427,18 @@ SFErrorCode JsSelectionEngineSetting::RegisterListenerToService(
         SELECTION_HILOGE("selection system ability is nullptr!");
         return EXCEPTION_SELECTION_SERVICE;
     }
-    listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionEnging);
-    if (listenerStub_ == nullptr) {
-        SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
-        return EXCEPTION_SELECTION_SERVICE;
+    sptr<ISelectionListener> listenerStub;
+    {
+        std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+        listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionEnging);
+        if (listenerStub_ == nullptr) {
+            SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
+            return EXCEPTION_SELECTION_SERVICE;
+        }
+        listenerStub = listenerStub_;
     }
     SELECTION_HILOGI("Begin calling SA RegisterListener!");
-    if (proxy->RegisterListener(listenerStub_) != ERR_OK) {
+    if (proxy->RegisterListener(listenerStub) != ERR_OK) {
         return EXCEPTION_SELECTION_SERVICE;
     }
 
