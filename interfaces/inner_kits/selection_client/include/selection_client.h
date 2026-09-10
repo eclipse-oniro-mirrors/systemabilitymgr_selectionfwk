@@ -23,7 +23,6 @@
 class SelectionClient {
 public:
     SELECTION_API static SelectionClient& GetInstance();
-    bool IsCurrentSelectionApp(int pid);
     int32_t GetSelectionContent(std::string& selectionContent);
 };
 

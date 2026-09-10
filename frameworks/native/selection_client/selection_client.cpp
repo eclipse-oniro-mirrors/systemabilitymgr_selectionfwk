@@ -29,33 +29,6 @@ SelectionClient& SelectionClient::GetInstance()
     return instance;
 }
 
-bool SelectionClient::IsCurrentSelectionApp(int pid)
-{
-    SELECTION_HILOGI("SelectionClient::IsCurrentSelectionApp");
-    bool result = false;
-    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (systemAbilityManager == nullptr) {
-        SELECTION_HILOGE("system ability manager is nullptr!");
-        return result;
-    }
-    sptr<IRemoteObject> systemAbility = nullptr;
-    systemAbility = systemAbilityManager->GetSystemAbility(SELECTION_FWK_SA_ID);
-    if (systemAbility == nullptr) {
-        SELECTION_HILOGE("get system ability is nullptr!");
-        return result;
-    }
-    auto abilityManager = iface_cast<ISelectionService>(systemAbility);
-    if (abilityManager == nullptr) {
-        SELECTION_HILOGE("abilityManager is nullptr!");
-        return result;
-    }
-    ErrCode errCode = abilityManager->IsCurrentSelectionApp(pid, result);
-    if (errCode != 0) {
-        SELECTION_HILOGE("Failed to call IsCurrentSelectionApp, errCode: %{public}d.", errCode);
-    }
-    return result;
-}
-
 int32_t SelectionClient::GetSelectionContent(std::string& selectionContent)
 {
     SELECTION_HILOGI("SelectionClient::GetSelectionContent");

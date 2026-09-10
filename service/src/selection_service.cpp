@@ -209,13 +209,6 @@ ErrCode SelectionService::UnregisterListener(const sptr<ISelectionListener>& lis
     return 0;
 }
 
-ErrCode SelectionService::IsCurrentSelectionApp(int pid, bool &resultValue)
-{
-    resultValue = (pid_.load() != -1 && pid == pid_.load());
-    SELECTION_HILOGI("Checking IsCurrentSelectionApp: %{public}d", resultValue);
-    return 0;
-}
-
 ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
 {
     SELECTION_HILOGI("[SelectionService] GetSelectionContent in");
