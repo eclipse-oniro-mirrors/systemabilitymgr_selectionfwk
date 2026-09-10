@@ -95,7 +95,7 @@ private:
     bool IsTinyMovement(std::shared_ptr<PointerEvent> pointerEvent) const;
 
 private:
-    mutable std::shared_mutex selectionMutex_;
+    mutable std::shared_mutex selectionInfoMutex_;
     mutable std::atomic<uint32_t> curSelectState = static_cast<uint32_t>(SelectInputState::SELECT_INPUT_INITIAL);
     mutable std::atomic<uint32_t> subSelectState = static_cast<uint32_t>(SelectInputSubState::SUB_INITIAL);
     mutable std::atomic<int64_t> lastClickTime = 0;

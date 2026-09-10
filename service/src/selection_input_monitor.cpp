@@ -59,7 +59,7 @@ bool BaseSelectionInputMonitor::IsSelectionTriggered() const
 
 SelectionInfo BaseSelectionInputMonitor::GetSelectionInfo() const
 {
-    std::shared_lock<std::shared_mutex> lock(selectionMutex_);
+    std::shared_lock<std::shared_mutex> lock(selectionInfoMutex_);
     return selectionInfo_;
 }
 
@@ -282,7 +282,7 @@ void BaseSelectionInputMonitor::SaveSelectionStartInfo(std::shared_ptr<PointerEv
         bundleName = infos[0]->windowMetaInfo.bundleName;
     }
 
-    std::unique_lock<std::shared_mutex> lock(selectionMutex_);
+    std::unique_lock<std::shared_mutex> lock(selectionInfoMutex_);
     selectionInfo_.startDisplayX = pointerItem.GetGlobalX();
     selectionInfo_.startDisplayY = pointerItem.GetGlobalY();
     selectionInfo_.endDisplayX = pointerItem.GetGlobalX();
@@ -301,7 +301,7 @@ void BaseSelectionInputMonitor::SaveSelectionEndInfo(std::shared_ptr<PointerEven
     int32_t pointerId = pointerEvent->GetPointerId();
     PointerEvent::PointerItem pointerItem;
     pointerEvent->GetPointerItem(pointerId, pointerItem);
-    std::unique_lock<std::shared_mutex> lock(selectionMutex_);
+    std::unique_lock<std::shared_mutex> lock(selectionInfoMutex_);
     SaveSelectionTypeLocked();
     selectionInfo_.endDisplayX = pointerItem.GetGlobalX();
     selectionInfo_.endDisplayY = pointerItem.GetGlobalY();
