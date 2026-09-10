@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
+#include <shared_mutex>
 #include <string>
 #include <unordered_set>
 #include <memory>
