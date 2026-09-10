@@ -15,7 +15,6 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <shared_mutex>
 #include <input_manager.h>
 #include "selection_service.h"
 #include "selection_common.h"

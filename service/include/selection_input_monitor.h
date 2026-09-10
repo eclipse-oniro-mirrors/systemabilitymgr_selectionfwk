@@ -19,11 +19,9 @@
 #include <fcntl.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
-#include <shared_mutex>
 #include <string>
 #include <unordered_set>
 #include <memory>
-#include <atomic>
 #include <i_input_event_consumer.h>
 #include "selection_interface.h"
 
