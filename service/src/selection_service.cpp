@@ -227,6 +227,7 @@ ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
         return SelectionServiceError::INVALID_DATA;
     }
 
+    std::lock_guard<std::mutex> lock(selectionContentMutex_);
     if (!inputMonitor_->GetCanGetSelectionContentFlag()) {
         SELECTION_HILOGE("GetSelectionContent at wrong timing.");
         return SelectionServiceError::INVALID_TIMING;
@@ -381,9 +382,13 @@ void SelectionService::Init()
 
 void SelectionService::Shutdown()
 {
+    UnregisterSystemAbilityStatusChangeListener();
+    UnwatchParams();
     InputMonitorCancel();
     CancelFocusChangedMonitor();
     UnsubscribeSysEventReceiver();
+    isMonitorInitialized_ = false;
+    isWindowInitialized_ = false;
 }
 
 int32_t SelectionService::DoConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName)
@@ -586,6 +591,22 @@ void SelectionService::WatchParams()
     SELECTION_HILOGI("WatchParams end");
 }
 
+void SelectionService::UnwatchParams()
+{
+    SELECTION_HILOGI("UnwatchParams begin");
+    RemoveParameterWatcher(SYS_SELECTION_SWITCH, WatchEnableSwitch, this);
+    RemoveParameterWatcher(SYS_SELECTION_TRIGGER, WatchTriggerMode, this);
+    RemoveParameterWatcher(SYS_SELECTION_APP, WatchAppSwitch, this);
+    RemoveParameterWatcher(BOOTEVENT_BOOT_COMPLETED, WatchBootCompleted, this);
+    SELECTION_HILOGI("UnwatchParams end");
+}
+ 
+void SelectionService::WatchBootCompleted(const char *key, const char *value, void *context)
+{
+    SelectionService *selectionService = static_cast<SelectionService *>(context);
+    selectionService->PerformParamBootCompleted(key, value, context);
+}
+
 int SelectionService::GetUserId()
 {
     return userId_.load();
@@ -714,6 +735,7 @@ void SelectionService::ProcessSyncResult(const ComparisionResult& result)
     // 处理需要停止服务的情况
     if (result.shouldStop) {
         SELECTION_HILOGI("result.shouldStop");
+        UnwatchParams();
         SysSelectionConfigRepository::GetInstance()->DisableSAService();
         UnloadService();
         return;
@@ -772,10 +794,7 @@ void SelectionService::WatchExtAbilityInstalled(const std::string& bundleName, c
 void SelectionService::OnStart()
 {
     SELECTION_HILOGI("[selectevent][SelectionService][OnStart]begin");
-    int ret = WatchParameter(BOOTEVENT_BOOT_COMPLETED, [](const char* key, const char* value, void* context) {
-        SelectionService *selectionService = static_cast<SelectionService *>(context);
-        selectionService->PerformParamBootCompleted(key, value, context);
-    }, reinterpret_cast<void*>(this));
+    int ret = WatchParameter(BOOTEVENT_BOOT_COMPLETED, WatchBootCompleted, reinterpret_cast<void*>(this));
     if (ret != 0) {
         SELECTION_HILOGE("Faild to watch %{public}s with ret %{public}d, init now.", BOOTEVENT_BOOT_COMPLETED, ret);
         Init();
@@ -832,7 +851,25 @@ void SelectionService::RegisterSystemAbilityStatusChangeListener()
             SELECTION_HILOGE("Failed to SubscribeSystemAbility. ret: %{public}d", ret);
             continue;
         }
+        saListeners_[pair.first] = listener;
     }
+}
+
+void SelectionService::UnregisterSystemAbilityStatusChangeListener()
+{
+    SELECTION_HILOGI("UnregisterSystemAbilityStatusChangeListener start!");
+    auto abilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (abilityManager == nullptr) {
+        SELECTION_HILOGE("SystemAbilityManager is nullptr!");
+        return;
+    }
+    for (auto& pair : saListeners_) {
+        int32_t ret = abilityManager->UnSubscribeSystemAbility(pair.first, pair.second);
+        if (ret != ERR_OK) {
+            SELECTION_HILOGE("Failed to UnSubscribeSystemAbility [%{public}d]. ret: %{public}d", pair.first, ret);
+        }
+    }
+    saListeners_.clear();
 }
 
 void SelectionService::InputMonitorInit()

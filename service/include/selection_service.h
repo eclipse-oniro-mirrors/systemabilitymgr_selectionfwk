@@ -35,6 +35,7 @@
 #include "selection_common.h"
 #include "selection_config_comparator.h"
 #include "selection_input_monitor.h"
+#include "system_ability_status_change_listener.h"
 
 namespace OHOS::SelectionFwk {
 using namespace MMI;
@@ -136,9 +137,12 @@ private:
     void DoDisconnectCurrentExtAbility();
     void InitSystemAbilityChangeHandlers();
     void RegisterSystemAbilityStatusChangeListener();
+    void UnregisterSystemAbilityStatusChangeListener();
     void InputMonitorInit();
     void InputMonitorCancel();
     void WatchParams();
+    void UnwatchParams();
+    static void WatchBootCompleted(const char *key, const char *value, void *context);
     void InitFocusChangedMonitor();
     void CancelFocusChangedMonitor();
     void HandleFocusChanged(const sptr<Rosen::FocusChangeInfo> &focusChangeInfo, bool isFocused);
@@ -180,6 +184,7 @@ private:
     void PerformParamBootCompleted(const char* key, const char* value, void* context);
 
     std::map<int32_t, std::function<void(int32_t, const std::string&)>> systemAbilityChangeHandlers_;
+    std::map<int32_t, sptr<SystemAbilityStatusChangeListener>> saListeners_;
     std::shared_ptr<SelectionInputMonitor> inputMonitor_;
 
     // 插件 .so 句柄和函数指针
@@ -198,6 +203,7 @@ private:
     int32_t inputMonitorId_ {-1};
     mutable std::mutex mutex_;
     mutable std::shared_mutex pluginMutex_;
+    std::mutex selectionContentMutex_;
     static sptr<ISelectionListener> listener_;
     sptr<SelectionExtensionAbilityConnection> connectInner_ {nullptr};
     std::mutex connectMutex_;
