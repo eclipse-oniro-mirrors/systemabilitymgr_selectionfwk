@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
+#include <shared_mutex>
 #include <string>
 #include <unordered_set>
 #include <memory>
@@ -65,7 +66,7 @@ public:
     virtual void OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) const;
 
     virtual bool IsSelectionTriggered() const;
-    virtual const SelectionInfo& GetSelectionInfo() const;
+    virtual SelectionInfo GetSelectionInfo() const;
     virtual bool IsInputWordEnd() const;
 
 private:
@@ -86,7 +87,7 @@ private:
     void JudgeTripleClick(std::shared_ptr<PointerEvent> pointerEvent) const;
     void SaveSelectionStartInfo(std::shared_ptr<PointerEvent> pointerEvent) const;
     void SaveSelectionEndInfo(std::shared_ptr<PointerEvent> pointerEvent) const;
-    void SaveSelectionType() const;
+    void SaveSelectionTypeLocked() const;
     bool IsSelectionDone() const;
     bool GetCtrlSelectFlag() const;
     bool IsClickTimeout(uint32_t time) const;
@@ -94,9 +95,10 @@ private:
     bool IsTinyMovement(std::shared_ptr<PointerEvent> pointerEvent) const;
 
 private:
-    mutable SelectInputState curSelectState = SelectInputState::SELECT_INPUT_INITIAL;
-    mutable SelectInputSubState subSelectState = SelectInputSubState::SUB_INITIAL;
-    mutable int64_t lastClickTime = 0;
+    mutable std::shared_mutex selectionInfoMutex_;
+    mutable std::atomic<uint32_t> curSelectState = static_cast<uint32_t>(SelectInputState::SELECT_INPUT_INITIAL);
+    mutable std::atomic<uint32_t> subSelectState = static_cast<uint32_t>(SelectInputSubState::SUB_INITIAL);
+    mutable std::atomic<int64_t> lastClickTime = 0;
     mutable SelectionInfo selectionInfo_;
 };
 

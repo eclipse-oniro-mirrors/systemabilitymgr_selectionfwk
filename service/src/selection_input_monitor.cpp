@@ -57,8 +57,9 @@ bool BaseSelectionInputMonitor::IsSelectionTriggered() const
     return IsSelectionDone();
 }
 
-const SelectionInfo& BaseSelectionInputMonitor::GetSelectionInfo() const
+SelectionInfo BaseSelectionInputMonitor::GetSelectionInfo() const
 {
+    std::shared_lock<std::shared_mutex> lock(selectionInfoMutex_);
     return selectionInfo_;
 }
 
@@ -66,36 +67,36 @@ void BaseSelectionInputMonitor::OnInputEvent(std::shared_ptr<KeyEvent> keyEvent)
 {
     SELECTION_HILOGD("Before keyEvent, curSelectState: %{public}d, subSelectState: %{public}d; "
         "keyAction: %{public}d",
-        curSelectState, subSelectState, keyEvent->GetKeyAction());
+        curSelectState.load(), subSelectState.load(), keyEvent->GetKeyAction());
     ProcessInputEvent(keyEvent);
     SELECTION_HILOGD("After keyEvent, curSelectState: %{public}d, subSelectState: %{public}d",
-        curSelectState, subSelectState);
+        curSelectState.load(), subSelectState.load());
 }
 
 void BaseSelectionInputMonitor::OnInputEvent(std::shared_ptr<PointerEvent> pointerEvent) const
 {
     SELECTION_HILOGD("Before pointerEvent, curSelectState: %{public}d, subSelectState: %{public}d; "
         "buttonId: %{public}d, pointerAction: %{public}d",
-        curSelectState, subSelectState, pointerEvent->GetButtonId(), pointerEvent->GetPointerAction());
+        curSelectState.load(), subSelectState.load(), pointerEvent->GetButtonId(), pointerEvent->GetPointerAction());
     ProcessInputEvent(pointerEvent);
     SELECTION_HILOGD("After pointerEvent, curSelectState: %{public}d, subSelectState: %{public}d",
-        curSelectState, subSelectState);
+        curSelectState.load(), subSelectState.load());
 }
 
 void BaseSelectionInputMonitor::ProcessInputEvent(std::shared_ptr<KeyEvent> keyEvent) const
 {
-    if (curSelectState == SelectInputState::SELECT_INPUT_DONE) {
-        if (subSelectState != SelectInputSubState::SUB_INITIAL) {
-            curSelectState = SelectInputState::SELECT_INPUT_WORD_END;
+    if (curSelectState.load() == static_cast<uint32_t>(SelectInputState::SELECT_INPUT_DONE)) {
+        if (subSelectState.load() != static_cast<uint32_t>(SelectInputSubState::SUB_INITIAL)) {
+            curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WORD_END));
             return;
         }
         ResetState();
         return;
     }
 
-    if (subSelectState != SelectInputSubState::SUB_WAIT_KEY_CTRL_DOWN &&
-        subSelectState != SelectInputSubState::SUB_WAIT_KEY_CTRL_UP &&
-        subSelectState != SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN) {
+    if (subSelectState.load() != static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_KEY_CTRL_DOWN) &&
+        subSelectState.load() != static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_KEY_CTRL_UP) &&
+        subSelectState.load() != static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN)) {
         return;
     }
 
@@ -110,26 +111,27 @@ void BaseSelectionInputMonitor::ProcessInputEvent(std::shared_ptr<KeyEvent> keyE
         return;
     }
     SELECTION_HILOGI("[SelectionService] Processed ctrl key with action: %{public}d.", action);
-    if ((subSelectState == SelectInputSubState::SUB_WAIT_KEY_CTRL_DOWN ||
-         subSelectState == SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN) &&
+    if ((subSelectState.load() == static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_KEY_CTRL_DOWN) ||
+         subSelectState.load() == static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN)) &&
         action == KeyEvent::KEY_ACTION_DOWN) {
-        subSelectState = SelectInputSubState::SUB_WAIT_KEY_CTRL_UP;
+        subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_KEY_CTRL_UP));
         return;
     }
 
-    if (subSelectState == SelectInputSubState::SUB_WAIT_KEY_CTRL_UP && action == KeyEvent::KEY_ACTION_UP) {
-        if (curSelectState == SelectInputState::SELECT_INPUT_WORD_END) {
-            curSelectState = SelectInputState::SELECT_INPUT_DONE;
+    if (subSelectState.load() == static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_KEY_CTRL_UP) &&
+        action == KeyEvent::KEY_ACTION_UP) {
+        if (curSelectState.load() == static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WORD_END)) {
+            curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_DONE));
             SELECTION_HILOGI("[SelectionService] Set curSelectState SELECT_INPUT_DONE.");
         }
-        subSelectState = SelectInputSubState::SUB_INITIAL;
+        subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_INITIAL));
     } else {
         if (action == KeyEvent::KEY_ACTION_UP && keyEvent->IsRepeatKey()) {
             SELECTION_HILOGD("current ctrl up is repeat, ignore");
             return;
         }
-        curSelectState = SelectInputState::SELECT_INPUT_INITIAL;
-        subSelectState = SelectInputSubState::SUB_INITIAL;
+        curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_INITIAL));
+        subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_INITIAL));
         SELECTION_HILOGI("[SelectionService] Set curSelectState SELECT_INPUT_INITIAL.");
     }
     FinishedWordSelection();
@@ -154,8 +156,8 @@ void BaseSelectionInputMonitor::ProcessInputEvent(std::shared_ptr<PointerEvent> 
         return;
     }
 
-    SELECTION_HILOGD("[SelectionService] into PointerEvent, curSelectState = %{public}d.", curSelectState);
-    switch (curSelectState) {
+    SELECTION_HILOGD("[SelectionService] into PointerEvent, curSelectState = %{public}d.", curSelectState.load());
+    switch (static_cast<SelectInputState>(curSelectState.load())) {
         case SelectInputState::SELECT_INPUT_INITIAL:
             InputInitialProcess(pointerEvent);
             break;
@@ -194,20 +196,20 @@ void BaseSelectionInputMonitor::ProcessInputEvent(std::shared_ptr<PointerEvent> 
 
 bool BaseSelectionInputMonitor::ProcessMovement(std::shared_ptr<PointerEvent> pointerEvent) const
 {
-    if (subSelectState == SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_DOWN) {
+    if (subSelectState.load() == static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_DOWN)) {
         if (IsTinyMovement(pointerEvent)) {
-            if (curSelectState == SelectInputState::SELECT_INPUT_DONE) {
-                curSelectState = SelectInputState::SELECT_INPUT_WAIT_TRIPLE_CLICK;
+            if (curSelectState.load() == static_cast<uint32_t>(SelectInputState::SELECT_INPUT_DONE)) {
+                curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WAIT_TRIPLE_CLICK));
             }
             return true;
         }
     }
-    if (subSelectState == SelectInputSubState::SUB_WAIT_KEY_CTRL_DOWN ||
-        subSelectState == SelectInputSubState::SUB_WAIT_KEY_CTRL_UP) {
+    if (subSelectState.load() == static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_KEY_CTRL_DOWN) ||
+        subSelectState.load() == static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_KEY_CTRL_UP)) {
         return true;
     }
-    if (subSelectState == SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN) {
-        subSelectState = SelectInputSubState::SUB_WAIT_KEY_CTRL_DOWN;
+    if (subSelectState.load() == static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN)) {
+        subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_KEY_CTRL_DOWN));
         return true;
     }
     return false;
@@ -228,8 +230,8 @@ bool BaseSelectionInputMonitor::IsTinyMovement(std::shared_ptr<PointerEvent> poi
 bool BaseSelectionInputMonitor::IsClickTimeout(uint32_t time) const
 {
     auto curTime = GetCurrentTimeMillis();
-    auto duration = curTime - lastClickTime;
-    lastClickTime = curTime;
+    auto duration = curTime - lastClickTime.load();
+    lastClickTime.store(curTime);
     return (duration > time);
 }
 
@@ -241,8 +243,8 @@ void BaseSelectionInputMonitor::OnInputEvent(std::shared_ptr<AxisEvent> axisEven
 void BaseSelectionInputMonitor::ResetProcess(std::shared_ptr<PointerEvent> pointerEvent) const
 {
     SELECTION_HILOGI("ResetProcess with action: %{public}d.", pointerEvent->GetPointerAction());
-    curSelectState = SelectInputState::SELECT_INPUT_INITIAL;
-    subSelectState = SelectInputSubState::SUB_INITIAL;
+    curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_INITIAL));
+    subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_INITIAL));
     OnInputEvent(pointerEvent);
 }
 
@@ -251,14 +253,6 @@ void BaseSelectionInputMonitor::SaveSelectionStartInfo(std::shared_ptr<PointerEv
     int32_t pointerId = pointerEvent->GetPointerId();
     PointerEvent::PointerItem pointerItem;
     pointerEvent->GetPointerItem(pointerId, pointerItem);
-    selectionInfo_.startDisplayX = pointerItem.GetGlobalX();
-    selectionInfo_.startDisplayY = pointerItem.GetGlobalY();
-    selectionInfo_.endDisplayX = pointerItem.GetGlobalX();
-    selectionInfo_.endDisplayY = pointerItem.GetGlobalY();
-    selectionInfo_.startWindowX = pointerItem.GetWindowX();
-    selectionInfo_.startWindowY = pointerItem.GetWindowY();
-    selectionInfo_.endWindowX = pointerItem.GetWindowX();
-    selectionInfo_.endWindowY = pointerItem.GetWindowY();
     int32_t displayId = pointerEvent->GetTargetDisplayId();
     int32_t windowId = pointerEvent->GetTargetWindowId();
     if (displayId < 0 || windowId < 0) {
@@ -266,11 +260,9 @@ void BaseSelectionInputMonitor::SaveSelectionStartInfo(std::shared_ptr<PointerEv
             "windowId: %{public}d", displayId, windowId);
         return;
     }
-    selectionInfo_.displayId = static_cast<std::uint32_t>(displayId);
-    selectionInfo_.windowId = static_cast<std::uint32_t>(windowId);
 
     OHOS::Rosen::WindowInfoOption windowInfoOption;
-    windowInfoOption.windowId = static_cast<std::int32_t>(selectionInfo_.windowId);
+    windowInfoOption.windowId = windowId;
     SELECTION_HILOGI("Begin to call ListWindowInfo");
     std::vector<sptr<Rosen::WindowInfo>> infos;
 #ifdef SCENE_BOARD_ENABLE
@@ -285,26 +277,41 @@ void BaseSelectionInputMonitor::SaveSelectionStartInfo(std::shared_ptr<PointerEv
             info->windowMetaInfo.bundleName.c_str(), info->windowMetaInfo.windowType,
             info->windowLayoutInfo.rect.width_, info->windowLayoutInfo.rect.height_);
     }
+    std::string bundleName;
     if (ret == Rosen::WMError::WM_OK && !infos.empty()) {
-        selectionInfo_.bundleName = infos[0]->windowMetaInfo.bundleName;
+        bundleName = infos[0]->windowMetaInfo.bundleName;
     }
+
+    std::unique_lock<std::shared_mutex> lock(selectionInfoMutex_);
+    selectionInfo_.startDisplayX = pointerItem.GetGlobalX();
+    selectionInfo_.startDisplayY = pointerItem.GetGlobalY();
+    selectionInfo_.endDisplayX = pointerItem.GetGlobalX();
+    selectionInfo_.endDisplayY = pointerItem.GetGlobalY();
+    selectionInfo_.startWindowX = pointerItem.GetWindowX();
+    selectionInfo_.startWindowY = pointerItem.GetWindowY();
+    selectionInfo_.endWindowX = pointerItem.GetWindowX();
+    selectionInfo_.endWindowY = pointerItem.GetWindowY();
+    selectionInfo_.displayId = static_cast<std::uint32_t>(displayId);
+    selectionInfo_.windowId = static_cast<std::uint32_t>(windowId);
+    selectionInfo_.bundleName = std::move(bundleName);
 }
 
 void BaseSelectionInputMonitor::SaveSelectionEndInfo(std::shared_ptr<PointerEvent> pointerEvent) const
 {
-    SaveSelectionType();
     int32_t pointerId = pointerEvent->GetPointerId();
     PointerEvent::PointerItem pointerItem;
     pointerEvent->GetPointerItem(pointerId, pointerItem);
+    std::unique_lock<std::shared_mutex> lock(selectionInfoMutex_);
+    SaveSelectionTypeLocked();
     selectionInfo_.endDisplayX = pointerItem.GetGlobalX();
     selectionInfo_.endDisplayY = pointerItem.GetGlobalY();
     selectionInfo_.endWindowX = pointerItem.GetWindowX();
     selectionInfo_.endWindowY = pointerItem.GetWindowY();
 }
 
-void BaseSelectionInputMonitor::SaveSelectionType() const
+void BaseSelectionInputMonitor::SaveSelectionTypeLocked() const
 {
-    switch (curSelectState) {
+    switch (static_cast<SelectInputState>(curSelectState.load())) {
         case SelectInputState::SELECT_INPUT_WAIT_LEFT_MOVE:
             selectionInfo_.selectionType = MOVE_SELECTION;
             break;
@@ -321,12 +328,12 @@ void BaseSelectionInputMonitor::SaveSelectionType() const
 
 bool BaseSelectionInputMonitor::IsSelectionDone() const
 {
-    return curSelectState == SelectInputState::SELECT_INPUT_DONE;
+    return curSelectState.load() == static_cast<uint32_t>(SelectInputState::SELECT_INPUT_DONE);
 }
 
 bool BaseSelectionInputMonitor::IsInputWordEnd() const
 {
-    return curSelectState == SelectInputState::SELECT_INPUT_WORD_END;
+    return curSelectState.load() == static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WORD_END);
 }
 
 bool BaseSelectionInputMonitor::GetCtrlSelectFlag() const
@@ -339,9 +346,9 @@ void BaseSelectionInputMonitor::InputInitialProcess(std::shared_ptr<PointerEvent
     int32_t action = pointerEvent->GetPointerAction();
     int32_t buttonId = pointerEvent->GetButtonId();
     if (action == PointerEvent::POINTER_ACTION_BUTTON_DOWN && buttonId == PointerEvent::MOUSE_BUTTON_LEFT) {
-        curSelectState = SelectInputState::SELECT_INPUT_WORD_BEGIN;
-        subSelectState = SelectInputSubState::SUB_INITIAL;
-        lastClickTime = GetCurrentTimeMillis();
+        curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WORD_BEGIN));
+        subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_INITIAL));
+        lastClickTime.store(GetCurrentTimeMillis());
         SaveSelectionStartInfo(pointerEvent);
         SELECTION_HILOGI("set curSelectState to SELECT_INPUT_WORD_BEGIN.");
     }
@@ -352,12 +359,12 @@ void BaseSelectionInputMonitor::InputWordBeginProcess(std::shared_ptr<PointerEve
 {
     int32_t action = pointerEvent->GetPointerAction();
     if (action == PointerEvent::POINTER_ACTION_MOVE) {
-        curSelectState = SelectInputState::SELECT_INPUT_WAIT_LEFT_MOVE;
-        subSelectState = SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_UP;
+        curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WAIT_LEFT_MOVE));
+        subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_UP));
         SELECTION_HILOGI("set curSelectState to SELECT_INPUT_WAIT_LEFT_MOVE.");
     } else if (action == PointerEvent::POINTER_ACTION_BUTTON_UP) {
-        curSelectState = SelectInputState::SELECT_INPUT_WAIT_DOUBLE_CLICK;
-        subSelectState = SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_DOWN;
+        curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WAIT_DOUBLE_CLICK));
+        subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_DOWN));
         SELECTION_HILOGI("set curSelectState to SELECT_INPUT_WAIT_DOUBLE_CLICK.");
     }
     return;
@@ -367,20 +374,20 @@ void BaseSelectionInputMonitor::ProcessWordSelection(std::shared_ptr<PointerEven
 {
     SaveSelectionEndInfo(pointerEvent);
     if (GetCtrlSelectFlag()) {
-        if (curSelectState == SelectInputState::SELECT_INPUT_WAIT_DOUBLE_CLICK) {
-            subSelectState = SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN;
+        if (curSelectState.load() == static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WAIT_DOUBLE_CLICK)) {
+            subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN));
         } else {
-            subSelectState = SelectInputSubState::SUB_WAIT_KEY_CTRL_DOWN;
+            subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_KEY_CTRL_DOWN));
         }
-        curSelectState = SelectInputState::SELECT_INPUT_WORD_END;
+        curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WORD_END));
         SELECTION_HILOGI("set curSelectState to SELECT_INPUT_WORD_END");
     } else {
-        if (curSelectState == SelectInputState::SELECT_INPUT_WAIT_DOUBLE_CLICK) {
-            subSelectState = SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_DOWN;
+        if (curSelectState.load() == static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WAIT_DOUBLE_CLICK)) {
+            subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_DOWN));
         } else {
-            subSelectState = SelectInputSubState::SUB_INITIAL;
+            subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_INITIAL));
         }
-        curSelectState = SelectInputState::SELECT_INPUT_DONE;
+        curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_DONE));
         SELECTION_HILOGI("set curSelectState to SELECT_INPUT_DONE.");
     }
 }
@@ -391,7 +398,8 @@ void BaseSelectionInputMonitor::InputWordLeftMoveProcess(std::shared_ptr<Pointer
     if (action == PointerEvent::POINTER_ACTION_BUTTON_UP) {
         ProcessWordSelection(pointerEvent);
     } else if (action != PointerEvent::POINTER_ACTION_MOVE) {
-        SELECTION_HILOGI("Action reset. subSelectState is %{public}d, action is %{public}d.", subSelectState, action);
+        SELECTION_HILOGI("Action reset. subSelectState is %{public}d, action is %{public}d.",
+            subSelectState.load(), action);
         ResetProcess(pointerEvent);
     }
     return;
@@ -403,34 +411,34 @@ void BaseSelectionInputMonitor::JudgeTripleClick(std::shared_ptr<PointerEvent> p
         ResetProcess(pointerEvent);
         return;
     }
-    curSelectState = SelectInputState::SELECT_INPUT_WAIT_TRIPLE_CLICK;
-    subSelectState = SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_UP;
+    curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WAIT_TRIPLE_CLICK));
+    subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_UP));
     SELECTION_HILOGI("set curSelectState to SELECT_INPUT_WAIT_TRIPLE_CLICK.");
 }
 
 void BaseSelectionInputMonitor::InputWordDoubleClickProcess(std::shared_ptr<PointerEvent> pointerEvent) const
 {
     int32_t action = pointerEvent->GetPointerAction();
-    if (subSelectState == SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_DOWN &&
+    if (subSelectState.load() == static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_DOWN) &&
         action == PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
         if (IsClickTimeout(DOUBLE_CLICK_TIME)) {
             ResetProcess(pointerEvent);
             return;
         }
-        subSelectState = SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_UP;
+        subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_UP));
         SELECTION_HILOGI("set subSelectState to SUB_WAIT_POINTER_ACTION_BUTTON_UP.");
         return;
     }
-    if (subSelectState == SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_UP) {
+    if (subSelectState.load() == static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_UP)) {
         if (action == PointerEvent::POINTER_ACTION_BUTTON_UP) {
             ProcessWordSelection(pointerEvent);
         } else if (action == PointerEvent::POINTER_ACTION_MOVE) {
-            curSelectState = SelectInputState::SELECT_INPUT_WAIT_LEFT_MOVE;
+            curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WAIT_LEFT_MOVE));
             SELECTION_HILOGI("set curSelectState to SELECT_INPUT_WAIT_LEFT_MOVE.");
         }
         return;
     }
-    if (subSelectState == SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN &&
+    if (subSelectState.load() == static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN) &&
         action == PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
         JudgeTripleClick(pointerEvent);
     }
@@ -444,8 +452,8 @@ void BaseSelectionInputMonitor::InputWordEndProcess(std::shared_ptr<PointerEvent
         ResetState();
         return;
     }
-    if (subSelectState != SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_DOWN &&
-        subSelectState != SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN) {
+    if (subSelectState.load() != static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_DOWN) &&
+        subSelectState.load() != static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_BUTTON_OR_CTRL_DOWN)) {
         ResetProcess(pointerEvent);
         return;
     }
@@ -468,14 +476,15 @@ void BaseSelectionInputMonitor::InputWordTripleClickProcess(std::shared_ptr<Poin
             ResetProcess(pointerEvent);
             return;
         }
-        subSelectState = SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_UP;
+        subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_WAIT_POINTER_ACTION_BUTTON_UP));
     } else if (action == PointerEvent::POINTER_ACTION_BUTTON_UP) {
         ProcessWordSelection(pointerEvent);
     } else if (action == PointerEvent::POINTER_ACTION_MOVE) {
-        curSelectState = SelectInputState::SELECT_INPUT_WAIT_LEFT_MOVE;
+        curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_WAIT_LEFT_MOVE));
         SELECTION_HILOGI("set curSelectState to SELECT_INPUT_WAIT_LEFT_MOVE.");
     } else {
-        SELECTION_HILOGI("Action reset. subSelectState is %{public}d, action is %{public}d.", subSelectState, action);
+        SELECTION_HILOGI("Action reset. subSelectState is %{public}d, action is %{public}d.",
+            subSelectState.load(), action);
         ResetProcess(pointerEvent);
     }
     return;
@@ -487,14 +496,14 @@ void BaseSelectionInputMonitor::FinishedWordSelection() const
         return;
     }
     GenerateSequenceId();
-    SELECTION_HILOGW("[selectevent] curSelectState:%{public}d. Selection event id is %{public}u.", curSelectState,
-        selSeqId.load());
+    SELECTION_HILOGW("[selectevent] curSelectState:%{public}d. Selection event id is %{public}u.",
+        curSelectState.load(), selSeqId.load());
 }
 
 void BaseSelectionInputMonitor::ResetState() const
 {
-    curSelectState = SelectInputState::SELECT_INPUT_INITIAL;
-    subSelectState = SelectInputSubState::SUB_INITIAL;
+    curSelectState.store(static_cast<uint32_t>(SelectInputState::SELECT_INPUT_INITIAL));
+    subSelectState.store(static_cast<uint32_t>(SelectInputSubState::SUB_INITIAL));
     SELECTION_HILOGD("ResetState.");
 }
 

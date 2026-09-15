@@ -35,6 +35,8 @@ constexpr int TEST_CLICK_POSITION_X = 50;
 constexpr int TEST_CLICK_POSITION_Y = 50;
 constexpr int SMALL_MOVE = 10;
 constexpr int TIMEOUT_TIME = 10;
+constexpr int TEST_DISPLAY_ID = 0;
+constexpr int TEST_WINDOW_ID = 1;
 
 using namespace testing::ext;
 
@@ -53,6 +55,8 @@ inline std::shared_ptr<PointerEvent> GetPointerEvent()
     pointerItem.SetWindowY(WINDOW_Y_OFFSET);
 
     pointEvent->AddPointerItem(pointerItem);
+    pointEvent->SetTargetDisplayId(TEST_DISPLAY_ID);
+    pointEvent->SetTargetWindowId(TEST_WINDOW_ID);
     return pointEvent;
 }
 
@@ -269,6 +273,8 @@ void LEFT_BUTTON_DOWN(std::shared_ptr<T> handler, int x, int y)
     pointerEvent->AddPointerItem(pointerItem);
     pointerEvent->SetButtonId(PointerEvent::MOUSE_BUTTON_LEFT);
     pointerEvent->SetPointerAction(PointerEvent::POINTER_ACTION_BUTTON_DOWN);
+    pointerEvent->SetTargetDisplayId(TEST_DISPLAY_ID);
+    pointerEvent->SetTargetWindowId(TEST_WINDOW_ID);
     handler->OnInputEvent(pointerEvent);
 }
 
@@ -288,6 +294,8 @@ void LEFT_BUTTON_UP(std::shared_ptr<T> handler, int x, int y)
     pointerEvent->AddPointerItem(pointerItem);
     pointerEvent->SetButtonId(PointerEvent::MOUSE_BUTTON_LEFT);
     pointerEvent->SetPointerAction(PointerEvent::POINTER_ACTION_BUTTON_UP);
+    pointerEvent->SetTargetDisplayId(TEST_DISPLAY_ID);
+    pointerEvent->SetTargetWindowId(TEST_WINDOW_ID);
     handler->OnInputEvent(pointerEvent);
 }
 
