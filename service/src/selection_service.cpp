@@ -228,7 +228,7 @@ ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
     }
 
     std::lock_guard<std::mutex> lock(selectionContentMutex_);
-    if (!inputMonitor_->GetCanGetSelectionContentFlag()) {
+    if (!CanGetPasteboardContent()) {
         SELECTION_HILOGE("GetSelectionContent at wrong timing.");
         return SelectionServiceError::INVALID_TIMING;
     }
@@ -387,8 +387,6 @@ void SelectionService::Shutdown()
     InputMonitorCancel();
     CancelFocusChangedMonitor();
     UnsubscribeSysEventReceiver();
-    isMonitorInitialized_ = false;
-    isWindowInitialized_ = false;
 }
 
 int32_t SelectionService::DoConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName)
@@ -913,6 +911,7 @@ void SelectionService::InputMonitorCancel()
         inputManager->RemoveMonitor(inputMonitorId_);
         inputMonitorId_ = -1;
     }
+    isMonitorInitialized_ = false;
 }
 
 void SelectionService::InitFocusChangedMonitor()
@@ -934,6 +933,7 @@ void SelectionService::CancelFocusChangedMonitor()
 {
     SELECTION_HILOGI("[SelectionService] cancel focus changed monitor");
     FocusMonitorManager::GetInstance().UnregisterFocusChangedListener();
+    isWindowInitialized_ = false;
 }
 
 void SelectionService::HandleFocusChanged(const sptr<Rosen::FocusChangeInfo> &focusChangeInfo, bool isFocused)
