@@ -873,6 +873,7 @@ void SelectionService::UnregisterSystemAbilityStatusChangeListener()
 void SelectionService::InputMonitorInit()
 {
     SELECTION_HILOGI("[SelectionService] input monitor init");
+    std::lock_guard<std::mutex> lock(initMutex_);
     if (isMonitorInitialized_) {
         SELECTION_HILOGE("The monitor has been initialized.");
         return;
@@ -906,6 +907,7 @@ void SelectionService::InputMonitorInit()
 void SelectionService::InputMonitorCancel()
 {
     SELECTION_HILOGI("[SelectionService] input monitor cancel");
+    std::lock_guard<std::mutex> lock(initMutex_);
     InputManager* inputManager = InputManager::GetInstance();
     if (inputMonitorId_ >= 0) {
         inputManager->RemoveMonitor(inputMonitorId_);
@@ -932,6 +934,7 @@ void SelectionService::InitFocusChangedMonitor()
 void SelectionService::CancelFocusChangedMonitor()
 {
     SELECTION_HILOGI("[SelectionService] cancel focus changed monitor");
+    std::lock_guard<std::mutex> lock(initMutex_);
     FocusMonitorManager::GetInstance().UnregisterFocusChangedListener();
     isWindowInitialized_ = false;
 }
@@ -953,6 +956,7 @@ void SelectionService::HandleFocusChanged(const sptr<Rosen::FocusChangeInfo> &fo
 void SelectionService::SubscribeSysEventReceiver()
 {
     SELECTION_HILOGI("SubscribeSysEventReceiver start.");
+    std::lock_guard<std::mutex> lock(initMutex_);
     if (isCommonEventInitialized_) {
         SELECTION_HILOGE("The common event has been subscribed.");
         return;
@@ -975,6 +979,7 @@ void SelectionService::SubscribeSysEventReceiver()
 void SelectionService::UnsubscribeSysEventReceiver()
 {
     SELECTION_HILOGI("UnsubscribeSysEventReceiver start.");
+    std::lock_guard<std::mutex> lock(initMutex_);
     SELECTION_CHECK(isCommonEventInitialized_, return, "The common event has not been subscribed.");
 
     bool subResult = CommonEventManager::UnSubscribeCommonEvent(selectionSysEventReceiver_);
