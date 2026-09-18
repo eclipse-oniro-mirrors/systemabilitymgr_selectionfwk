@@ -102,6 +102,7 @@ private:
     static std::mutex selectionMutex_;
     static std::shared_ptr<JsSelectionEngineSetting> selectionDelegate_;
     std::recursive_mutex mutex_;
+    static std::recursive_mutex listenerMutex_;
     static sptr<ISelectionListener> listenerStub_;
     static std::mutex eventHandlerMutex_;
     static std::shared_ptr<AppExecFwk::EventHandler> handler_;
