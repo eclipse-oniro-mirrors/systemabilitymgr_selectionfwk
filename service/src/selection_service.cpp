@@ -873,16 +873,6 @@ void SelectionService::UnregisterSystemAbilityStatusChangeListener()
 void SelectionService::InputMonitorInit()
 {
     SELECTION_HILOGI("[SelectionService] input monitor init");
-    std::lock_guard<std::mutex> lock(initMutex_);
-    if (isMonitorInitialized_) {
-        SELECTION_HILOGE("The monitor has been initialized.");
-        return;
-    }
-    if (inputMonitorId_ >= 0) {
-        SELECTION_HILOGE("There has added monitor already!");
-        return;
-    }
-
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sam == nullptr) {
         SELECTION_HILOGE("get system ability manager failed!");
@@ -895,6 +885,16 @@ void SelectionService::InputMonitorInit()
     }
 
     SELECTION_HILOGI("CheckSystemAbility MULTIMODAL_INPUT_SERVICE_ID succeed.");
+    std::lock_guard<std::mutex> lock(initMutex_);
+    if (isMonitorInitialized_) {
+        SELECTION_HILOGE("The monitor has been initialized.");
+        return;
+    }
+    if (inputMonitorId_ >= 0) {
+        SELECTION_HILOGE("There has added monitor already!");
+        return;
+    }
+
     inputMonitor_ = std::make_shared<SelectionInputMonitor>();
     inputMonitorId_ = InputManager::GetInstance()->AddMonitor(inputMonitor_);
     if (inputMonitorId_ < 0) {
@@ -907,8 +907,8 @@ void SelectionService::InputMonitorInit()
 void SelectionService::InputMonitorCancel()
 {
     SELECTION_HILOGI("[SelectionService] input monitor cancel");
-    std::lock_guard<std::mutex> lock(initMutex_);
     InputManager* inputManager = InputManager::GetInstance();
+    std::lock_guard<std::mutex> lock(initMutex_);
     if (inputMonitorId_ >= 0) {
         inputManager->RemoveMonitor(inputMonitorId_);
         inputMonitorId_ = -1;
