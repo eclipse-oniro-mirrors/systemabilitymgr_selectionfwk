@@ -925,7 +925,6 @@ void SelectionService::InputMonitorInit()
 void SelectionService::InputMonitorCancel()
 {
     SELECTION_HILOGI("[SelectionService] input monitor cancel");
-    std::lock_guard<std::mutex> lock(initMutex_);
     InputManager* inputManager = InputManager::GetInstance();
     std::lock_guard<std::mutex> lock(initMutex_);
     if (inputMonitorId_ >= 0) {
