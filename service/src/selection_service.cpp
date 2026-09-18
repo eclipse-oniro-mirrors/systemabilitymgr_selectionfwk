@@ -752,7 +752,6 @@ void SelectionService::ProcessSyncResult(const ComparisionResult& result)
     // 处理需要停止服务的情况
     if (result.shouldStop) {
         SELECTION_HILOGI("result.shouldStop");
-        UnwatchParams();
         SysSelectionConfigRepository::GetInstance()->DisableSAService();
         UnloadService();
         return;
