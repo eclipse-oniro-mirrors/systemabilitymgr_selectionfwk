@@ -54,12 +54,12 @@ private:
     sptr<IRemoteObject> GetSelectionSystemAbility();
 };
 
-void DbSelectionConfigRepositoryTest::SetUpTestCase()
+void SelectionServiceTest::SetUpTestCase()
 {
     std::system("param set sys.selection.switch on");
     std::system("mkdir -p /data/service/el1/public/selection_service");
     std::system("chmod 0770 /data/service/el1/public/selection_service");
-    std::cout << "DbSelectionConfigRepositoryTest SetUpTestCase" << std::endl;
+    std::cout << "SelectionServiceTest SetUpTestCase" << std::endl;
 }
 
 void SelectionServiceTest::TearDownTestCase()
