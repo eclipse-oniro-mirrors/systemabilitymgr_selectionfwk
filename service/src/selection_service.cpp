@@ -612,7 +612,7 @@ void SelectionService::UnwatchParams()
     RemoveParameterWatcher(BOOTEVENT_BOOT_COMPLETED, WatchBootCompleted, this);
     SELECTION_HILOGI("UnwatchParams end");
 }
- 
+
 void SelectionService::WatchBootCompleted(const char *key, const char *value, void *context)
 {
     SelectionService *selectionService = static_cast<SelectionService *>(context);
