@@ -216,6 +216,7 @@ private:
     bool isMonitorInitialized_ = false;
     bool isWindowInitialized_ = false;
     bool isCommonEventInitialized_ = false;
+    std::atomic<bool> isShutdown_ {false};
 };
 }
 

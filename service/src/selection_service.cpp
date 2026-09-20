@@ -380,6 +380,7 @@ void SelectionService::HandleCommonEvent(const CommonEventData &data)
 
 void SelectionService::Init()
 {
+    isShutdown_.store(false);
     SelectionConfigComparator::GetInstance().Init();
     SynchronizeSelectionConfig();
     RegisterSystemAbilityStatusChangeListener();
@@ -388,6 +389,7 @@ void SelectionService::Init()
 
 void SelectionService::Shutdown()
 {
+    isShutdown_.store(true);
     UnregisterSystemAbilityStatusChangeListener();
     UnwatchParams();
     InputMonitorCancel();
@@ -904,6 +906,10 @@ void SelectionService::InputMonitorInit()
 
     SELECTION_HILOGI("CheckSystemAbility MULTIMODAL_INPUT_SERVICE_ID succeed.");
     std::lock_guard<std::mutex> lock(initMutex_);
+    if (isShutdown_.load()) {
+        SELECTION_HILOGE("Service is shutdown, skip input monitor init.");
+        return;
+    }
     if (isMonitorInitialized_) {
         SELECTION_HILOGE("The monitor has been initialized.");
         return;
@@ -938,6 +944,10 @@ void SelectionService::InitFocusChangedMonitor()
 {
     SELECTION_HILOGI("[SelectionService] init focus changed monitor");
     std::lock_guard<std::mutex> lock(initMutex_);
+    if (isShutdown_.load()) {
+        SELECTION_HILOGE("Service is shutdown, skip focus changed monitor init.");
+        return;
+    }
     if (isWindowInitialized_) {
         SELECTION_HILOGE("The forcus changed listener has been registered.");
         return;
@@ -975,6 +985,10 @@ void SelectionService::SubscribeSysEventReceiver()
 {
     SELECTION_HILOGI("SubscribeSysEventReceiver start.");
     std::lock_guard<std::mutex> lock(initMutex_);
+    if (isShutdown_.load()) {
+        SELECTION_HILOGE("Service is shutdown, skip subscribe sys event receiver.");
+        return;
+    }
     if (isCommonEventInitialized_) {
         SELECTION_HILOGE("The common event has been subscribed.");
         return;
