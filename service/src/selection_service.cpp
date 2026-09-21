@@ -66,7 +66,10 @@ void SelectionExtensionAbilityConnection::OnAbilityConnectDone(
 {
     SELECTION_HILOGI("OnAbilityConnectDone, bundle = %{public}s, ability = %{public}s, resultCode = %{public}d",
         element.GetBundleName().c_str(), element.GetAbilityName().c_str(), resultCode);
-    connectedAbilityInfo = {userId_, element.GetBundleName(), element.GetAbilityName()};
+    {
+        std::lock_guard<std::mutex> infoLock(abilityInfoMutex_);
+        connectedAbilityInfo = {userId_, element.GetBundleName(), element.GetAbilityName()};
+    }
 
     std::lock_guard<std::mutex> lock(connectMutex_);
     if (connectPromise_) {
@@ -80,7 +83,10 @@ void SelectionExtensionAbilityConnection::OnAbilityDisconnectDone(const ElementN
 {
     SELECTION_HILOGI("OnAbilityDisconnectDone, bundle = %{public}s,ability = %{public}s, resultCode = %{public}d",
         element.GetBundleName().c_str(), element.GetAbilityName().c_str(), resultCode);
-    connectedAbilityInfo = std::nullopt;
+    {
+        std::lock_guard<std::mutex> infoLock(abilityInfoMutex_);
+        connectedAbilityInfo = std::nullopt;
+    }
 
     std::lock_guard<std::mutex> lock(disconnectMutex_);
     if (disconnectPromise_) {
@@ -228,7 +234,8 @@ ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
         return SelectionServiceError::INVALID_DATA;
     }
 
-    if (!inputMonitor_->GetCanGetSelectionContentFlag()) {
+    std::lock_guard<std::mutex> lock(selectionContentMutex_);
+    if (!CanGetPasteboardContent()) {
         SELECTION_HILOGE("GetSelectionContent at wrong timing.");
         return SelectionServiceError::INVALID_TIMING;
     }
@@ -374,6 +381,7 @@ void SelectionService::HandleCommonEvent(const CommonEventData &data)
 
 void SelectionService::Init()
 {
+    isShutdown_.store(false);
     SelectionConfigComparator::GetInstance().Init();
     SynchronizeSelectionConfig();
     RegisterSystemAbilityStatusChangeListener();
@@ -382,6 +390,9 @@ void SelectionService::Init()
 
 void SelectionService::Shutdown()
 {
+    isShutdown_.store(true);
+    UnregisterSystemAbilityStatusChangeListener();
+    UnwatchParams();
     InputMonitorCancel();
     CancelFocusChangedMonitor();
     UnsubscribeSysEventReceiver();
@@ -471,8 +482,12 @@ void SelectionService::DoDisconnectCurrentExtAbility()
 
 bool SelectionService::HasExtAbilityConnection() const
 {
-    if (connectInner_ != nullptr && connectInner_->connectedAbilityInfo.has_value()) {
-        return true;
+    std::lock_guard<std::mutex> lockGuard(connectMutex_);
+    if (connectInner_ != nullptr) {
+        std::lock_guard<std::mutex> infoLock(connectInner_->abilityInfoMutex_);
+        if (connectInner_->connectedAbilityInfo.has_value()) {
+            return true;
+        }
     }
     SELECTION_HILOGI("No selection extension is connected");
     return false;
@@ -534,13 +549,15 @@ int32_t SelectionService::ConnectNewExtAbility(const std::string& bundleName, co
 {
     std::lock_guard<std::mutex> lockGuard(connectMutex_);
     AbilityRuntimeInfo newAbilityInfo{GetUserId(), bundleName, abilityName};
-    if (connectInner_ != nullptr &&
-        connectInner_->connectedAbilityInfo.has_value() &&
-        newAbilityInfo == connectInner_->connectedAbilityInfo.value()) {
-        SELECTION_HILOGI("Ability (userId:%{public}d, bundleName:%{public}s, abilityName:%{public}s) "
-            "has been connected.",
-            newAbilityInfo.userId, newAbilityInfo.bundleName.c_str(), newAbilityInfo.abilityName.c_str());
-        return 0;
+    if (connectInner_ != nullptr) {
+        std::lock_guard<std::mutex> infoLock(connectInner_->abilityInfoMutex_);
+        if (connectInner_->connectedAbilityInfo.has_value() &&
+            newAbilityInfo == connectInner_->connectedAbilityInfo.value()) {
+            SELECTION_HILOGI("Ability (userId:%{public}d, bundleName:%{public}s, abilityName:%{public}s) "
+                "has been connected.",
+                newAbilityInfo.userId, newAbilityInfo.bundleName.c_str(), newAbilityInfo.abilityName.c_str());
+            return 0;
+        }
     }
     return DoConnectNewExtAbility(bundleName, abilityName);
 }
@@ -550,13 +567,15 @@ int32_t SelectionService::ReconnectExtAbility(const std::string& bundleName, con
     SELECTION_HILOGI("ReconnectExtAbility start.");
     std::lock_guard<std::mutex> lockGuard(connectMutex_);
     AbilityRuntimeInfo newAbilityInfo{GetUserId(), bundleName, abilityName};
-    if (connectInner_ != nullptr &&
-        connectInner_->connectedAbilityInfo.has_value() &&
-        newAbilityInfo == connectInner_->connectedAbilityInfo.value()) {
-        SELECTION_HILOGI("Ability (userId:%{public}d, bundleName:%{public}s, abilityName:%{public}s) "
-            "has been connected.",
-            newAbilityInfo.userId, newAbilityInfo.bundleName.c_str(), newAbilityInfo.abilityName.c_str());
-        return 0;
+    if (connectInner_ != nullptr) {
+        std::lock_guard<std::mutex> infoLock(connectInner_->abilityInfoMutex_);
+        if (connectInner_->connectedAbilityInfo.has_value() &&
+            newAbilityInfo == connectInner_->connectedAbilityInfo.value()) {
+            SELECTION_HILOGI("Ability (userId:%{public}d, bundleName:%{public}s, abilityName:%{public}s) "
+                "has been connected.",
+                newAbilityInfo.userId, newAbilityInfo.bundleName.c_str(), newAbilityInfo.abilityName.c_str());
+            return 0;
+        }
     }
     DoDisconnectCurrentExtAbility();
     /* no need to connect extension ability, the function name should change */
@@ -585,6 +604,22 @@ void SelectionService::WatchParams()
         SELECTION_HILOGE("Failed to watch SYS_SELECTION_APP");
     }
     SELECTION_HILOGI("WatchParams end");
+}
+
+void SelectionService::UnwatchParams()
+{
+    SELECTION_HILOGI("UnwatchParams begin");
+    RemoveParameterWatcher(SYS_SELECTION_SWITCH, WatchEnableSwitch, this);
+    RemoveParameterWatcher(SYS_SELECTION_TRIGGER, WatchTriggerMode, this);
+    RemoveParameterWatcher(SYS_SELECTION_APP, WatchAppSwitch, this);
+    RemoveParameterWatcher(BOOTEVENT_BOOT_COMPLETED, WatchBootCompleted, this);
+    SELECTION_HILOGI("UnwatchParams end");
+}
+
+void SelectionService::WatchBootCompleted(const char *key, const char *value, void *context)
+{
+    SelectionService *selectionService = static_cast<SelectionService *>(context);
+    selectionService->PerformParamBootCompleted(key, value, context);
 }
 
 int SelectionService::GetUserId()
@@ -629,8 +664,13 @@ void SelectionService::SynchronizeSelectionConfig()
     ComparisionResult result;
     {
         std::lock_guard<std::mutex> lockGuard(connectMutex_);
+        std::optional<AbilityRuntimeInfo> currentAbilityInfo;
+        if (connectInner_ != nullptr) {
+            std::lock_guard<std::mutex> infoLock(connectInner_->abilityInfoMutex_);
+            currentAbilityInfo = connectInner_->connectedAbilityInfo;
+        }
         result = SelectionConfigComparator::GetInstance().Compare(userId_.load(), sysSelectionConfig,
-            dbSelectionConfig, (connectInner_ ? connectInner_->connectedAbilityInfo : std::nullopt));
+            dbSelectionConfig, currentAbilityInfo);
     }
     MemSelectionConfig::GetInstance().SetSelectionConfig(result.selectionConfig);
 
@@ -774,10 +814,7 @@ void SelectionService::OnStart()
 {
     SELECTION_HILOGI("[selectevent][SelectionService][OnStart]begin");
     fdsan_set_error_level(FDSAN_ERROR_LEVEL_FATAL);
-    int ret = WatchParameter(BOOTEVENT_BOOT_COMPLETED, [](const char* key, const char* value, void* context) {
-        SelectionService *selectionService = static_cast<SelectionService *>(context);
-        selectionService->PerformParamBootCompleted(key, value, context);
-    }, reinterpret_cast<void*>(this));
+    int ret = WatchParameter(BOOTEVENT_BOOT_COMPLETED, WatchBootCompleted, reinterpret_cast<void*>(this));
     if (ret != 0) {
         SELECTION_HILOGE("Faild to watch %{public}s with ret %{public}d, init now.", BOOTEVENT_BOOT_COMPLETED, ret);
         Init();
@@ -834,21 +871,30 @@ void SelectionService::RegisterSystemAbilityStatusChangeListener()
             SELECTION_HILOGE("Failed to SubscribeSystemAbility. ret: %{public}d", ret);
             continue;
         }
+        saListeners_[pair.first] = listener;
     }
+}
+
+void SelectionService::UnregisterSystemAbilityStatusChangeListener()
+{
+    SELECTION_HILOGI("UnregisterSystemAbilityStatusChangeListener start!");
+    auto abilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (abilityManager == nullptr) {
+        SELECTION_HILOGE("SystemAbilityManager is nullptr!");
+        return;
+    }
+    for (auto& pair : saListeners_) {
+        int32_t ret = abilityManager->UnSubscribeSystemAbility(pair.first, pair.second);
+        if (ret != ERR_OK) {
+            SELECTION_HILOGE("Failed to UnSubscribeSystemAbility [%{public}d]. ret: %{public}d", pair.first, ret);
+        }
+    }
+    saListeners_.clear();
 }
 
 void SelectionService::InputMonitorInit()
 {
     SELECTION_HILOGI("[SelectionService] input monitor init");
-    if (isMonitorInitialized_) {
-        SELECTION_HILOGE("The monitor has been initialized.");
-        return;
-    }
-    if (inputMonitorId_ >= 0) {
-        SELECTION_HILOGE("There has added monitor already!");
-        return;
-    }
-
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sam == nullptr) {
         SELECTION_HILOGE("get system ability manager failed!");
@@ -861,6 +907,20 @@ void SelectionService::InputMonitorInit()
     }
 
     SELECTION_HILOGI("CheckSystemAbility MULTIMODAL_INPUT_SERVICE_ID succeed.");
+    std::lock_guard<std::mutex> lock(initMutex_);
+    if (isShutdown_.load()) {
+        SELECTION_HILOGE("Service is shutdown, skip input monitor init.");
+        return;
+    }
+    if (isMonitorInitialized_) {
+        SELECTION_HILOGE("The monitor has been initialized.");
+        return;
+    }
+    if (inputMonitorId_ >= 0) {
+        SELECTION_HILOGE("There has added monitor already!");
+        return;
+    }
+
     inputMonitor_ = std::make_shared<SelectionInputMonitor>();
     inputMonitorId_ = InputManager::GetInstance()->AddMonitor(inputMonitor_);
     if (inputMonitorId_ < 0) {
@@ -874,16 +934,22 @@ void SelectionService::InputMonitorCancel()
 {
     SELECTION_HILOGI("[SelectionService] input monitor cancel");
     InputManager* inputManager = InputManager::GetInstance();
+    std::lock_guard<std::mutex> lock(initMutex_);
     if (inputMonitorId_ >= 0) {
         inputManager->RemoveMonitor(inputMonitorId_);
         inputMonitorId_ = -1;
     }
+    isMonitorInitialized_ = false;
 }
 
 void SelectionService::InitFocusChangedMonitor()
 {
     SELECTION_HILOGI("[SelectionService] init focus changed monitor");
     std::lock_guard<std::mutex> lock(initMutex_);
+    if (isShutdown_.load()) {
+        SELECTION_HILOGE("Service is shutdown, skip focus changed monitor init.");
+        return;
+    }
     if (isWindowInitialized_) {
         SELECTION_HILOGE("The forcus changed listener has been registered.");
         return;
@@ -898,7 +964,9 @@ void SelectionService::InitFocusChangedMonitor()
 void SelectionService::CancelFocusChangedMonitor()
 {
     SELECTION_HILOGI("[SelectionService] cancel focus changed monitor");
+    std::lock_guard<std::mutex> lock(initMutex_);
     FocusMonitorManager::GetInstance().UnregisterFocusChangedListener();
+    isWindowInitialized_ = false;
 }
 
 void SelectionService::HandleFocusChanged(const sptr<Rosen::FocusChangeInfo> &focusChangeInfo, bool isFocused)
@@ -918,6 +986,11 @@ void SelectionService::HandleFocusChanged(const sptr<Rosen::FocusChangeInfo> &fo
 void SelectionService::SubscribeSysEventReceiver()
 {
     SELECTION_HILOGI("SubscribeSysEventReceiver start.");
+    std::lock_guard<std::mutex> lock(initMutex_);
+    if (isShutdown_.load()) {
+        SELECTION_HILOGE("Service is shutdown, skip subscribe sys event receiver.");
+        return;
+    }
     if (isCommonEventInitialized_) {
         SELECTION_HILOGE("The common event has been subscribed.");
         return;
@@ -940,6 +1013,7 @@ void SelectionService::SubscribeSysEventReceiver()
 void SelectionService::UnsubscribeSysEventReceiver()
 {
     SELECTION_HILOGI("UnsubscribeSysEventReceiver start.");
+    std::lock_guard<std::mutex> lock(initMutex_);
     SELECTION_CHECK(isCommonEventInitialized_, return, "The common event has not been subscribed.");
 
     bool subResult = CommonEventManager::UnSubscribeCommonEvent(selectionSysEventReceiver_);

@@ -25,12 +25,11 @@ namespace SelectionFwk {
 
 using namespace testing::ext;
 using ::testing::Return;
-using ::testing::ReturnRef;
 using ::testing::Mock;
 
 class MockBaseSelectionInputMonitor : public BaseSelectionInputMonitor {
 public:
-    MOCK_METHOD(const SelectionInfo&, GetSelectionInfo, (), (const, override));
+    MOCK_METHOD(SelectionInfo, GetSelectionInfo, (), (const, override));
     MOCK_METHOD(bool, IsSelectionTriggered, (), (const, override));
 };
 
@@ -77,7 +76,7 @@ HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor002, TestSize.Level0)
     std::shared_ptr<MockBaseSelectionInputMonitor> mockObj= std::make_shared<MockBaseSelectionInputMonitor>();
     SelectionInfo selectionInfo;
     selectionInfo.bundleName = "a/b";
-    EXPECT_CALL(*mockObj, GetSelectionInfo()).WillRepeatedly(ReturnRef(selectionInfo));
+    EXPECT_CALL(*mockObj, GetSelectionInfo()).WillRepeatedly(Return(selectionInfo));
     EXPECT_CALL(*mockObj, IsSelectionTriggered()).WillRepeatedly(Return(true));
     inputMonitor->baseInputMonitor_ = mockObj;
 
@@ -108,7 +107,7 @@ HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor003, TestSize.Level0)
     std::shared_ptr<MockBaseSelectionInputMonitor> mockObj= std::make_shared<MockBaseSelectionInputMonitor>();
     SelectionInfo selectionInfo;
     selectionInfo.bundleName = "a/b";
-    EXPECT_CALL(*mockObj, GetSelectionInfo()).WillRepeatedly(ReturnRef(selectionInfo));
+    EXPECT_CALL(*mockObj, GetSelectionInfo()).WillRepeatedly(Return(selectionInfo));
     EXPECT_CALL(*mockObj, IsSelectionTriggered()).WillRepeatedly(Return(true));
     inputMonitor->baseInputMonitor_ = mockObj;
 
