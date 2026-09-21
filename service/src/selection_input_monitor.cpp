@@ -549,11 +549,6 @@ void SelectionInputMonitor::OnInputEvent(std::shared_ptr<AxisEvent> axisEvent) c
     baseInputMonitor_->OnInputEvent(axisEvent);
 }
 
-bool SelectionInputMonitor::GetCanGetSelectionContentFlag() const
-{
-    return SelectionService::GetInstance()->CanGetPasteboardContent();
-}
-
 void SelectionInputMonitor::SetCanGetSelectionContentFlag(bool flag) const
 {
     SelectionService::GetInstance()->SetPasteboardFlag(flag);

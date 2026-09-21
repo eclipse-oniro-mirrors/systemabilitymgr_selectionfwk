@@ -114,7 +114,6 @@ public:
     int32_t GetSelectionContent(std::string& selectionContent);
     bool CanGetSelectionContent() const;
 
-    bool GetCanGetSelectionContentFlag() const;
     void SetCanGetSelectionContentFlag(bool flag) const;
 
 private:
@@ -127,8 +126,6 @@ private:
 
 private:
     std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
-
-    mutable std::atomic<bool> canGetSelectionContentFlag_ = false;
 };
 }
 
