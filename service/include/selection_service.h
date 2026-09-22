@@ -96,7 +96,6 @@ public:
 
     ErrCode RegisterListener(const sptr<ISelectionListener>& listener) override;
     ErrCode UnregisterListener(const sptr<ISelectionListener>& listener) override;
-    ErrCode IsCurrentSelectionApp(int pid, bool &resultValue) override;
     ErrCode GetSelectionContent(std::string& selectionContent) override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args) override;
     int32_t ConnectNewExtAbility(const std::string& bundleName, const std::string& abilityName);

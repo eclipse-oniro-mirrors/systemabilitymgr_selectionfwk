@@ -205,17 +205,6 @@ HWTEST_F(SelectionServiceTest, SelectionService006, TestSize.Level0)
 }
 
 /**
- * @tc.name: SelectionService007
- * @tc.desc: test IsCurrentSelectionApp
- * @tc.type: FUNC
- */
-HWTEST_F(SelectionServiceTest, SelectionService007, TestSize.Level0)
-{
-    bool resultValue;
-    ASSERT_EQ(SelectionService::GetInstance()->IsCurrentSelectionApp(101, resultValue), 0);
-}
-
-/**
  * @tc.name: SelectionService008
  * @tc.desc: test Dump Other
  * @tc.type: FUNC
@@ -481,10 +470,6 @@ HWTEST_F(SelectionServiceTest, SelectionService018, TestSize.Level0)
 
     ret = mockObj.UnregisterListener(listener);
     ASSERT_EQ(ret, 2);
-
-    bool resultValue;
-    ret = mockObj.IsCurrentSelectionApp(1001, resultValue);
-    ASSERT_EQ(ret, 0);
 }
 
 /**
