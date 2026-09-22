@@ -57,6 +57,9 @@ private:
 void SelectionServiceTest::SetUpTestCase()
 {
     std::system("param set sys.selection.switch on");
+    std::system("mkdir /data/service/el1/public/selection_service 0770 sysselection sysselection");
+    std::system("chown sysselection sysselection /data/service/el1/public/selection_service");
+    std::system("chmod 0770 /data/service/el1/public/selection_service");
     std::cout << "SelectionServiceTest SetUpTestCase" << std::endl;
 }
 
