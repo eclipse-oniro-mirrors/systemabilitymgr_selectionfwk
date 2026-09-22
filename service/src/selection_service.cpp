@@ -20,6 +20,7 @@
 #include <thread>
 #include <ipc_skeleton.h>
 #include <dlfcn.h>  // 用于 dlopen/dlsym
+#include "selection_fdsan.h"
 
 // #include "ability_manager_client.h"  // 移除：已解耦到插件
 #include "iremote_object.h"
@@ -805,6 +806,7 @@ void SelectionService::WatchExtAbilityInstalled(const std::string& bundleName, c
 void SelectionService::OnStart()
 {
     SELECTION_HILOGI("[selectevent][SelectionService][OnStart]begin");
+    fdsan_set_error_level(FDSAN_ERROR_LEVEL_FATAL);
     int ret = WatchParameter(BOOTEVENT_BOOT_COMPLETED, WatchBootCompleted, reinterpret_cast<void*>(this));
     if (ret != 0) {
         SELECTION_HILOGE("Faild to watch %{public}s with ret %{public}d, init now.", BOOTEVENT_BOOT_COMPLETED, ret);

@@ -28,6 +28,7 @@
 #include <linux/uinput.h>
 #include "selection_log.h"
 #include "selection_errors.h"
+#include "selection_fdsan.h"
  
 namespace OHOS::SelectionFwk {
 
@@ -176,7 +177,7 @@ void SelectionPasteboardManager::Cleanup()
     if (ioctl(fd_, UI_DEV_DESTROY) < 0) {
         SELECTION_HILOGW("Failed to destroy virtual device.");
     }
-    close(fd_);
+    FdsanClose(fd_);
     fd_ = -1;
     initialized_ = false;
 }
@@ -190,6 +191,7 @@ bool SelectionPasteboardManager::InitUidev()
         return false;
     }
     SELECTION_HILOGI("Opened /dev/uinput with fd %{public}d.", fd_);
+    FdsanMark(fd_);
  
     if (ioctl(fd_, UI_SET_EVBIT, EV_KEY) < 0) {
         SELECTION_HILOGE("Unable to set EV_KEY event bit.");
@@ -229,7 +231,7 @@ bool SelectionPasteboardManager::InitUidev()
  
 CLEAN:
     SELECTION_HILOGE("Failed to init uidev, clean up fd now.");
-    close(fd_);
+    FdsanClose(fd_);
     fd_ = -1;
     return false;
 }
