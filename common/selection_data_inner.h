@@ -134,7 +134,7 @@ public:
     {
         bool ret = parcel.WriteInt32(windowId_) && parcel.WriteUint64(displayId_) &&
             parcel.WriteInt32(pid_) && parcel.WriteInt32(uid_) &&
-            parcel.WriteUint32(static_cast<uint32_t>(windowType_)) &&
+            parcel.WriteUint32(windowType_) &&
             parcel.WriteBool(isFocused_) &&
             parcel.WriteUint32(static_cast<uint32_t>(source_));
         return ret;
