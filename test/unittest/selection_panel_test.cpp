@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 
 #include "selection_panel.h"
+#include "selection_ability.h"
 #include "panel_info.h"
 #include "panel_status_listener.h"
 #include "panel_common.h"
@@ -1975,6 +1976,189 @@ HWTEST_F(PanelStressTest, MassivePanelCreateDestroy001, TestSize.Level0)
         EXPECT_EQ(panel->GetPanelType(), PanelType::MENU_PANEL);
         EXPECT_FALSE(panel->IsPanelShowing());
     }
+}
+
+// ============================================================================
+// SelectionAbility Tests (HasPanelOfType / Dispose / RemovePanel)
+// ============================================================================
+
+class SelectionAbilityTest : public testing::Test {
+public:
+    void SetUp() override
+    {
+        ability_ = SelectionAbility::GetInstance();
+        ASSERT_NE(ability_, nullptr);
+        ability_->panels_.clear();
+    }
+    void TearDown() override
+    {
+        ability_->panels_.clear();
+    }
+    sptr<SelectionAbility> ability_;
+};
+
+/**
+ * @tc.name: HasPanelOfType001
+ * @tc.desc: HasPanelOfType returns false when panels_ is empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, HasPanelOfType001, TestSize.Level0)
+{
+    EXPECT_FALSE(ability_->HasPanelOfType(PanelType::MENU_PANEL));
+    EXPECT_FALSE(ability_->HasPanelOfType(PanelType::MAIN_PANEL));
+}
+
+/**
+ * @tc.name: HasPanelOfType002
+ * @tc.desc: HasPanelOfType returns true when matching type exists
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, HasPanelOfType002, TestSize.Level0)
+{
+    auto panel = std::make_shared<SelectionPanel>();
+    panel->panelType_ = PanelType::MENU_PANEL;
+    ability_->panels_.push_back(panel);
+    EXPECT_TRUE(ability_->HasPanelOfType(PanelType::MENU_PANEL));
+    EXPECT_FALSE(ability_->HasPanelOfType(PanelType::MAIN_PANEL));
+}
+
+/**
+ * @tc.name: HasPanelOfType003
+ * @tc.desc: HasPanelOfType skips nullptr entries in panels_
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, HasPanelOfType003, TestSize.Level0)
+{
+    ability_->panels_.push_back(nullptr);
+    EXPECT_FALSE(ability_->HasPanelOfType(PanelType::MENU_PANEL));
+}
+
+/**
+ * @tc.name: RemovePanel001
+ * @tc.desc: RemovePanel removes the matching shared_ptr from panels_
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, RemovePanel001, TestSize.Level0)
+{
+    auto panel1 = std::make_shared<SelectionPanel>();
+    auto panel2 = std::make_shared<SelectionPanel>();
+    ability_->panels_.push_back(panel1);
+    ability_->panels_.push_back(panel2);
+    EXPECT_EQ(ability_->panels_.size(), 2u);
+    ability_->RemovePanel(panel1);
+    EXPECT_EQ(ability_->panels_.size(), 1u);
+    EXPECT_EQ(ability_->panels_.front(), panel2);
+}
+
+/**
+ * @tc.name: RemovePanel002
+ * @tc.desc: RemovePanel does nothing when panel not found
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, RemovePanel002, TestSize.Level0)
+{
+    auto panel1 = std::make_shared<SelectionPanel>();
+    auto panel2 = std::make_shared<SelectionPanel>();
+    ability_->panels_.push_back(panel1);
+    ability_->RemovePanel(panel2);
+    EXPECT_EQ(ability_->panels_.size(), 1u);
+}
+
+/**
+ * @tc.name: DestroyPanelRemovesFromDeque001
+ * @tc.desc: DestroyPanel removes the panel from panels_ after destruction
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, DestroyPanelRemovesFromDeque001, TestSize.Level0)
+{
+    auto panel = std::make_shared<SelectionPanel>();
+    ability_->panels_.push_back(panel);
+    EXPECT_EQ(ability_->panels_.size(), 1u);
+    ability_->DestroyPanel(panel);
+    EXPECT_EQ(ability_->panels_.size(), 0u);
+}
+
+/**
+ * @tc.name: DestroyPanelAllowsRecreate001
+ * @tc.desc: After DestroyPanel, HasPanelOfType returns false allowing recreation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, DestroyPanelAllowsRecreate001, TestSize.Level0)
+{
+    auto panel = std::make_shared<SelectionPanel>();
+    panel->panelType_ = PanelType::MAIN_PANEL;
+    ability_->panels_.push_back(panel);
+    EXPECT_TRUE(ability_->HasPanelOfType(PanelType::MAIN_PANEL));
+    ability_->DestroyPanel(panel);
+    EXPECT_FALSE(ability_->HasPanelOfType(PanelType::MAIN_PANEL));
+}
+
+/**
+ * @tc.name: DestroyPanelNullPanel001
+ * @tc.desc: DestroyPanel with nullptr returns ERROR_SELECTION_SERVICE
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, DestroyPanelNullPanel001, TestSize.Level0)
+{
+    auto ret = ability_->DestroyPanel(nullptr);
+    EXPECT_EQ(ret, ErrorCode::ERROR_SELECTION_SERVICE);
+}
+
+/**
+ * @tc.name: DisposeClearsAllPanels001
+ * @tc.desc: Dispose clears all panels from the deque
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, DisposeClearsAllPanels001, TestSize.Level0)
+{
+    auto panel1 = std::make_shared<SelectionPanel>();
+    auto panel2 = std::make_shared<SelectionPanel>();
+    ability_->panels_.push_back(panel1);
+    ability_->panels_.push_back(panel2);
+    EXPECT_EQ(ability_->panels_.size(), 2u);
+    ability_->Dispose(9999);
+    EXPECT_EQ(ability_->panels_.size(), 0u);
+}
+
+/**
+ * @tc.name: DisposeEmptyDeque001
+ * @tc.desc: Dispose on empty deque does not crash
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, DisposeEmptyDeque001, TestSize.Level0)
+{
+    ability_->Dispose(9999);
+    EXPECT_EQ(ability_->panels_.size(), 0u);
+}
+
+/**
+ * @tc.name: DisposeNullPanelInDeque001
+ * @tc.desc: Dispose skips nullptr entries without crashing
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, DisposeNullPanelInDeque001, TestSize.Level0)
+{
+    ability_->panels_.push_back(nullptr);
+    ability_->panels_.push_back(nullptr);
+    ability_->Dispose(9999);
+    EXPECT_EQ(ability_->panels_.size(), 0u);
+}
+
+/**
+ * @tc.name: DisposeMixedPanels001
+ * @tc.desc: Dispose hides MENU_PANEL and destroys MAIN_PANEL
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionAbilityTest, DisposeMixedPanels001, TestSize.Level0)
+{
+    auto menuPanel = std::make_shared<SelectionPanel>();
+    menuPanel->panelType_ = PanelType::MENU_PANEL;
+    auto mainPanel = std::make_shared<SelectionPanel>();
+    mainPanel->panelType_ = PanelType::MAIN_PANEL;
+    ability_->panels_.push_back(menuPanel);
+    ability_->panels_.push_back(mainPanel);
+    ability_->Dispose(9999);
+    EXPECT_EQ(ability_->panels_.size(), 0u);
 }
 
 } // namespace SelectionFwk

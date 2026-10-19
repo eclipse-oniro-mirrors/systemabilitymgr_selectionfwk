@@ -16,6 +16,7 @@
 #include "ohos.selectionInput.selectionManager.proj.hpp"
 #include "ohos.selectionInput.selectionManager.impl.hpp"
 #include "stdexcept"
+#include "mutex"
 #include "panel_listener_impl.h"
 #include "ani_common.h"
 #include "selection_ability.h"
@@ -30,6 +31,7 @@ namespace {
 
 std::map<std::string, std::vector<std::unique_ptr<callbackType>>> selectionManagerJsCbMap_;
 static std::deque<uint64_t> g_getSelectionContentCounter;
+static std::mutex g_getSelectionContentCounterMutex;
 static constexpr int MAX_CALLS_PER_WINDOW = 50;
 static constexpr int WINDOW_MS = 500;
 
@@ -185,10 +187,11 @@ static uint64_t GetNowMs()
     return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
 }
 
-static void CheckGetSelectionContentFrequency()
+static bool CheckGetSelectionContentFrequency()
 {
     SELECTION_HILOGE("GetSelectionContent CheckGetSelectionContentFrequency");
     uint64_t now = GetNowMs();
+    std::lock_guard<std::mutex> lock(g_getSelectionContentCounterMutex);
     g_getSelectionContentCounter.push_back(now);
 
     while (!g_getSelectionContentCounter.empty() && g_getSelectionContentCounter.front() + WINDOW_MS < now) {
@@ -199,14 +202,18 @@ static void CheckGetSelectionContentFrequency()
         g_getSelectionContentCounter.back() - g_getSelectionContentCounter.front() <= WINDOW_MS) {
         SELECTION_HILOGE("GetSelectionContent is called too frequent");
         set_business_error(EXCEPTION_TOO_FREQUENT, JsUtils::ToMessage(EXCEPTION_TOO_FREQUENT));
+        return true;
     }
+    return false;
 }
 
 ::taihe::string getSelectionContent()
 {
     SELECTION_HILOGI("GetSelectionContent");
 
-    CheckGetSelectionContentFrequency();
+    if (CheckGetSelectionContentFrequency()) {
+        return ::taihe::string("");
+    }
 
     std::string selectionContent;
     int32_t errCode = SelectionClient::GetInstance().GetSelectionContent(selectionContent);
@@ -237,7 +244,11 @@ const int MENU_PANEL = 1;
     panelInfo.width = info.width;
     panelInfo.height = info.height;
     std::shared_ptr<SelectionPanel> selectionPanel;
-    SelectionAbility::GetInstance()->CreatePanel(context, panelInfo, selectionPanel);
+    int32_t errCode = SelectionAbility::GetInstance()->CreatePanel(context, panelInfo, selectionPanel);
+    if (errCode != EXCEPTION_SUCCESS) {
+        set_business_error(JsUtils::Convert(errCode), JsUtils::ToMessage(JsUtils::Convert(errCode)));
+        return taihe::make_holder<PanelImpl, ::ohos::selectionInput::selectionManager::Panel>(selectionPanel);
+    }
 
     return taihe::make_holder<PanelImpl, ::ohos::selectionInput::selectionManager::Panel>(selectionPanel);
 }

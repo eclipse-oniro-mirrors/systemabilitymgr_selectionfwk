@@ -200,6 +200,34 @@ ErrCode SelectionService::RegisterListener(const sptr<ISelectionListener>& liste
 
     {
         std::lock_guard<std::mutex> lock(mutex_);
+        if (deathRecipient_ == nullptr) {
+            auto onDied = [](const wptr<IRemoteObject>& remote) {
+                auto service = SelectionService::GetInstance();
+                if (service != nullptr) {
+                    service->OnListenerDied(remote);
+                }
+            };
+            class ListenerDeathRecipient : public IRemoteObject::DeathRecipient {
+            public:
+                explicit ListenerDeathRecipient(std::function<void(const wptr<IRemoteObject>&)> callback)
+                    : callback_(std::move(callback)) {}
+                void OnRemoteDied(const wptr<IRemoteObject>& remote) override
+                {
+                    if (callback_) {
+                        callback_(remote);
+                    }
+                }
+            private:
+                std::function<void(const wptr<IRemoteObject>&)> callback_;
+            };
+            deathRecipient_ = new (std::nothrow) ListenerDeathRecipient(onDied);
+        }
+        if (deathRecipient_ != nullptr) {
+            if (listener_ != nullptr) {
+                listener_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+            }
+            listener->AsObject()->AddDeathRecipient(deathRecipient_);
+        }
         listener_ = listener;
     }
 
@@ -212,8 +240,24 @@ ErrCode SelectionService::UnregisterListener(const sptr<ISelectionListener>& lis
         return SelectionServiceError::UNAUTHENTICATED_ERROR;
     }
     std::lock_guard<std::mutex> lock(mutex_);
+    if (listener != nullptr && deathRecipient_ != nullptr) {
+        listener->AsObject()->RemoveDeathRecipient(deathRecipient_);
+    }
     listener_ = nullptr;
     return 0;
+}
+
+void SelectionService::OnListenerDied(const wptr<IRemoteObject>& remote)
+{
+    SELECTION_HILOGI("Listener died, checking if it's the current listener.");
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (listener_ != nullptr) {
+        auto currentObj = listener_->AsObject();
+        if (currentObj != nullptr && currentObj.GetRefPtr() == remote.GetRefPtr()) {
+            SELECTION_HILOGI("Current listener died, clearing listener_.");
+            listener_ = nullptr;
+        }
+    }
 }
 
 ErrCode SelectionService::GetSelectionContent(std::string& selectionContent)
@@ -965,15 +1009,19 @@ void SelectionService::CancelFocusChangedMonitor()
 void SelectionService::HandleFocusChanged(const sptr<Rosen::FocusChangeInfo> &focusChangeInfo, bool isFocused)
 {
     SELECTION_HILOGI("[SelectionService] handle focus changed");
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (listener_ == nullptr || focusChangeInfo == nullptr) {
-        SELECTION_HILOGE("listener_ or focusChangeInfo is nullptr.");
+    if (focusChangeInfo == nullptr) {
+        SELECTION_HILOGE("focusChangeInfo is nullptr.");
+        return;
+    }
+    auto listener = GetListener();
+    if (listener == nullptr) {
+        SELECTION_HILOGE("listener_ is nullptr.");
         return;
     }
     auto windowType = static_cast<uint32_t>(focusChangeInfo->windowType_);
     SelectionFocusChangeInfo selectionFocusChangeInfo(focusChangeInfo->windowId_, focusChangeInfo->displayId_,
         focusChangeInfo->pid_, focusChangeInfo->uid_, windowType, isFocused, FocusChangeSource::WindowManager);
-    listener_->FocusChange(selectionFocusChangeInfo);
+    listener->FocusChange(selectionFocusChangeInfo);
 }
 
 void SelectionService::SubscribeSysEventReceiver()

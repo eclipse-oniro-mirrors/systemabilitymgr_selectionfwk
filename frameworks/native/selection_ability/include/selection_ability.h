@@ -19,6 +19,7 @@
 #include <thread>
 #include <mutex>
 #include <memory>
+#include <optional>
 #include "refbase.h"
 #include "context.h"
 #include "concurrent_map.h"
@@ -41,7 +42,8 @@ public:
 
 private:
     void PushPanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
-    std::optional<std::shared_ptr<SelectionPanel>> PopPanel();
+    void RemovePanel(const std::shared_ptr<SelectionPanel> &selectionPanel);
+    bool HasPanelOfType(PanelType panelType);
 
 private:
     static std::mutex instanceLock_;

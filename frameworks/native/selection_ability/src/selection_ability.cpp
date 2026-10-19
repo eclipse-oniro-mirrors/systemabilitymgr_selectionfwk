@@ -66,6 +66,11 @@ int32_t SelectionAbility::CreatePanel(const std::shared_ptr<AbilityRuntime::Cont
         return ErrorCode::ERROR_INVALID_OPERATION;
     }
 
+    if (HasPanelOfType(panelInfo.panelType)) {
+        SELECTION_HILOGE("panel of type %{public}d already exists!", static_cast<int32_t>(panelInfo.panelType));
+        return ErrorCode::ERROR_INVALID_OPERATION;
+    }
+
     auto panel = std::make_shared<SelectionPanel>();
     if (panel == nullptr) {
         SELECTION_HILOGE("Construct selectionPanel failed");
@@ -84,7 +89,9 @@ int32_t SelectionAbility::DestroyPanel(const std::shared_ptr<SelectionPanel> &se
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
 
-    return selectionPanel->DestroyPanel();
+    auto ret = selectionPanel->DestroyPanel();
+    RemovePanel(selectionPanel);
+    return ret;
 }
 
 int32_t SelectionAbility::ShowPanel(const std::shared_ptr<SelectionPanel> &selectionPanel)
@@ -117,23 +124,23 @@ int32_t SelectionAbility::HidePanel(const std::shared_ptr<SelectionPanel> &selec
 
 void SelectionAbility::Dispose(uint32_t winId)
 {
+    // winId is the newly focused window's ID (e.g., Notes), not the panel's own window ID.
     SELECTION_HILOGI("Dispose start, winid:%{public}d, panels_ size: %{public}zu", winId, panels_.size());
-
-    auto selectionPanelOpt = PopPanel();
-    if (!selectionPanelOpt.has_value()) {
-        return;
+    std::vector<std::shared_ptr<SelectionPanel>> panelsToDispose;
+    {
+        std::lock_guard<std::mutex> lock(panelsMutex_);
+        panelsToDispose.assign(panels_.begin(), panels_.end());
+        panels_.clear();
     }
-
-    auto selectionPanel = selectionPanelOpt.value();
-    if (selectionPanel == nullptr) {
-        SELECTION_HILOGI("selectionPanel is nullptr.");
-        return;
-    }
-
-    if (selectionPanel->GetPanelType() == PanelType::MENU_PANEL) {
-        selectionPanel->HidePanel();
-    } else {
-        selectionPanel->DestroyPanel();
+    for (auto &selectionPanel : panelsToDispose) {
+        if (selectionPanel == nullptr) {
+            continue;
+        }
+        if (selectionPanel->GetPanelType() == PanelType::MENU_PANEL) {
+            selectionPanel->HidePanel();
+        } else {
+            selectionPanel->DestroyPanel();
+        }
     }
 }
 
@@ -143,18 +150,26 @@ void SelectionAbility::PushPanel(const std::shared_ptr<SelectionPanel> &selectio
     panels_.push_back(selectionPanel);
 }
 
-std::optional<std::shared_ptr<SelectionPanel>> SelectionAbility::PopPanel()
+void SelectionAbility::RemovePanel(const std::shared_ptr<SelectionPanel> &selectionPanel)
 {
     std::lock_guard<std::mutex> lock(panelsMutex_);
-    if (panels_.empty()) {
-        SELECTION_HILOGI("No left panel to dispose.");
-        return std::nullopt;
+    for (auto it = panels_.begin(); it != panels_.end(); ++it) {
+        if (*it == selectionPanel) {
+            panels_.erase(it);
+            return;
+        }
     }
+}
 
-    auto selectionPanel = panels_.front();
-
-    panels_.pop_front();
-    return selectionPanel;
+bool SelectionAbility::HasPanelOfType(PanelType panelType)
+{
+    std::lock_guard<std::mutex> lock(panelsMutex_);
+    for (const auto &panel : panels_) {
+        if (panel != nullptr && panel->GetPanelType() == panelType) {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace SelectionFwk
 } // namespace OHOS

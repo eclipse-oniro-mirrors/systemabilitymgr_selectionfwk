@@ -18,6 +18,7 @@
 #include <tuple>
 #include <thread>
 #include <chrono>
+#include <mutex>
 
 #include "display_manager.h"
 #include "hisysevent_adapter.h"
@@ -117,6 +118,10 @@ int32_t SelectionPanel::DestroyPanel()
         SELECTION_HILOGE("window_ is nullptr!");
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
+    if (IsDestroyed(window)) {
+        SELECTION_HILOGE("window is already destroyed!");
+        return ErrorCode::ERROR_PANEL_DESTROYED;
+    }
     auto ret = DoHidePanel(window);
     if (ret != ErrorCode::NO_ERROR) {
         SELECTION_HILOGE("SelectionPanel, hide panel failed, ret: %{public}d!", ret);
@@ -161,7 +166,14 @@ int32_t SelectionPanel::SetUiContent(const std::string &contentInfo, napi_env en
     }
     SELECTION_HILOGI("SetTransparent ret: %{public}u.", wmError);
     SELECTION_HILOGI("NapiSetUIContent ret: %{public}d.", ret);
-    return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
+    if (ret == WMError::WM_OK) {
+        return ErrorCode::NO_ERROR;
+    }
+    if (ret == WMError::WM_ERROR_INVALID_PARAM) {
+        return ErrorCode::ERROR_PARAMETER_CHECK_FAILED;
+    }
+    SELECTION_HILOGE("NapiSetUIContent failed with WM error: %{public}d", ret);
+    return ErrorCode::ERROR_SELECTION_SERVICE;
 }
 
 int32_t SelectionPanel::SetUiContent(const std::string &contentInfo, ani_env* env)
@@ -192,7 +204,14 @@ int32_t SelectionPanel::SetUiContent(const std::string &contentInfo, ani_env* en
     }
     SELECTION_HILOGI("SetTransparent ret: %{public}u.", wmError);
     SELECTION_HILOGI("AniSetUIContent ret: %{public}d.", ret);
-    return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
+    if (ret == WMError::WM_OK) {
+        return ErrorCode::NO_ERROR;
+    }
+    if (ret == WMError::WM_ERROR_INVALID_PARAM) {
+        return ErrorCode::ERROR_PARAMETER_CHECK_FAILED;
+    }
+    SELECTION_HILOGE("AniSetUIContent failed with WM error: %{public}d", ret);
+    return ErrorCode::ERROR_SELECTION_SERVICE;
 }
 
 PanelType SelectionPanel::GetPanelType()
@@ -266,7 +285,16 @@ bool SelectionPanel::IsPanelShowing()
 
 void SelectionPanel::PanelStatusChange(const SelectionWindowStatus &status)
 {
-    if (panelStatusListener_ == nullptr) {
+    std::shared_ptr<PanelStatusListener> listener;
+    bool hiddenRegistered = false;
+    bool destroyedRegistered = false;
+    {
+        std::shared_lock<std::shared_mutex> lock(listenerMutex_);
+        listener = panelStatusListener_;
+        hiddenRegistered = hiddenRegistered_;
+        destroyedRegistered = destroyedRegistered_;
+    }
+    if (listener == nullptr) {
         SELECTION_HILOGE("panelStatusListener_ is nullptr.");
         return;
     }
@@ -278,11 +306,11 @@ void SelectionPanel::PanelStatusChange(const SelectionWindowStatus &status)
     }
 
     uint32_t windowId = GetWindowId();
-    if (status == SelectionWindowStatus::HIDDEN && hiddenRegistered_) {
-        panelStatusListener_->OnPanelStatus(windowId, itr->second);
+    if (status == SelectionWindowStatus::HIDDEN && hiddenRegistered) {
+        listener->OnPanelStatus(windowId, itr->second);
     }
-    if (status == SelectionWindowStatus::DESTROYED && destroyedRegistered_) {
-        panelStatusListener_->OnPanelStatus(windowId, itr->second);
+    if (status == SelectionWindowStatus::DESTROYED && destroyedRegistered) {
+        listener->OnPanelStatus(windowId, itr->second);
     }
 }
 
@@ -395,12 +423,20 @@ int32_t SelectionPanel::MoveTo(int32_t x, int32_t y)
     WMError ret = window->MoveTo(x, y);
 #endif
     SELECTION_HILOGI("Moveto finish, ret = %{public}d", ret);
-    return ret == WMError::WM_ERROR_INVALID_PARAM ? ErrorCode::ERROR_PARAMETER_CHECK_FAILED : ErrorCode::NO_ERROR;
+    if (ret == WMError::WM_OK) {
+        return ErrorCode::NO_ERROR;
+    }
+    if (ret == WMError::WM_ERROR_INVALID_PARAM) {
+        return ErrorCode::ERROR_PARAMETER_CHECK_FAILED;
+    }
+    SELECTION_HILOGE("MoveTo failed with WM error: %{public}d", ret);
+    return ErrorCode::ERROR_SELECTION_SERVICE;
 }
 
 bool SelectionPanel::SetPanelStatusListener(std::shared_ptr<PanelStatusListener> statusListener,
     const std::string &type)
 {
+    std::unique_lock<std::shared_mutex> lock(listenerMutex_);
     if (!MarkListener(type, true)) {
         return false;
     }
@@ -432,6 +468,7 @@ bool SelectionPanel::MarkListener(const std::string &type, bool isRegister)
 
 void SelectionPanel::ClearPanelListener(const std::string &type)
 {
+    std::unique_lock<std::shared_mutex> lock(listenerMutex_);
     if (!MarkListener(type, false)) {
         return;
     }

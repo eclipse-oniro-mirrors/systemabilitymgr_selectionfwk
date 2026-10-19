@@ -45,6 +45,7 @@ constexpr size_t ARGC_TWO = 2;
 
 static constexpr int MAX_CALLS_PER_WINDOW = 50;
 static constexpr int WINDOW_MS = 500;
+static std::mutex g_getSelectionContentCounterMutex;
 
 const std::string JsSelectionEngineSetting::KDS_CLASS_NAME = "SelectionAbility";
 thread_local napi_ref JsSelectionEngineSetting::KDSRef_ = nullptr;
@@ -192,6 +193,7 @@ static uint64_t GetNowMs()
 static void CheckGetSelectionContentFrequency(napi_env env)
 {
     uint64_t now = GetNowMs();
+    std::lock_guard<std::mutex> lock(g_getSelectionContentCounterMutex);
     g_getSelectionContentCounter.push_back(now);
 
     while (!g_getSelectionContentCounter.empty() && g_getSelectionContentCounter.front() + WINDOW_MS < now) {
@@ -217,6 +219,12 @@ napi_value JsSelectionEngineSetting::GetSelectionContent(napi_env env, napi_call
     SELECTION_HILOGI("SelectionEngineSetting GetSelectionContent start.");
 
     CheckGetSelectionContentFrequency(env);
+    bool isPending = false;
+    napi_is_exception_pending(env, &isPending);
+    if (isPending) {
+        SELECTION_HILOGE("GetSelectionContent frequency check failed, aborting.");
+        return nullptr;
+    }
 
     size_t argc = ARGC_ONE;
     napi_value argv[ARGC_ONE] = { nullptr };
@@ -362,19 +370,16 @@ void JsSelectionEngineSetting::RegisterListener(napi_value callback, std::string
 void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::string type)
 {
     SELECTION_HILOGI("unregister listener: %{public}s.", type.c_str());
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
-            SELECTION_HILOGE("methodName %{public}s is not unregistered!", type.c_str());
-            return;
-        }
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
+        SELECTION_HILOGE("methodName %{public}s is not unregistered!", type.c_str());
+        return;
+    }
 
-        if (callback == nullptr) {
-            jsCbMap_.erase(type);
-            SELECTION_HILOGE("callback is nullptr!");
-            return;
-        }
-
+    if (callback == nullptr) {
+        jsCbMap_.erase(type);
+        SELECTION_HILOGE("callback is nullptr!");
+    } else {
         for (auto item = jsCbMap_[type].begin(); item != jsCbMap_[type].end(); item++) {
             if ((callback != nullptr) &&
                 (JsUtils::Equals((*item)->env_, callback, (*item)->callback_, (*item)->threadId_))) {
@@ -387,15 +392,19 @@ void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::stri
         }
     }
 
-    auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();
-    {
-        std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
-        if (proxy == nullptr || listenerStub_ == nullptr) {
-            SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
-            return;
+    if (jsCbMap_.empty()) {
+        auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();
+        sptr<ISelectionListener> stubToUnregister;
+        {
+            std::lock_guard<std::recursive_mutex> lock2(listenerMutex_);
+            if (proxy == nullptr || listenerStub_ == nullptr) {
+                SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
+                return;
+            }
+            stubToUnregister = listenerStub_;
+            listenerStub_ = nullptr;
         }
-        proxy->UnregisterListener(listenerStub_);
-        listenerStub_ = nullptr;
+        proxy->UnregisterListener(stubToUnregister);
     }
 }
 
@@ -416,6 +425,15 @@ std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::GetJsSelecti
         std::lock_guard<std::mutex> lock(eventHandlerMutex_);
         handler_ = AppExecFwk::EventHandler::Current();
     }
+    {
+        std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+        if (listenerStub_ == nullptr && selectionDelegate_ != nullptr) {
+            SELECTION_HILOGI("listenerStub_ is null, attempting to re-register listener.");
+        }
+    }
+    if (listenerStub_ == nullptr && selectionDelegate_ != nullptr) {
+        RegisterListenerToService(selectionDelegate_);
+    }
     return selectionDelegate_;
 }
 
@@ -430,6 +448,9 @@ SFErrorCode JsSelectionEngineSetting::RegisterListenerToService(
     sptr<ISelectionListener> listenerStub;
     {
         std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+        if (listenerStub_ != nullptr) {
+            return EXCEPTION_SUCCESS;
+        }
         listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionEnging);
         if (listenerStub_ == nullptr) {
             SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
@@ -439,6 +460,10 @@ SFErrorCode JsSelectionEngineSetting::RegisterListenerToService(
     }
     SELECTION_HILOGI("Begin calling SA RegisterListener!");
     if (proxy->RegisterListener(listenerStub) != ERR_OK) {
+        std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+        if (listenerStub_ == listenerStub) {
+            listenerStub_ = nullptr;
+        }
         return EXCEPTION_SELECTION_SERVICE;
     }
 

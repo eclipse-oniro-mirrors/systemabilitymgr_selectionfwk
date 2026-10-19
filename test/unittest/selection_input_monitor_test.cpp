@@ -119,5 +119,55 @@ HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor003, TestSize.Level0)
     ASSERT_EQ(MemSelectionConfig::GetInstance().GetEnable(), true);
 }
 
+/**
+ * @tc.name: SelectInputMonitor004
+ * @tc.desc: test GetSelectionContent returns INVALID_TIMING when event ID changes during retrieval
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor004, TestSize.Level0)
+{
+    auto reginBaseInputMonitor = inputMonitor->baseInputMonitor_;
+    auto mockObj = std::make_shared<MockBaseSelectionInputMonitor>();
+    auto monitor = inputMonitor;
+    ON_CALL(*mockObj, GetSelectionInfo()).WillByDefault([monitor]() {
+        monitor->selectionEventId_.fetch_add(1, std::memory_order_seq_cst);
+        SelectionInfo info;
+        info.bundleName = "a/b";
+        return info;
+    });
+    EXPECT_CALL(*mockObj, IsSelectionTriggered()).WillRepeatedly(Return(true));
+    inputMonitor->baseInputMonitor_ = mockObj;
+
+    inputMonitor->selectionEventId_.store(0, std::memory_order_seq_cst);
+    std::string selectionContent;
+    int32_t ret = inputMonitor->GetSelectionContent(selectionContent);
+    ASSERT_EQ(ret, SelectionServiceError::INVALID_TIMING);
+
+    inputMonitor->baseInputMonitor_ = reginBaseInputMonitor;
+}
+
+/**
+ * @tc.name: SelectInputMonitor005
+ * @tc.desc: test GetSelectionContent does not return INVALID_TIMING when event ID is stable
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionInputMonitorTest, SelectInputMonitor005, TestSize.Level0)
+{
+    auto reginBaseInputMonitor = inputMonitor->baseInputMonitor_;
+    auto mockObj = std::make_shared<MockBaseSelectionInputMonitor>();
+    SelectionInfo selectionInfo;
+    selectionInfo.bundleName = "a/b";
+    EXPECT_CALL(*mockObj, GetSelectionInfo()).WillRepeatedly(Return(selectionInfo));
+    EXPECT_CALL(*mockObj, IsSelectionTriggered()).WillRepeatedly(Return(true));
+    inputMonitor->baseInputMonitor_ = mockObj;
+
+    inputMonitor->selectionEventId_.store(42, std::memory_order_seq_cst);
+    std::string selectionContent;
+    int32_t ret = inputMonitor->GetSelectionContent(selectionContent);
+    ASSERT_NE(ret, SelectionServiceError::INVALID_TIMING);
+
+    inputMonitor->baseInputMonitor_ = reginBaseInputMonitor;
+}
+
 } // namespace SelectionFwk
 } // namespace OHOS

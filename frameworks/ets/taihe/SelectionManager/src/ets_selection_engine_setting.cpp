@@ -118,6 +118,15 @@ std::shared_ptr<EtsSelectionEngineSetting> EtsSelectionEngineSetting::GetEtsSele
             selectionDelegate_ = delegate;
         }
     }
+    {
+        std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+        if (listenerStub_ == nullptr && selectionDelegate_ != nullptr) {
+            SELECTION_HILOGI("listenerStub_ is null, attempting to re-register listener.");
+        }
+    }
+    if (listenerStub_ == nullptr && selectionDelegate_ != nullptr) {
+        RegisterListenerToService(selectionDelegate_);
+    }
     return selectionDelegate_;
 }
 
@@ -131,6 +140,9 @@ SFErrorCode EtsSelectionEngineSetting::RegisterListenerToService(std::shared_ptr
     sptr<ISelectionListener> listenerStub;
     {
         std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+        if (listenerStub_ != nullptr) {
+            return EXCEPTION_SUCCESS;
+        }
         listenerStub_ = new (std::nothrow) SelectionListenerImpl(selectionEnging);
         if (listenerStub_ == nullptr) {
             SELECTION_HILOGE("Failed to create SelectionListenerImpl instance.");
@@ -140,6 +152,10 @@ SFErrorCode EtsSelectionEngineSetting::RegisterListenerToService(std::shared_ptr
     }
     SELECTION_HILOGI("Begin calling SA RegisterListener!");
     if (proxy->RegisterListener(listenerStub) != ERR_OK) {
+        std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+        if (listenerStub_ == listenerStub) {
+            listenerStub_ = nullptr;
+        }
         return EXCEPTION_SELECTION_SERVICE;
     }
 
@@ -168,46 +184,71 @@ void EtsSelectionEngineSetting::RegisterListener(const std::string &type, callba
 void EtsSelectionEngineSetting::UnRegisterListener(const std::string &type, const callbackTypePara &cb)
 {
     SELECTION_HILOGI("unregister listener: %{public}s.", type.c_str());
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (EtsCbMap_.empty() || EtsCbMap_.find(type) == EtsCbMap_.end()) {
-        SELECTION_HILOGE("methodName %{public}s is not unregistered!", type.c_str());
-        return;
-    }
-
-    for (auto item = EtsCbMap_[type].begin(); item != EtsCbMap_[type].end(); item++) {
-        if ((cb == *item)) {
-            EtsCbMap_[type].erase(item);
-            break;
-        }
-    }
-    if (EtsCbMap_[type].empty()) {
-        EtsCbMap_.erase(type);
-    }
-
-    auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();
+    bool allEmpty = false;
     {
-        std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
-        if (proxy == nullptr || listenerStub_ == nullptr) {
-            SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        if (EtsCbMap_.empty() || EtsCbMap_.find(type) == EtsCbMap_.end()) {
+            SELECTION_HILOGE("methodName %{public}s is not unregistered!", type.c_str());
             return;
         }
-        proxy->UnregisterListener(listenerStub_);
-        listenerStub_ = nullptr;
+
+        for (auto item = EtsCbMap_[type].begin(); item != EtsCbMap_[type].end(); item++) {
+            if ((cb == *item)) {
+                EtsCbMap_[type].erase(item);
+                break;
+            }
+        }
+        if (EtsCbMap_[type].empty()) {
+            EtsCbMap_.erase(type);
+        }
+        allEmpty = EtsCbMap_.empty();
+    }
+
+    if (allEmpty) {
+        auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();
+        sptr<ISelectionListener> stubToUnregister;
+        {
+            std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+            if (proxy == nullptr || listenerStub_ == nullptr) {
+                SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
+                return;
+            }
+            stubToUnregister = listenerStub_;
+            listenerStub_ = nullptr;
+        }
+        proxy->UnregisterListener(stubToUnregister);
     }
 }
 
 void EtsSelectionEngineSetting::UnRegisterListener(const std::string &type)
 {
     SELECTION_HILOGI("unregister listener: %{public}s.", type.c_str());
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (EtsCbMap_.empty() || EtsCbMap_.find(type) == EtsCbMap_.end()) {
-        SELECTION_HILOGE("methodName %{public}s is not unregistered!", type.c_str());
-        return;
+    bool allEmpty = false;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        if (EtsCbMap_.empty() || EtsCbMap_.find(type) == EtsCbMap_.end()) {
+            SELECTION_HILOGE("methodName %{public}s is not unregistered!", type.c_str());
+            return;
+        }
+
+        EtsCbMap_.erase(type);
+        allEmpty = EtsCbMap_.empty();
     }
 
-    EtsCbMap_.erase(type);
-    SELECTION_HILOGE("callback is nullptr!");
-    return;
+    if (allEmpty) {
+        auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();
+        sptr<ISelectionListener> stubToUnregister;
+        {
+            std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+            if (proxy == nullptr || listenerStub_ == nullptr) {
+                SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
+                return;
+            }
+            stubToUnregister = listenerStub_;
+            listenerStub_ = nullptr;
+        }
+        proxy->UnregisterListener(stubToUnregister);
+    }
 }
 
 } // namespace SelectionFwk
