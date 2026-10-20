@@ -25,6 +25,7 @@
 #include "ability_connect_callback_stub.h"
 #include "focus_change_info.h"
 #include "iselection_listener.h"
+#include "iremote_object.h"
 #include "selection_service_stub.h"
 #include "refbase.h"
 #include "system_ability.h"
@@ -147,6 +148,7 @@ private:
     void CancelFocusChangedMonitor();
     void HandleFocusChanged(const sptr<Rosen::FocusChangeInfo> &focusChangeInfo, bool isFocused);
     void SynchronizeSelectionConfig();
+    void OnListenerDied(const wptr<IRemoteObject>& remote);
 
     // 配置同步辅助函数
     std::optional<SelectionConfig> LoadDatabaseSelectionConfig();
@@ -205,6 +207,7 @@ private:
     mutable std::shared_mutex pluginMutex_;
     std::mutex selectionContentMutex_;
     static sptr<ISelectionListener> listener_;
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_;
     sptr<SelectionExtensionAbilityConnection> connectInner_ {nullptr};
     mutable std::mutex connectMutex_;
     std::atomic<int> pid_ = -1;

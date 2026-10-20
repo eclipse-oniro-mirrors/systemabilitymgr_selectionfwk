@@ -570,5 +570,25 @@ HWTEST_F(SelectionServiceTest, SelectionService028, TestSize.Level0)
     int ret = SelectionService::GetInstance()->GetCurrentSelectionAppInfo(bundleName, abilityName);
     ASSERT_EQ(ret, -1);
 }
+
+/**
+ * @tc.name: SelectionService019
+ * @tc.desc: test OnListenerDied clears listener_
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionServiceTest, SelectionService019, TestSize.Level0)
+{
+    auto savedListener = SelectionService::GetInstance()->listener_;
+    auto remote = GetSelectionSystemAbility();
+    sptr<ISelectionListener> selectionListener = iface_cast<ISelectionListener>(remote);
+    SelectionService::GetInstance()->listener_ = selectionListener;
+    ASSERT_NE(SelectionService::GetInstance()->listener_, nullptr);
+
+    wptr<IRemoteObject> weakRemote(remote);
+    SelectionService::GetInstance()->OnListenerDied(weakRemote);
+    ASSERT_EQ(SelectionService::GetInstance()->listener_, nullptr);
+
+    SelectionService::GetInstance()->listener_ = savedListener;
+}
 }
 }

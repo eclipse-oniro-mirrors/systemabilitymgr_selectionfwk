@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
+#include <atomic>
 #include <shared_mutex>
 #include <string>
 #include <unordered_set>
@@ -126,6 +127,7 @@ private:
 
 private:
     std::shared_ptr<BaseSelectionInputMonitor> baseInputMonitor_;
+    mutable std::atomic<uint32_t> selectionEventId_{0};
 };
 }
 

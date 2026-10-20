@@ -20,6 +20,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <shared_mutex>
 #include <string>
 #include <atomic>
 
@@ -92,6 +93,7 @@ private:
     static std::atomic<uint32_t> sequenceId_;
     uint32_t invalidGravityPercent = 0;
     std::atomic<bool> isWaitSetUiContent_ { true };
+    mutable std::shared_mutex listenerMutex_;
     std::shared_ptr<PanelStatusListener> panelStatusListener_ = nullptr;
     bool destroyedRegistered_ = false;
     bool hiddenRegistered_ = false;

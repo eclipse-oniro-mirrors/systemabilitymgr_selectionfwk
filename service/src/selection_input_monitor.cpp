@@ -629,6 +629,7 @@ void SelectionInputMonitor::FinishedWordSelection() const
         return;
     }
     SetCanGetSelectionContentFlag(true);
+    selectionEventId_.fetch_add(1, std::memory_order_seq_cst);
     listener->OnSelectionChange(infoData);
 }
 
@@ -642,8 +643,18 @@ int32_t SelectionInputMonitor::GetSelectionContent(std::string& selectionContent
 
     HisyseventAdapter::GetInstance()->AddSelectionCount();
     SetCanGetSelectionContentFlag(false);
+    uint32_t eventId = selectionEventId_.load(std::memory_order_seq_cst);
     auto selectionInfo = baseInputMonitor_->GetSelectionInfo();
 
-    return SelectionService::GetInstance()->GetPasteboardContent(selectionContent, selectionInfo.windowId,
+    auto ret = SelectionService::GetInstance()->GetPasteboardContent(selectionContent, selectionInfo.windowId,
         selectionInfo.bundleName);
+
+    uint32_t newEventId = selectionEventId_.load(std::memory_order_seq_cst);
+    if (newEventId != eventId) {
+        SELECTION_HILOGE("Selection event changed during content retrieval, eventId: %{public}u -> %{public}u",
+            eventId, newEventId);
+        SetCanGetSelectionContentFlag(true);
+        return SelectionServiceError::INVALID_TIMING;
+    }
+    return ret;
 }
