@@ -32,6 +32,7 @@ const std::map<int32_t, int32_t> JsUtils::ERROR_CODE_MAP = {
 const std::map<int32_t, int32_t> JsUtils::SERVICE_ERROR_CODE_MAP = {
     { SelectionServiceError::INVALID_DATA, EXCEPTION_SELECTION_SERVICE },
     { SelectionServiceError::NOT_SYSTEM_APP_ERROR, EXCEPTION_NOT_SYSTEM_APP },
+    { SelectionServiceError::UNAUTHENTICATED_ERROR, EXCEPTION_INVALID_OPERATION },
     { SelectionServiceError::INVALID_TIMING, EXCEPTION_INVALID_TIMING },
     { SelectionServiceError::CANNOT_GET_CONTENT, EXCEPTION_CANNOT_GET_CONTENT },
     { SelectionServiceError::CONTENT_OUT_OF_RANGE, EXCEPTION_CONTENT_OUT_OF_RANGE },

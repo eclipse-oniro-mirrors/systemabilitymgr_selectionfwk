@@ -94,6 +94,7 @@ private:
     static napi_value GetJsSelectionTypeProperty(napi_env env);
     static napi_status CheckArguments(napi_env env, size_t argc, napi_value *argv,
         std::shared_ptr<PanelContext> ctxt);
+    static napi_status WaitAndDestroyPanel(std::shared_ptr<SelectionPanel> &panel, int32_t &errCode);
 
 private:
     static const std::string KDS_CLASS_NAME;

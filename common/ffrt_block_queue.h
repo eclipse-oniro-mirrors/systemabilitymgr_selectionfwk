@@ -43,10 +43,11 @@ public:
         queues_.push(data);
     }
 
-    void Wait(const T &data)
+    bool Wait(const T &data)
     {
         std::unique_lock<ffrt::mutex> lock(queuesMutex_);
-        cv_.wait_for(lock, std::chrono::milliseconds(timeout_), [&data, this]() { return data == queues_.front(); });
+        return  cv_.wait_for(lock, std::chrono::milliseconds(timeout_),
+            [&data, this]() { return !queues_.empty() && data == queues_.front(); });
     }
 
     bool GetFront(T &data)

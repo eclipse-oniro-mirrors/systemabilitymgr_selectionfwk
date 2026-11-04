@@ -56,6 +56,7 @@ ohos_shared_library("selectionmanager_napi") {
     "../../../common",
     "../../../../hiappevent_agent",
     "../../../../interfaces/inner_kits/selection_client/include",
+    "../../../../sysevent",
   ]
 
   deps = [
@@ -75,6 +76,7 @@ ohos_shared_library("selectionmanager_napi") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "ipc:ipc_single",
     "napi:ace_napi",

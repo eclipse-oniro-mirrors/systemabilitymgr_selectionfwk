@@ -29,6 +29,7 @@ enum class SelectFailedReason : int32_t {
     CREATE_PANEL_FAILED,
     CONNECT_EXTENSION_TIMEOUT,
     DISCONNECT_EXTENSION_TIMEOUT,
+    CALLBACK_DELIVERY_FAILED,
 };
 
 class HisyseventAdapter : public RefBase {

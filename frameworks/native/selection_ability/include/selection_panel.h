@@ -72,7 +72,7 @@ private:
     bool IsHidden(const sptr<OHOS::Rosen::Window>& window);
     bool IsDestroyed(const sptr<OHOS::Rosen::Window>& window);
     bool IsSelectionSystemAbilityExistent();
-    sptr<OHOS::Rosen::Window> GetWindow() { return window_; };
+    sptr<OHOS::Rosen::Window> GetWindow();
 
 private:
     inline static const std::unordered_map<SelectionWindowStatus, std::string> panelStatusMap_ {
@@ -87,6 +87,7 @@ private:
     int32_t height_ = 0;
 
     sptr<OHOS::Rosen::Window> window_;
+    mutable std::shared_mutex windowMutex_;
     sptr<OHOS::Rosen::WindowOption> winOption_ = nullptr;
     bool isScbEnable_ { false };
     Rosen::KeyboardLayoutParams keyboardLayoutParams_;

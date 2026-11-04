@@ -25,6 +25,7 @@
 #include "napi/native_node_api.h"
 #include "selection_listener_impl.h"
 #include "selection_log.h"
+#include "hisysevent_adapter.h"
 #include "util.h"
 #include "napi_base_context.h"
 #include "js_panel.h"
@@ -302,6 +303,42 @@ napi_value JsSelectionEngineSetting::CreatePanel(napi_env env, napi_callback_inf
     return asyncCall.Call(env, exec, "createPanel");
 }
 
+napi_status JsSelectionEngineSetting::WaitAndDestroyPanel(std::shared_ptr<SelectionPanel>& panel,
+    int32_t& errCode)
+{
+    JsEventInfo destroyInfo { std::chrono::system_clock::now(), JsEvent::DESTROY_PANEL };
+    auto& jsQueue = JsPanel::GetJsQueue();
+    jsQueue.Push(destroyInfo);
+    // 等待 destroyInfo 成为队首；超时后用 GetFront 校验，仅当队首确认为自身事件时
+    // 才执行销毁与出队，避免弹出其他调用者的事件导致队列错乱。
+    constexpr int32_t maxDestroyWaitRounds = 50;
+    bool isFront = false;
+    for (int32_t i = 0; i < maxDestroyWaitRounds; ++i) {
+        if (jsQueue.Wait(destroyInfo)) {
+            isFront = true;
+            break;
+        }
+        JsEventInfo frontInfo;
+        if (jsQueue.GetFront(frontInfo) && frontInfo == destroyInfo) {
+            isFront = true;
+            break;
+        }
+        SELECTION_HILOGW("destroyPanel wait timeout, round: %{public}d, retry", i);
+    }
+    if (!isFront) {
+        SELECTION_HILOGE("destroyPanel wait timeout, destroyInfo is not front, abort destroy");
+        return napi_generic_failure;
+    }
+    errCode = SelectionAbility::GetInstance()->DestroyPanel(panel);
+    jsQueue.Pop();
+    if (errCode != ErrorCode::NO_ERROR) {
+        SELECTION_HILOGE("DestroyPanel failed, errCode: %{public}d!", JsUtils::Convert(errCode));
+        return napi_generic_failure;
+    }
+    panel = nullptr;
+    return napi_ok;
+}
+
 napi_value JsSelectionEngineSetting::DestroyPanel(napi_env env, napi_callback_info info)
 {
     SELECTION_HILOGI("SelectionEngineSetting DestroyPanel start.");
@@ -330,14 +367,12 @@ napi_value JsSelectionEngineSetting::DestroyPanel(napi_env env, napi_callback_in
 
     auto output = [ctxt](napi_env env, napi_value *result) -> napi_status {
         CHECK_RETURN((ctxt->panel != nullptr), "panel is nullptr!", napi_generic_failure);
-        auto errCode = SelectionAbility::GetInstance()->DestroyPanel(ctxt->panel);
-        if (errCode != ErrorCode::NO_ERROR) {
-            SELECTION_HILOGE("DestroyPanel failed, errCode: %{public}d!", JsUtils::Convert(errCode));
+        int32_t errCode = ErrorCode::NO_ERROR;
+        auto ret = WaitAndDestroyPanel(ctxt->panel, errCode);
+        if (ret != napi_ok && errCode != ErrorCode::NO_ERROR) {
             ctxt->SetErrorCode(errCode);
-            return napi_generic_failure;
         }
-        ctxt->panel = nullptr;
-        return napi_ok;
+        return ret;
     };
 
     ctxt->SetAction(std::move(input), std::move(output));
@@ -598,12 +633,16 @@ int32_t JsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selectio
     auto entry = GetEntry(type, [&selectionInfo](SelectionEntry &entry) {entry.selectionInfo = selectionInfo; });
     if (entry == nullptr) {
         SELECTION_HILOGE("failed to get SelectionEntry entry!");
+        OHOS::SelectionFwk::HisyseventAdapter::GetInstance()->ReportShowPanelFailed(
+            selectionInfo.bundleName, 0, static_cast<int32_t>(SelectFailedReason::CALLBACK_DELIVERY_FAILED));
         return 1;
     }
 
     auto eventHandler = GetEventHandler();
     if (eventHandler == nullptr) {
         SELECTION_HILOGE("eventHandler is nullptr!");
+        OHOS::SelectionFwk::HisyseventAdapter::GetInstance()->ReportShowPanelFailed(
+            selectionInfo.bundleName, 0, static_cast<int32_t>(SelectFailedReason::CALLBACK_DELIVERY_FAILED));
         return 1;
     }
 

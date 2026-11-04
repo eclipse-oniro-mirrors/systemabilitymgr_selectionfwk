@@ -52,7 +52,8 @@ void PanelListenerImpl::OnPanelStatus(uint32_t windowId, const std::string& stat
 {
     auto eventHandler = GetEventHandler();
     if (eventHandler == nullptr) {
-        SELECTION_HILOGE("eventHandler is nullptr!");
+        SELECTION_HILOGE("eventHandler is nullptr! windowId: %{public}u, status: %{public}s",
+            windowId, status.c_str());
         return;
     }
     CallbackVector callBacks = GetCallback(windowId, status);
