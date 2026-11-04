@@ -40,6 +40,7 @@ enum class JsEvent : uint32_t {
     SET_IMMERSIVE_MODE,
     GET_IMMERSIVE_MODE,
     START_MOVING,
+    DESTROY_PANEL,
     EVENT_END,
 };
 
@@ -66,6 +67,7 @@ public:
     static napi_value UnSubscribe(napi_env env, napi_callback_info info);
     void SetNative(const std::shared_ptr<SelectionPanel> &panel);
     std::shared_ptr<SelectionPanel> GetNative();
+    static FFRTBlockQueue<JsEventInfo>& GetJsQueue() { return jsQueue_; }
 private:
     struct PanelContentContext : public AsyncCall::Context {
         LayoutParams layoutParams = { { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };

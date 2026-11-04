@@ -79,7 +79,8 @@ sptr<IRemoteObject> EtsSelectionExtension::OnConnect(const AAFwk::Want &want)
     Extension::OnConnect(want);
     auto env = etsRuntime_.GetAniEnv();
     if (env == nullptr) {
-        SELECTION_HILOGE("null env");
+        SELECTION_HILOGE("null env, bundleName: %{public}s, abilityName: %{public}s",
+            want.GetBundle().c_str(), want.GetElement().GetAbilityName().c_str());
         return nullptr;
     }
     ani_ref wantRef = OHOS::AppExecFwk::WrapWant(env, want);
@@ -88,10 +89,16 @@ sptr<IRemoteObject> EtsSelectionExtension::OnConnect(const AAFwk::Want &want)
         return nullptr;
     }
     ani_ref result = CallObjectMethod(true, "onConnect", nullptr, wantRef);
+    if (result == nullptr) {
+        SELECTION_HILOGE("onConnect returned null, bundleName: %{public}s, abilityName: %{public}s",
+            want.GetBundle().c_str(), want.GetElement().GetAbilityName().c_str());
+        return nullptr;
+    }
     auto obj = reinterpret_cast<ani_object>(result);
     auto remoteObj = AniGetNativeRemoteObject(env, obj);
     if (remoteObj == nullptr) {
-        SELECTION_HILOGE("remoteObj null");
+        SELECTION_HILOGE("AniGetNativeRemoteObject failed, bundleName: %{public}s, abilityName: %{public}s",
+            want.GetBundle().c_str(), want.GetElement().GetAbilityName().c_str());
         return nullptr;
     }
     SELECTION_HILOGD("end");

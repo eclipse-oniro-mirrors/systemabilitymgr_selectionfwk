@@ -16,6 +16,7 @@
 #include "ets_selection_engine_setting.h"
 #include "selection_system_ability_utils.h"
 #include "selection_listener_impl.h"
+#include <vector>
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -43,8 +44,11 @@ int32_t EtsSelectionEngineSetting::OnSelectionEvent(const SelectionInfo &selecti
 {
     //selectionComplete
     const std::string type = callbackType_SelectionComplete;
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    auto callbackVec = EtsCbMap_[type];
+    std::vector<callbackTypePara> callbackVec;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        callbackVec = EtsCbMap_[type];
+    }
     if (callbackVec.empty()) {
         SELECTION_HILOGE("callback of selecationComplete is empty");
         return -1;

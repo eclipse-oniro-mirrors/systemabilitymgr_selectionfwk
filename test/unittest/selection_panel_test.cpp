@@ -1251,7 +1251,7 @@ HWTEST_F(PanelLifecycleTest, DestroyThenGetWindowId001, TestSize.Level0)
     CreateMenuPanel();
     panel_->DestroyPanel();
     auto id = panel_->GetWindowId();
-    EXPECT_FALSE(id == static_cast<uint32_t>(ErrorCode::ERROR_PANEL_DESTROYED) ||
+    EXPECT_TRUE(id == static_cast<uint32_t>(ErrorCode::ERROR_PANEL_DESTROYED) ||
                 id == SelectionPanel::INVALID_WINDOW_ID);
     panel_.release();
 }

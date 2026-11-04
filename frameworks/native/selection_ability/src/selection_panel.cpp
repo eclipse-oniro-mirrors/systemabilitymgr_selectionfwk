@@ -45,6 +45,12 @@ static std::map<PanelType, std::string> windowTypeToName = {
 
 SelectionPanel::~SelectionPanel() = default;
 
+sptr<OHOS::Rosen::Window> SelectionPanel::GetWindow()
+{
+    std::shared_lock<std::shared_mutex> lock(windowMutex_);
+    return window_;
+}
+
 int32_t SelectionPanel::CreatePanel(
     const std::shared_ptr<AbilityRuntime::Context> &context, const PanelInfo &panelInfo)
 {
@@ -71,7 +77,10 @@ int32_t SelectionPanel::CreatePanel(
         SELECTION_HILOGE("Faied to create window, errCode: %{public}d", wmError);
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
-    window_ = window;
+    {
+        std::unique_lock<std::shared_mutex> lock(windowMutex_);
+        window_ = window;
+    }
     SELECTION_HILOGI("Window::Create Success");
     return 0;
 }
@@ -134,6 +143,10 @@ int32_t SelectionPanel::DestroyPanel()
     }
     SELECTION_HILOGI("destroy ret: %{public}d", result);
     PanelStatusChange(SelectionWindowStatus::DESTROYED);
+    {
+        std::unique_lock<std::shared_mutex> lock(windowMutex_);
+        window_ = nullptr;
+    }
     return ErrorCode::NO_ERROR;
 }
 
@@ -243,7 +256,7 @@ int32_t SelectionPanel::ShowPanel()
     }
 
     if (isWaitSetUiContent_.load()) {
-        SELECTION_HILOGE("isWaitSetUiContent_ is true!");
+        SELECTION_HILOGE("setUiContent must be called before show");
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
 

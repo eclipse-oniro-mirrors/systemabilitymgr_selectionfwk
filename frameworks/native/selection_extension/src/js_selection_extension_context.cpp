@@ -26,7 +26,6 @@ using namespace OHOS::SelectionFwk;
 
 namespace {
 constexpr int32_t INDEX_ZERO = 0;
-constexpr int32_t ERROR_CODE_ONE = 1;
 constexpr size_t ARGC_ONE = 1;
 
 class JsSelectionExtensionContext final {
@@ -73,7 +72,8 @@ private:
             auto context = weak.lock();
             if (context == nullptr) {
                 SELECTION_HILOGW("context is released.");
-                task->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "Context is released"));
+                task->Reject(env, CreateJsError(env,
+                    static_cast<int32_t>(AbilityErrorCode::ERROR_CODE_INVALID_CONTEXT), "Context is released"));
                 delete task;
                 return;
             }
@@ -86,7 +86,10 @@ private:
             delete task;
         };
         if (napi_send_event(env, asyncTask, napi_eprio_high) != napi_status::napi_ok) {
-            napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
+            // napi_send_event failed: callback was never scheduled, so napiAsyncTask still owns task.
+            // Do NOT release() — let unique_ptr destruct to delete task, avoiding double-free.
+            napiAsyncTask->Reject(env, CreateJsError(env,
+                static_cast<int32_t>(AbilityErrorCode::ERROR_CODE_INNER), "send event failed"));
         } else {
             napiAsyncTask.release();
         }
