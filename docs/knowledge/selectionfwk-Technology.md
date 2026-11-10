@@ -46,7 +46,7 @@ selectionfwk 部件核心技术框架和机制的知识定义，涵盖价值认�
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 状态机见实体文档；本机制补充分发前置链（`FinishedWordSelected`，selection_input_monitor.cpp:596）：无扩展连接→`ConnectExtAbilityFromConfig()` + `ResetPluginUnloadTimer()` → 锁屏跳过 → bundleName 空告警 → `IsAppInBlocklist`（空）→ 开关关跳过 → `SetCanGetSelectionContentFlag(true)` → `selectionEventId_++` → `listener->OnSelectionChange`。起点信息在 WORD_BEGIN 经 `WindowManager(Lite)::ListWindowInfo(windowId)` 反查 bundleName（:254-300）；焦点伴随判定 `HandleWindowFocused`（:560，BUTTON_DOWN 时 `GetFocusWindowInfo`，点击窗即焦点窗则发 FocusChangeInfo） |
+| 核心机制 | 状态机见实体文档；本机制补充分发前置链（`FinishedWordSelection`，selection_input_monitor.cpp:596）：无扩展连接→`ConnectExtAbilityFromConfig()` + `ResetPluginUnloadTimer()` → 锁屏跳过 → bundleName 空告警 → `IsAppInBlocklist`（空）→ 开关关跳过 → `SetCanGetSelectionContentFlag(true)` → `selectionEventId_++` → `listener->OnSelectionChange`。起点信息在 WORD_BEGIN 经 `WindowManager(Lite)::ListWindowInfo(windowId)` 反查 bundleName（:254-300）；焦点伴随判定 `HandleWindowFocused`（:560，BUTTON_DOWN 时 `GetFocusWindowInfo`，点击窗即焦点窗则发 FocusChangeInfo） |
 | 关键流程 | 触发分叉：`GetCtrlSelectFlag()`（=trigger 配置）为真→WORD_END 等 Ctrl（KeyEvent 只认 `KEYCODE_CTRL_LEFT/RIGHT`，重复键忽略，UP→DONE）；为假→直接 DONE。三击窗口由双击 DONE 态微动（≤10px）延续 |
 
 ### 使用方式（Usage）
@@ -59,7 +59,7 @@ selectionfwk 部件核心技术框架和机制的知识定义，涵盖价值认�
 |---|---|
 | 核心类 | `SelectionInputMonitor`/`BaseSelectionInputMonitor`（MMI::IInputEventConsumer） |
 | 核心成员 | `DOUBLE_CLICK_TIME=550ms`、`TRIPLE_CLICK_TIME=300ms`、`MAX_POSITION_CHANGE_OFFSET=10px`、`MAX_PASTERBOARD_TEXT_LENGTH=2000`、`BYTES_PER_CHINESE_CHAR=3` |
-| 核心方法 | `OnInputEvent`/各 `Input*Process`/`JudgeTripleClick`/`ProcessWordSelection`/`FinishedWordSelected`/`ResetState`/`HandleWindowFocused`（selection_input_monitor.cpp） |
+| 核心方法 | `OnInputEvent`/各 `Input*Process`/`JudgeTripleClick`/`ProcessWordSelection`/`FinishedWordSelection`/`ResetState`/`HandleWindowFocused`（selection_input_monitor.cpp） |
 
 ### 约束与限制（Constraints）
 | 子维度 | 内容 |
@@ -112,7 +112,7 @@ selectionfwk 部件核心技术框架和机制的知识定义，涵盖价值认�
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 实体生命周期见实体文档；本机制补充三件套：①UI 就绪同步——`ShowPanel` 等待 `isWaitSetUiContent_`（`MAXWAITTIMES=3 × WAITTIME=100000us`）；②操作串行化——所有面板操作封装为 `JsEvent`（SHOW/HIDE/SET_UI_CONTENT/MOVE_TO/START_MOVING 等，js_panel.h:31-44）经 `FFRTBlockQueue<JsEventInfo> jsQueue_`（`MAX_WAIT_TIME=10s`）FIFO 执行；③回调注册表——`PanelListenerImpl` 单例 `ConcurrentMap<uint32_t, map<string, vector<shared_ptr<JSCallbackObject>>>> callbacks_`（windowId→事件名→回调），事件经 `EventHandler::PostTask(..., VIP)` + `JsCallbackHandler::Traverse` 分发（panel_listener_impl.cpp:51-68）；ANI 版 `PanelListenerImpl`（taihe/SelectionManager）同步遍历。焦点联动（服务端双源）：WMS `IFocusChangedListener`（`FocusMonitorManager`）与 MMI BUTTON_DOWN 判定产生 `SelectionFocusChangeInfo` → 应用侧 `FocusChange` → `Dispose(windowId_)`。服务端探测：`IsAnySelectionPanelShowing()`（`GetVisibilityWindowInfo` 匹配配置 bundle/ability，selection_service.cpp:545-572）用于插件保活。sceneboard 分支：`SCENE_BOARD_ENABLE` 下 `MoveTo` 走 `MoveWindowToGlobalDisplay`（跨 display） |
+| 核心机制 | 实体生命周期见实体文档；本机制补充三件套：①UI 就绪同步——`ShowPanel` 等待 `isWaitSetUiContent_`（`MAXWAITTIMES=3 × WAITTIME=100000us`）；②操作串行化——所有面板操作封装为 `JsEvent`（SHOW/HIDE/SET_UI_CONTENT/MOVE_TO/START_MOVING 等，js_panel.h:31-44）经 `FFRTBlockQueue<JsEventInfo> jsQueue_`（`MAX_WAIT_TIME=10ms`）FIFO 执行；③回调注册表——`PanelListenerImpl` 单例 `ConcurrentMap<uint32_t, map<string, vector<shared_ptr<JSCallbackObject>>>> callbacks_`（windowId→事件名→回调），事件经 `EventHandler::PostTask(..., VIP)` + `JsCallbackHandler::Traverse` 分发（panel_listener_impl.cpp:51-68）；ANI 版 `PanelListenerImpl`（taihe/SelectionManager）同步遍历。焦点联动（服务端双源）：WMS `IFocusChangedListener`（`FocusMonitorManager`）与 MMI BUTTON_DOWN 判定产生 `SelectionFocusChangeInfo` → 应用侧 `FocusChange` → `Dispose(windowId_)`。服务端探测：`IsAnySelectionPanelShowing()`（`GetVisibilityWindowInfo` 匹配配置 bundle/ability，selection_service.cpp:545-572）用于插件保活。sceneboard 分支：`SCENE_BOARD_ENABLE` 下 `MoveTo` 走 `MoveWindowToGlobalDisplay`（跨 display） |
 | 关键流程 | 失败上报：面板创建失败（selection_panel.cpp:69）、连接/断开超时（selection_service.cpp:473/511）、注入失败（selection_pasteboard_manager.cpp:367）、文本接收失败（:116）→ `SELECTION_PROCESS_ABNORMAL`；hiappevent：createPanel 全路径打点（入参校验失败/执行失败/成功） |
 
 ### 使用方式（Usage）
@@ -131,7 +131,7 @@ selectionfwk 部件核心技术框架和机制的知识定义，涵盖价值认�
 | 子维度 | 内容 |
 |---|---|
 | 系统限制 | 面板窗口属扩展应用进程（createPanel 的 ctx 决定）；SA 不持有面板对象，仅窗口可见性探测；`SYSTEM_FLOAT_WINDOW` 权限由服务配置承载 |
-| 并发约束 | 应用侧操作串行（FFRTBlockQueue 10s）；回调 VIP 队列不阻塞 IPC 线程 |
+| 并发约束 | 应用侧操作串行（FFRTBlockQueue 10ms）；回调 VIP 队列不阻塞 IPC 线程 |
 | 安全约束 | createPanel 走 `SelectionAppValidator`（framework 版，模块加载 `SetValid()` 置位）；窗口类型固定 `WINDOW_TYPE_SELECTION`，不可挪作他用 |
 
 ## 插件解耦与自动卸载机制
@@ -145,7 +145,7 @@ selectionfwk 部件核心技术框架和机制的知识定义，涵盖价值认�
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 加载：`dlopen("libselection_plugins_impl.z.so")` + dlsym 9 个函数（`PLUGIN_SO_PATH` 与指针表见 selection_service.h:159-203：pasteboard 取词、ability 连接/断开、DB 读写等），`pluginMutex_`（shared_mutex）保护；卸载：`PLUGIN_UNLOAD_TIMEOUT_MS=300000` 定时器（`ResetPluginUnloadTimer/OnPluginUnloadTimer`，:1193-1208）——到期时若面板在显（`IsAnySelectionPanelShowing`）或扩展已连接则保留并重置，否则 `UnloadPluginSo()`（dlclose 前 `CLEANUP_DELAY_TIME=50ms` 等待在途调用）；导出面：`plugin_exports.cpp` `extern "C"` + `visibility("default")`，其余符号 hidden；CFI：plugins/BUILD.gn 配置与 `relational_store:native_rdb` 一致并 `-Wl,-z,now` |
+| 核心机制 | 加载：`dlopen("libselection_plugins_impl.z.so")` + dlsym 9 个函数（`PLUGIN_SO_PATH` 与指针表见 selection_service.h:159-203：pasteboard 取词、ability 连接/断开、DB 读写等），`pluginMutex_`（shared_mutex）保护；卸载：`PLUGIN_UNLOAD_TIMEOUT_MS=300000` 定时器（`ResetPluginUnloadTimer/OnPluginUnloadTimer`，:1193-1207）——到期时若面板在显（`IsAnySelectionPanelShowing`）则直接保留插件（不重置定时器）；若扩展已连接（`HasExtAbilityConnection`）则先 `DisconnectCurrentExtAbility()` 断开扩展连接，随后无条件 `UnloadPluginSo()`（dlclose 前 `CLEANUP_DELAY_TIME=50ms` 等待在途调用）；导出面：`plugin_exports.cpp` `extern "C"` + `visibility("default")`，其余符号 hidden；CFI：plugins/BUILD.gn 配置与 `relational_store:native_rdb` 一致并 `-Wl,-z,now` |
 | 关键流程 | 事件到来时 `ResetPluginUnloadTimer()` 续命；`OnStop` 强制 `UnloadPluginSo()`；调用约定=函数指针直调，无 IPC 开销 |
 
 ### 使用方式（Usage）
@@ -244,7 +244,7 @@ selectionfwk 部件核心技术框架和机制的知识定义，涵盖价值认�
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 服务端版（`service/src/selection_app_validator.cpp`）：`IPCSkeleton::GetCallingTokenID()` → `Security::AccessToken::AccessTokenKit::GetHapTokenInfo(callingTokenId, hapTokenInfoRes)` 取调用方 bundleName → 与 `sys.selection.app` 的 bundle 前缀（`GetBundleNameFromSys` 按 `/` 截断，`service/src/selection_common.cpp:51`）比对；强制点=`RegisterListener`/`UnregisterListener`/`GetSelectionContent` 三个 IPC 入口（失败 `UNAUTHENTICATED_ERROR`）。framework 版（`frameworks/native/selection_ability/src/selection_app_validator.cpp`）：模块加载时 `SetValid()` 置位（js_selection_engine_setting.cpp:501），用于 createPanel 侧。进程级补充：服务进程自身 8 权限 + ACL（INPUT_MONITORING 等，selection_service.cfg），参数 DAC（selection.para.dac） |
+| 核心机制 | 服务端版（`service/src/selection_app_validator.cpp`）：`IPCSkeleton::GetCallingTokenID()` → `Security::AccessToken::AccessTokenKit::GetHapTokenInfo(callingTokenId, hapTokenInfoRes)` 取调用方 bundleName → 与 `sys.selection.app` 的 bundle 前缀（`GetBundleNameFromSys`（定义于 `service/src/selection_app_validator.cpp:63`）按 `/` 截断）比对；强制点=`RegisterListener`/`UnregisterListener`/`GetSelectionContent` 三个 IPC 入口（失败 `UNAUTHENTICATED_ERROR`）。framework 版（`frameworks/native/selection_ability/src/selection_app_validator.cpp`）：模块加载时 `SetValid()` 置位（js_selection_engine_setting.cpp:501），用于 createPanel 侧。进程级补充：服务进程自身 8 权限 + ACL（INPUT_MONITORING 等，selection_service.cfg），参数 DAC（selection.para.dac） |
 | 关键流程 | 校验失败既拒绝注册也拒绝取词 → 非目标应用拿不到 SelectionInfo 也拿不到文本 |
 
 ### 使用方式（Usage）
@@ -257,7 +257,7 @@ selectionfwk 部件核心技术框架和机制的知识定义，涵盖价值认�
 |---|---|
 | 核心类 | `SelectionAppValidator`（服务端版 + framework 版） |
 | 核心成员 | `UNAUTHENTICATED_ERROR`（utils/include/selection_errors.h） |
-| 核心方法 | `Validate()`（两版本）；`GetBundleNameFromSys`/`ParseAppInfo`（selection_common.cpp） |
+| 核心方法 | `Validate()`（两版本）；`GetBundleNameFromSys`（selection_app_validator.cpp）/`ParseAppInfo`（selection_common.cpp） |
 
 ### 约束与限制（Constraints）
 | 子维度 | 内容 |

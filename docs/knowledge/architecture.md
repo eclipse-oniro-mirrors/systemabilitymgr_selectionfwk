@@ -11,7 +11,7 @@
 | 插件解耦重依赖 | pasteboard、RDB、ability_runtime 三个重依赖收进 `service/plugins/`（`libselection_plugins_impl.z.so`），主服务 dlopen 9 个 `extern "C"` 函数指针调用；主服务 BUILD.gn 禁止直连 `ability_runtime:ability_manager` | 主服务可裁剪、依赖边界显式；CFI 配置可按 DSO 独立对齐（plugins 需与 `native_rdb` 一致） |
 | 配置双轨同步 | 配置同时存于系统参数（`sys.selection.*`）与 RDB（用户级），`SelectionConfigComparator::DoCompare` 单点裁决同步方向（`service/src/selection_config_comparator.cpp:93-143`），内存镜像 `MemSelectionConfig` 统一供读 | 支持用户级绑定 + 快速读 + 跨用户切换一致性 |
 | 事件驱动状态机 | 划词识别不解析文本，只消费 MMI 键鼠事件流驱动 `SelectInputState` 状态机；文本获取延后到应用请求 `GetSelectionContent` 时经虚拟键盘注入 + 剪贴板订阅完成 | 识别与取词解耦：识别纯事件态，取词纯文本态 |
-| 回调三段式分发 | JS 回调统一 `EventHandler::PostTask(..., VIP)` → `JsCallbackHandler::Traverse`（NAPI）/ 直接向量遍历（ANI）；面板操作经 `FFRTBlockQueue`（10s 超时）串行化（`common/ffrt_block_queue.h`） | 回调不阻塞 IPC/事件线程，面板操作有序 |
+| 回调三段式分发 | JS 回调统一 `EventHandler::PostTask(..., VIP)` → `JsCallbackHandler::Traverse`（NAPI）/ 直接向量遍历（ANI）；面板操作经 `FFRTBlockQueue`（10ms 超时）串行化（`common/ffrt_block_queue.h`） | 回调不阻塞 IPC/事件线程，面板操作有序 |
 | 编译期统一加固 | 全部产物 `sanitize{cfi, cfi_cross_dso, ubsan, integer_overflow, boundary_sanitize}` + `branch_protector_ret="pac_ret"` + `-fvisibility=hidden` + `--exclude-libs,ALL`（`service/BUILD.gn` 等） | 干净构建即静态检查门（无独立 lint） |
 
 ### 逻辑架构
@@ -96,7 +96,7 @@ SA 就绪回调链：MMI(3101)→`InputMonitorInit()`（AddMonitor）；WMS(4606
 
 | 场景类别 | 方案设计 |
 |---|---|
-| 可靠性 | SA `auto-restart:true`；扩展连接 promise/future + 5 秒超时（超时上报 `CONNECT_EXTENSION_TIMEOUT`/`DISCONNECT_EXTENSION_TIMEOUT`）；取词窗口期 `selectionEventId_` 原子比对防竞态（`INVALID_TIMING`）；插件 5 分钟闲置自动卸载（面板显示或扩展连接时保留，`PLUGIN_UNLOAD_TIMEOUT_MS=300000`，dlclose 前 `CLEANUP_DELAY_TIME=50ms`） |
+| 可靠性 | SA `auto-restart:true`；扩展连接 promise/future + 5 秒超时（超时上报 `CONNECT_EXTENSION_TIMEOUT`/`DISCONNECT_EXTENSION_TIMEOUT`）；取词窗口期 `selectionEventId_` 原子比对防竞态（`INVALID_TIMING`）；插件 5 分钟闲置自动卸载（到期时面板在显则保留；扩展已连接则先断开扩展连接再卸载，`PLUGIN_UNLOAD_TIMEOUT_MS=300000`，dlclose 前 `CLEANUP_DELAY_TIME=50ms`） |
 | 性能 | 识别纯事件态零文本处理；取词链路 `std::async` 注入 + `cv_.wait_for(110ms)`（`MAX_DELAY_WAIT_FOR_PB`）；JS 回调 VIP 队列；`getSelectionContent` 频控 500ms 窗口 50 次（`EXCEPTION_TOO_FREQUENT 33600004`）；面板 Show 等 UI 就绪 `3×100ms` |
 | 并发 | 服务端不建专属线程（回调来自 binder/MMI/CommonEvent COMMON/Timer/async 线程）；状态机 `atomic` 状态位 + `shared_mutex selectionInfoMutex_`；插件句柄 `shared_mutex pluginMutex_`；剪贴板管理器 `mutex+condition_variable` + `weak_ptr` 防 use-after-free；事件一致性靠 `selectionEventId_`/`selSeqId` |
 | 安全 | IPC 三入口（Register/Unregister/GetSelectionContent）强制 `SelectionAppValidator`（CallingTokenID→HapTokenInfo→bundleName 与 `sys.selection.app` 前缀比对，`service/src/selection_app_validator.cpp`）；进程 8 权限 + ACL `INPUT_MONITORING`；参数 DAC 0775；RDB `SecurityLevel::S1`；符号面收敛（versionscript/map/visibility） |

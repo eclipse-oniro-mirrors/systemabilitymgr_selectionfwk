@@ -15,7 +15,7 @@ selectionfwk 部件核心业务实体的完整知识定义，涵盖静态概念�
 ### 上下文与场景
 | 子维度 | 内容 |
 |---|---|
-| 交互流程 | 创建：状态机 `ProcessWordSelection`（`service/src/selection_input_monitor.cpp:376`）`SaveSelectionEndInfo` 按状态写入 selectionType 与终点坐标（起点在 WORD_BEGIN 的 `SaveSelectionStartInfo` 记录，bundleName 经 `WindowManager(Lite)::ListWindowInfo(windowId)` 反查）；分发：`FinishedWordSelected`（:596）完成校验链（无扩展连接则 `ConnectExtAbilityFromConfig` → 锁屏跳过 → bundleName 空告警 → `IsAppInBlocklist`（空实现）→ 开关校验 → `SetCanGetSelectionContentFlag(true)` → `selectionEventId_++`）后 `listener->OnSelectionChange(infoData)`；消费：扩展应用 JS `on('selectionCompleted')` 收到后调用 `getSelectionContent` 取真实文本 |
+| 交互流程 | 创建：状态机 `ProcessWordSelection`（`service/src/selection_input_monitor.cpp:376`）`SaveSelectionEndInfo` 按状态写入 selectionType 与终点坐标（起点在 WORD_BEGIN 的 `SaveSelectionStartInfo` 记录，bundleName 经 `WindowManager(Lite)::ListWindowInfo(windowId)` 反查）；分发：`FinishedWordSelection`（:596）完成校验链（无扩展连接则 `ConnectExtAbilityFromConfig` → 锁屏跳过 → bundleName 空告警 → `IsAppInBlocklist`（空实现）→ 开关校验 → `SetCanGetSelectionContentFlag(true)` → `selectionEventId_++`）后 `listener->OnSelectionChange(infoData)`；消费：扩展应用 JS `on('selectionCompleted')` 收到后调用 `getSelectionContent` 取真实文本 |
 | 状态流转 | 不可变实体：创建即终态；消费后由 `selectionEventId_` 递增使旧事件失效（应用迟到请求返回 `INVALID_TIMING`） |
 
 ### 规格与约束
@@ -35,7 +35,7 @@ selectionfwk 部件核心业务实体的完整知识定义，涵盖静态概念�
 | 子维度 | 内容 |
 |---|---|
 | 核心类 | `SelectionInfo`/`SelectionType`（common/selection_interface.h）、`SelectionInfoData`（common/selection_data_inner.h） |
-| 核心方法 | `SaveSelectionStartInfo`/`SaveSelectionEndInfo`/`ProcessWordSelection`/`FinishedWordSelected`（selection_input_monitor.cpp）、`Write`（NAPI 字段映射，js_selection_engine_setting.cpp:575） |
+| 核心方法 | `SaveSelectionStartInfo`/`SaveSelectionEndInfo`/`ProcessWordSelection`/`FinishedWordSelection`（selection_input_monitor.cpp）、`Write`（NAPI 字段映射，js_selection_engine_setting.cpp:575） |
 
 ## 划词配置（SelectionConfig / 双轨记录）
 
@@ -86,7 +86,7 @@ selectionfwk 部件核心业务实体的完整知识定义，涵盖静态概念�
 | 子维度 | 内容 |
 |---|---|
 | 交互流程 | 创建：JS `createPanel(ctx, info)` → NAPI `JsSelectionEngineSetting::CreatePanel`（含 hiappevent 打点）→ `SelectionAbility::CreatePanel`（校验 SA 存在 + `SelectionAppValidator` + `HasPanelOfType` 去重）→ `Rosen::Window::Create` → 成功 `PushPanel` 入 `panels_` deque；使用：`SetUiContent`（NapiSetUIContent/AniSetUIContent + `SetTransparent(true)`）→ `ShowPanel`（等 UI 就绪 3×100ms）→ `StartMoving`（StartMoveWindow）/`MoveTo`（sceneboard 下 MoveWindowToGlobalDisplay）；回收：`HidePanel/DoHidePanel`、`DestroyPanel`（先 Hide 后 `window->Destroy()`）；焦点联动：`Dispose(winId)` 遍历 panels_（MENU_PANEL→Hide，其余→Destroy） |
-| 状态流转 | 创建 → STATE_SHOWN ↔ STATE_HIDDEN → STATE_DESTROYED；状态经 `PanelStatusListener::OnPanelStatus(windowId, status)` 以 `"hidden"/"destroyed"` 字符串回调 JS（`on('hidden')`/`on('destroyed')`）；操作全部经 `JsPanel::jsQueue_`（FFRTBlockQueue，10s 超时）串行化 |
+| 状态流转 | 创建 → STATE_SHOWN ↔ STATE_HIDDEN → STATE_DESTROYED；状态经 `PanelStatusListener::OnPanelStatus(windowId, status)` 以 `"hidden"/"destroyed"` 字符串回调 JS（`on('hidden')`/`on('destroyed')`）；操作全部经 `JsPanel::jsQueue_`（FFRTBlockQueue，10ms 超时）串行化 |
 ### 规格与约束
 | 子维度 | 内容 |
 |---|---|
@@ -122,7 +122,7 @@ selectionfwk 部件核心业务实体的完整知识定义，涵盖静态概念�
 ### 规格与约束
 | 子维度 | 内容 |
 |---|---|
-| 业务规则 | 连接必须经插件（AbilityManagerPlugin）发起，主服务不直连 ability_runtime；连接成功与插件卸载互斥（扩展连接时 5 分钟闲置不卸载插件）；userId 参与连接（多用户下连前台用户的扩展） |
+| 业务规则 | 连接必须经插件（AbilityManagerPlugin）发起，主服务不直连 ability_runtime；插件闲置卸载定时器到期时，扩展已连接的场景会先断开扩展连接再卸载插件（面板在显时才整体保留）；userId 参与连接（多用户下连前台用户的扩展） |
 | 并发约束 | `connectMutex_` 保护连接流程；promise/future 单次性——重复 Wait 会异常，连接前重置 |
 ### 知识关联
 | 子维度 | 内容 |
@@ -149,7 +149,7 @@ selectionfwk 部件核心业务实体的完整知识定义，涵盖静态概念�
 ### 上下文与场景
 | 子维度 | 内容 |
 |---|---|
-| 交互流程 | 输入：`InputManager::AddMonitor(inputMonitor_)`（SA 3101 就绪回调后）→ `OnInputEvent(KeyEvent/PointerEvent/AxisEvent)`；状态迁移（selection_input_monitor.cpp）：`InputInitialProcess`（:347，左键 DOWN→WORD_BEGIN+记时+存起点）、`InputWordBeginProcess`（:361，MOVE→WAIT_LEFT_MOVE / UP→WAIT_DOUBLE_CLICK）、`InputWordLeftMoveProcess`（:398，UP→`ProcessWordSelection`）、`InputWordDoubleClickProcess`（:422，550ms 超时重置；第二击 UP→`ProcessWordSelection`；DONE 态微动 ≤10px→`JudgeTripleClick`（:411，300ms 窗口）→WAIT_TRIPLE_CLICK）、`ProcessWordSelection`（:376，写 selectionType + 终点；ctrl 模式→WORD_END 等 Ctrl（`ProcessInputEvent(KeyEvent)` :88 只认 KEYCODE_CTRL_LEFT/RIGHT，UP→DONE），immediate→DONE）；DONE 后 `FinishedWordSelected` 产出事件；非左键任意态 `ResetState()`（:156） |
+| 交互流程 | 输入：`InputManager::AddMonitor(inputMonitor_)`（SA 3101 就绪回调后）→ `OnInputEvent(KeyEvent/PointerEvent/AxisEvent)`；状态迁移（selection_input_monitor.cpp）：`InputInitialProcess`（:347，左键 DOWN→WORD_BEGIN+记时+存起点）、`InputWordBeginProcess`（:361，MOVE→WAIT_LEFT_MOVE / UP→WAIT_DOUBLE_CLICK）、`InputWordLeftMoveProcess`（:398，UP→`ProcessWordSelection`）、`InputWordDoubleClickProcess`（:422，550ms 超时重置；第二击 UP→`ProcessWordSelection`；DONE 态微动 ≤10px→`JudgeTripleClick`（:411，300ms 窗口）→WAIT_TRIPLE_CLICK）、`ProcessWordSelection`（:376，写 selectionType + 终点；ctrl 模式→WORD_END 等 Ctrl（`ProcessInputEvent(KeyEvent)` :88 只认 KEYCODE_CTRL_LEFT/RIGHT，UP→DONE），immediate→DONE）；DONE 后 `FinishedWordSelection` 产出事件；非左键任意态 `ResetState()`（:156） |
 | 状态流转 | 见主态链；异常恢复：超时（550/300ms）、非左键、Ctrl 重复键（IsRepeatKey 忽略）、锁屏/开关关闭 → ResetState 回 INITIAL |
 ### 规格与约束
 | 子维度 | 内容 |
@@ -186,7 +186,7 @@ selectionfwk 部件核心业务实体的完整知识定义，涵盖静态概念�
 ### 规格与约束
 | 子维度 | 内容 |
 |---|---|
-| 业务规则 | 单监听器（mutex 保护覆盖式持有）；注册/注销/取词三入口统一校验调用方身份；事件分发前置条件链在 `FinishedWordSelected`（连接/锁屏/黑名单/开关/flag） |
+| 业务规则 | 单监听器（mutex 保护覆盖式持有）；注册/注销/取词三入口统一校验调用方身份；事件分发前置条件链在 `FinishedWordSelection`（连接/锁屏/黑名单/开关/flag） |
 | 并发约束 | 分发在 IPC 线程；SA 与应用双向进程隔离，回调对象经 Binder 死亡通知回收 |
 ### 知识关联
 | 子维度 | 内容 |

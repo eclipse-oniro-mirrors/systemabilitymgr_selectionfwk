@@ -40,7 +40,7 @@
 双轨同步的单点裁决器（`service/src/selection_config_comparator.cpp:93-143`）：输入 sys 参数快照 + DB 记录，输出 `ComparisionResult{direction, shouldCreate, shouldStop, shouldStart, shouldRestartApp, selectionConfig}`；DB 无记录时以 sys 参数为默认并回写。`Init`/USER_SWITCHED/参数 watcher 均经它同步。
 
 ## 插件 so（libselection_plugins_impl.z.so）
-pasteboard/RDB/ability 三个重依赖的解耦产物：主服务 dlopen + dlsym 9 个 C 函数（`service/include/selection_service.h:159-203`），唯一导出面 `service/plugins/src/plugin_exports.cpp`（`extern "C"` + `visibility("default")`）。闲置 5 分钟（`PLUGIN_UNLOAD_TIMEOUT_MS=300000`）自动 dlclose（面板显示或扩展连接时保留），dlclose 前等 50ms。
+pasteboard/RDB/ability 三个重依赖的解耦产物：主服务 dlopen + dlsym 9 个 C 函数（`service/include/selection_service.h:159-203`），唯一导出面 `service/plugins/src/plugin_exports.cpp`（`extern "C"` + `visibility("default")`）。闲置 5 分钟（`PLUGIN_UNLOAD_TIMEOUT_MS=300000`）自动 dlclose（到期时面板在显则保留插件；扩展已连接则先断开扩展连接再卸载插件），dlclose 前等 50ms。
 
 ## IDL proxy/stub（ISelectionService / ISelectionListener）
 IPC 契约：`ISelectionService`（RegisterListener/UnregisterListener/GetSelectionContent）与 `ISelectionListener`（OnSelectionChange/FocusChange），由 `idl_tool` 的 `idl_gen_interface` 从 `interfaces/idl/*.idl` 生成到 `${target_gen_dir}`，禁止手改。

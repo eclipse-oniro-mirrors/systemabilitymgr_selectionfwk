@@ -10,7 +10,7 @@
 ## 并发与锁
 
 - **禁止**在 `service/src/selection_input_monitor.cpp` 与 `utils/src/selection_timer.cpp` 加并发代码前不检查既有锁：这两处是高频变更区（git 近期提交记录），状态机已用 `std::atomic` 状态位 + `shared_mutex selectionInfoMutex_` 保护（`service/include/selection_input_monitor.h:99-103`），重复加锁或锁序不一致会死锁状态机。
-- **禁止**跨线程直接触发 JS 回调，采用统一三段式：`EventHandler::PostTask(..., EventQueue::Priority::VIP)` → `JsCallbackHandler::Traverse`（NAPI，`common/callback_handler.cpp`）/ ANI 侧向量遍历；面板操作一律经 `JsPanel::jsQueue_`（`FFRTBlockQueue`，10s 超时）串行化。依据：`frameworks/js/napi/selection_ability/js_panel.cpp`、`common/ffrt_block_queue.h`。
+- **禁止**跨线程直接触发 JS 回调，采用统一三段式：`EventHandler::PostTask(..., EventQueue::Priority::VIP)` → `JsCallbackHandler::Traverse`（NAPI，`common/callback_handler.cpp`）/ ANI 侧向量遍历；面板操作一律经 `JsPanel::jsQueue_`（`FFRTBlockQueue`，10ms 超时）串行化。依据：`frameworks/js/napi/selection_ability/js_panel.cpp`、`common/ffrt_block_queue.h`。
 - **禁止**在持有 `pluginMutex_`/`mtx_` 时做 dlopen/dlclose 或条件等待超过既有时长约定（插件卸载定时器 300000ms、剪贴板等待 110ms、扩展连接 5s）；异步等待用 `std::async`/`future`，不用忙轮询。
 - **禁止**裸持有 uinput fd 而不套 `FdsanMark/FdsanClose`（`utils/include/selection_fdsan.h`，owner tag = GENERIC_00 + LOG_DOMAIN）；服务 `OnStart` 已设 `fdsan_set_error_level(FATAL)`，fd 泄漏会直接 fatal。
 
