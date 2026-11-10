@@ -59,6 +59,25 @@ Frequent-change paths (by recent commit frequency): `service/src`, `service/incl
 
 ## Knowledge routing
 
+### In-repo knowledge base (`docs/knowledge/`)
+
+A six-part Chinese knowledge base generated from this repo's source lives under
+`docs/knowledge/`. It documents current code reality (verified paths, symbols,
+and limits) and complements the routing tables below.
+
+| Question | Read first |
+|---|---|
+| 业务定位、职责边界、输入输出、外部协作方 | [docs/knowledge/business-context.md](docs/knowledge/business-context.md) |
+| 分层、启动/初始化顺序、设计约束、非功能设计 | [docs/knowledge/architecture.md](docs/knowledge/architecture.md) |
+| 编码铁律（生成代码边界、锁、权限校验、sanitize、预留代码） | [docs/knowledge/coding-standards.md](docs/knowledge/coding-standards.md) |
+| 术语：SA 8500、状态机、Ctrl+C 注入、双轨配置、插件 so、Taihe 等 | [docs/knowledge/glossary.md](docs/knowledge/glossary.md) |
+| 业务实体：划词信息、划词配置、面板、扩展连接、输入状态机、监听器 | [docs/knowledge/selectionfwk-Entity.md](docs/knowledge/selectionfwk-Entity.md) |
+| 技术机制：按需生命周期、识别状态机、取词链路、面板管理、插件卸载、配置同步、IPC/接口层、权限校验、可观测性 | [docs/knowledge/selectionfwk-Technology.md](docs/knowledge/selectionfwk-Technology.md) |
+
+Suggested on-demand order: glossary (unclear term) → business-context (unclear
+scope) → architecture → the Entity/Technology chapter for the module you touch
+→ coding-standards before writing code. Do not load all six files at once.
+
 ### Task-based routing
 - **Public API change** (anything touching `libselection_client.z.so`): read `interfaces/inner_kits/selection_client/selection_client.versionscript` first — only symbols matching `*SelectionClient*` are exported; everything else is `local:*`. A new public symbol that does not match this pattern will be silently hidden.
 - **IPC protocol / cross-process change**: edit the `.idl` in `interfaces/idl/`, never the generated `*_proxy.cpp`/`*_stub.cpp`. Rebuild to regenerate.
