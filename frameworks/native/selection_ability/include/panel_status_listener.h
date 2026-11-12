@@ -25,6 +25,7 @@ class PanelStatusListener {
 public:
     virtual ~PanelStatusListener() {};
     virtual void OnPanelStatus(uint32_t windowId, const std::string& status) = 0;
+    virtual void ClearCallbacksByWindowId(uint32_t windowId) {};
 };
 } // namespace SelectionFwk
 } // namespace OHOS

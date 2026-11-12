@@ -266,6 +266,10 @@ const int MENU_PANEL = 1;
     // The parameters in the make_holder function should be of the same type
     // as the parameters in the constructor of the actual implementation class.
     //ctx->Context, info->panelInfo
+    if (info.x < 0 || info.y < 0 || info.width <= 0 || info.height <= 0) {
+        set_business_error(EXCEPTION_PARAMCHECK, "Parameter error. The parameter value is invalid.");
+        return taihe::make_holder<PanelImpl, ::ohos::selectionInput::selectionManager::Panel>(nullptr);
+    }
     ani_env *env = get_env();
     ani_object ani_obj = reinterpret_cast<ani_object>(ctx);
     std::shared_ptr<OHOS::AbilityRuntime::Context> context = OHOS::AbilityRuntime::GetStageModeContext(env, ani_obj);

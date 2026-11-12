@@ -128,8 +128,8 @@ int32_t SelectionPanel::DestroyPanel()
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     if (IsDestroyed(window)) {
-        SELECTION_HILOGE("window is already destroyed!");
-        return ErrorCode::ERROR_PANEL_DESTROYED;
+        SELECTION_HILOGI("window is already destroyed, return success");
+        return ErrorCode::NO_ERROR;
     }
     auto ret = DoHidePanel(window);
     if (ret != ErrorCode::NO_ERROR) {
@@ -142,7 +142,14 @@ int32_t SelectionPanel::DestroyPanel()
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     SELECTION_HILOGI("destroy ret: %{public}d", result);
+    uint32_t windowId = GetWindowId();
     PanelStatusChange(SelectionWindowStatus::DESTROYED);
+    {
+        std::shared_lock<std::shared_mutex> lock(listenerMutex_);
+        if (panelStatusListener_ != nullptr) {
+            panelStatusListener_->ClearCallbacksByWindowId(windowId);
+        }
+    }
     {
         std::unique_lock<std::shared_mutex> lock(windowMutex_);
         window_ = nullptr;

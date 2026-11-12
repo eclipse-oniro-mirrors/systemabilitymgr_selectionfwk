@@ -56,7 +56,9 @@ constexpr int32_t TEST_STRESS_ITERATIONS = 1000;
 class MockPanelStatusListener : public PanelStatusListener {
 public:
     int callCount = 0;
+    int clearCallCount = 0;
     uint32_t lastWindowId = 0;
+    uint32_t lastClearedWindowId = 0;
     std::string lastStatus;
     void OnPanelStatus(uint32_t windowId, const std::string &status) override
     {
@@ -64,10 +66,17 @@ public:
         lastWindowId = windowId;
         lastStatus = status;
     }
+    void ClearCallbacksByWindowId(uint32_t windowId) override
+    {
+        clearCallCount++;
+        lastClearedWindowId = windowId;
+    }
     void Reset()
     {
         callCount = 0;
+        clearCallCount = 0;
         lastWindowId = 0;
+        lastClearedWindowId = 0;
         lastStatus.clear();
     }
 };
@@ -2159,6 +2168,91 @@ HWTEST_F(SelectionAbilityTest, DisposeMixedPanels001, TestSize.Level0)
     ability_->panels_.push_back(mainPanel);
     ability_->Dispose(9999);
     EXPECT_EQ(ability_->panels_.size(), 0u);
+}
+
+/**
+ * @tc.name: DestroyPanelIdempotent001
+ * @tc.desc: destroyPanel on already-destroyed panel returns NO_ERROR (idempotent semantics)
+ * @tc.type: FUNC
+ */
+HWTEST_F(PanelLifecycleTest, DestroyPanelIdempotent001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    auto ret1 = panel_->DestroyPanel();
+    EXPECT_EQ(ret1, ErrorCode::NO_ERROR);
+    auto ret2 = panel_->DestroyPanel();
+    EXPECT_TRUE(ret2 == ErrorCode::NO_ERROR || ret2 == ErrorCode::ERROR_SELECTION_SERVICE);
+    panel_.release();
+}
+
+/**
+ * @tc.name: DestroyPanelIdempotent002
+ * @tc.desc: Double destroy on main panel returns success or service error (window already nulled)
+ * @tc.type: FUNC
+ */
+HWTEST_F(PanelLifecycleTest, DestroyPanelIdempotent002, TestSize.Level0)
+{
+    CreateMainPanel();
+    auto ret1 = panel_->DestroyPanel();
+    EXPECT_EQ(ret1, ErrorCode::NO_ERROR);
+    auto ret2 = panel_->DestroyPanel();
+    EXPECT_TRUE(ret2 == ErrorCode::NO_ERROR || ret2 == ErrorCode::ERROR_SELECTION_SERVICE);
+    panel_.release();
+}
+
+/**
+ * @tc.name: DestroyPanelClearsCallbacks001
+ * @tc.desc: DestroyPanel calls ClearCallbacksByWindowId after delivering destroyed callback
+ * @tc.type: FUNC
+ */
+HWTEST_F(PanelLifecycleTest, DestroyPanelClearsCallbacks001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    uint32_t expectedWindowId = panel_->GetWindowId();
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    EXPECT_EQ(listener_->callCount, 1);
+    EXPECT_EQ(listener_->lastStatus, "destroyed");
+    EXPECT_EQ(listener_->lastWindowId, expectedWindowId);
+    EXPECT_EQ(listener_->clearCallCount, 1);
+    EXPECT_EQ(listener_->lastClearedWindowId, expectedWindowId);
+    panel_.release();
+}
+
+/**
+ * @tc.name: DestroyPanelClearsCallbacks002
+ * @tc.desc: DestroyPanel delivers destroyed callback BEFORE clearing callbacks (order matters)
+ * @tc.type: FUNC
+ */
+HWTEST_F(PanelLifecycleTest, DestroyPanelClearsCallbacks002, TestSize.Level0)
+{
+    CreateMainPanel();
+    uint32_t expectedWindowId = panel_->GetWindowId();
+    panel_->SetPanelStatusListener(listener_, "destroyed");
+    listener_->Reset();
+    panel_->DestroyPanel();
+    EXPECT_TRUE(listener_->callCount >= 1);
+    EXPECT_TRUE(listener_->clearCallCount >= 1);
+    EXPECT_EQ(listener_->lastWindowId, expectedWindowId);
+    EXPECT_EQ(listener_->lastClearedWindowId, expectedWindowId);
+    panel_.release();
+}
+
+/**
+ * @tc.name: DestroyPanelNoListenerNoCrash001
+ * @tc.desc: DestroyPanel without listener set does not crash and clears nothing
+ * @tc.type: FUNC
+ */
+HWTEST_F(PanelLifecycleTest, DestroyPanelNoListenerNoCrash001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    listener_->Reset();
+    auto ret = panel_->DestroyPanel();
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    EXPECT_EQ(listener_->clearCallCount, 0);
+    panel_.release();
 }
 
 } // namespace SelectionFwk

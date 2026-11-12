@@ -306,4 +306,35 @@ HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager024, TestSize
     ASSERT_FALSE(observer.IsAllWhitespace(std::string("\xE0\xA0 ")));
 }
 
+/**
+ * @tc.name: SelectionPasteboardManager025
+ * @tc.desc: GetSelectionContent on uninitialized manager returns INVALID_DATA consistently across calls
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager025, TestSize.Level0)
+{
+    SelectionPasteboardManager manager;
+    std::string content;
+    int32_t ret1 = manager.GetSelectionContent(content, 100, "test.bundle");
+    ASSERT_EQ(ret1, SelectionServiceError::INVALID_DATA);
+    int32_t ret2 = manager.GetSelectionContent(content, 100, "test.bundle");
+    ASSERT_EQ(ret2, SelectionServiceError::INVALID_DATA);
+}
+
+/**
+ * @tc.name: SelectionPasteboardManager026
+ * @tc.desc: Multiple sequential GetSelectionContent calls do not accumulate stale state
+ * @tc.type: FUNC
+ */
+HWTEST_F(SelectionPasteboardManagerTest, SelectionPasteboardManager026, TestSize.Level0)
+{
+    SelectionPasteboardManager manager;
+    std::string content;
+    for (int i = 0; i < 5; i++) {
+        int32_t ret = manager.GetSelectionContent(content, 100, "test.bundle");
+        ASSERT_EQ(ret, SelectionServiceError::INVALID_DATA)
+            << "Iteration " << i << " returned unexpected error code";
+    }
+}
+
 } // namespace OHOS::SelectionFwk
