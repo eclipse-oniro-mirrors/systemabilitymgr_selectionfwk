@@ -132,7 +132,7 @@ selectionfwk 部件核心技术框架和机制的知识定义，涵盖价值认�
 |---|---|
 | 系统限制 | 面板窗口属扩展应用进程（createPanel 的 ctx 决定）；SA 不持有面板对象，仅窗口可见性探测；`SYSTEM_FLOAT_WINDOW` 权限由服务配置承载 |
 | 并发约束 | 应用侧操作串行（FFRTBlockQueue 10ms）；回调 VIP 队列不阻塞 IPC 线程 |
-| 安全约束 | createPanel 走 `SelectionAppValidator`（framework 版，模块加载 `SetValid()` 置位）；窗口类型固定 `WINDOW_TYPE_SELECTION`，不可挪作他用 |
+| 安全约束 | createPanel 走 `SelectionAppValidator`（framework 版，模块加载 `SetValid()` 置位）；窗口类型固定 `WINDOW_TYPE_SELECTION`，不可挪作别的用途 |
 
 ## 插件解耦与自动卸载机制
 
