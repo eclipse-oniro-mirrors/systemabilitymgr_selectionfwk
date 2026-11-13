@@ -346,6 +346,8 @@ int32_t SelectionPasteboardManager::GetSelectionContent(std::string& selectionCo
     });
  
     std::unique_lock<std::mutex> lock(mtx_);
+    g_pasteBoardErrorCode = ERR_OK;
+    g_selectionContent = "";
     SELECTION_HILOGI("Start wait for pasteboard OnTextReceived (async InjectCtrlC)");
     bool received = cv_.wait_for(lock, std::chrono::milliseconds(MAX_DELAY_WAIT_FOR_PB),
         [this] {

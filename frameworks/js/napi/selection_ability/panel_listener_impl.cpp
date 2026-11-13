@@ -68,6 +68,15 @@ void PanelListenerImpl::OnPanelStatus(uint32_t windowId, const std::string& stat
     eventHandler->PostTask(task, status, 0, AppExecFwk::EventQueue::Priority::VIP);
 }
 
+void PanelListenerImpl::ClearCallbacksByWindowId(uint32_t windowId)
+{
+    callbacks_.ComputeIfPresent(windowId, [](uint32_t id, TypeMap& callbacks) {
+        callbacks.clear();
+        return false;
+    });
+    SELECTION_HILOGI("Cleared callbacks for windowId: %{public}u", windowId);
+}
+
 CallbackVector PanelListenerImpl::GetCallback(uint32_t windowId, const std::string &type)
 {
     CallbackVector callBackVector;

@@ -34,6 +34,7 @@ public:
     ~PanelListenerImpl();
 
     void OnPanelStatus(uint32_t windowId, const std::string& status) override;
+    void ClearCallbacksByWindowId(uint32_t windowId) override;
     void Subscribe(uint32_t windowId, const std::string &type, callbackType &&cbObject);//往map里面添加cb
     void RemoveInfo(const std::string &type, uint32_t windowId, const callbackType &cbObject);//从map里面删除cb
     void RemoveInfo(const std::string &type, uint32_t windowId);

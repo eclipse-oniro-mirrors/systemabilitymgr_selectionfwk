@@ -129,7 +129,9 @@ napi_value JsPanel::SetUiContent(napi_env env, napi_callback_info info)
 
     auto exec = [ctxt](AsyncCall::Context *ctx) { ctxt->SetState(napi_ok); };
     auto output = [ctxt](napi_env env, napi_value *result) -> napi_status {
-        jsQueue_.Wait(ctxt->info);
+        if (!jsQueue_.Wait(ctxt->info)) {
+            SELECTION_HILOGW("setUiContent wait queue timeout, proceed with caution");
+        }
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
             jsQueue_.Pop();
@@ -161,7 +163,9 @@ napi_value JsPanel::Show(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto exec = [ctxt](AsyncCall::Context *ctx) {
-        jsQueue_.Wait(ctxt->info);
+        if (!jsQueue_.Wait(ctxt->info)) {
+            SELECTION_HILOGW("show wait queue timeout, proceed with caution");
+        }
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
             jsQueue_.Pop();
@@ -194,7 +198,9 @@ napi_value JsPanel::Hide(napi_env env, napi_callback_info info)
         return napi_ok;
     };
     auto exec = [ctxt](AsyncCall::Context *ctx) {
-        jsQueue_.Wait(ctxt->info);
+        if (!jsQueue_.Wait(ctxt->info)) {
+            SELECTION_HILOGW("hide wait queue timeout, proceed with caution");
+        }
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
             jsQueue_.Pop();
@@ -226,7 +232,9 @@ napi_value JsPanel::StartMoving(napi_env env, napi_callback_info info)
     };
 
     auto exec = [ctxt](AsyncCall::Context *ctx) {
-        jsQueue_.Wait(ctxt->info);
+        if (!jsQueue_.Wait(ctxt->info)) {
+            SELECTION_HILOGW("startMoving wait queue timeout, proceed with caution");
+        }
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
             jsQueue_.Pop();

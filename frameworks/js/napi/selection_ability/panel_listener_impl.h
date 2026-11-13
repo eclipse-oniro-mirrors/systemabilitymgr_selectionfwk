@@ -65,6 +65,7 @@ struct UvEntry {
     std::shared_ptr<AppExecFwk::EventHandler> GetEventHandler();
 
     void OnPanelStatus(uint32_t windowId, const std::string& status) override;
+    void ClearCallbacksByWindowId(uint32_t windowId) override;
     void Subscribe(uint32_t windowId, const std::string &type, std::shared_ptr<JSCallbackObject> cbObject);
     void RemoveInfo(const std::string &type, uint32_t windowId, std::shared_ptr<JSCallbackObject> cbObject);
     void RemoveInfo(const std::string &type, uint32_t windowId);
