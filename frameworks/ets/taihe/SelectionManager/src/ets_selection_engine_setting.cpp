@@ -122,13 +122,15 @@ std::shared_ptr<EtsSelectionEngineSetting> EtsSelectionEngineSetting::GetEtsSele
             selectionDelegate_ = delegate;
         }
     }
+    bool needRegister = false;
     {
         std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
-        if (listenerStub_ == nullptr && selectionDelegate_ != nullptr) {
+        needRegister = (listenerStub_ == nullptr && selectionDelegate_ != nullptr);
+        if (needRegister) {
             SELECTION_HILOGI("listenerStub_ is null, attempting to re-register listener.");
         }
     }
-    if (listenerStub_ == nullptr && selectionDelegate_ != nullptr) {
+    if (needRegister) {
         RegisterListenerToService(selectionDelegate_);
     }
     return selectionDelegate_;

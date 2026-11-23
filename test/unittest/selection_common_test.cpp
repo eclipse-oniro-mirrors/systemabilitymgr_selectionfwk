@@ -13,11 +13,13 @@
  * limitations under the License.
  */
 
+#include <memory>
 #include <optional>
 
 #include "gtest/gtest.h"
 
 #include "selection_common.h"
+#include "ffrt_block_queue.h"
 
 namespace OHOS {
 namespace SelectionFwk {
@@ -104,6 +106,155 @@ HWTEST_F(SelectionCommonTest, SelectionCommon005, TestSize.Level0)
 
     AbilityRuntimeInfo abilityInfo5{101, "a", "b"};
     ASSERT_TRUE(abilityInfo == abilityInfo5);
+}
+
+// ============================================================================
+// FFRTBlockQueue Tests
+// ============================================================================
+
+constexpr uint32_t TEST_QUEUE_TIMEOUT_MS = 100;
+
+class FFRTBlockQueueTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
+    std::unique_ptr<FFRTBlockQueue<int>> queue_;
+};
+
+void FFRTBlockQueueTest::SetUpTestCase()
+{
+    std::cout << "FFRTBlockQueueTest SetUpTestCase" << std::endl;
+}
+
+void FFRTBlockQueueTest::TearDownTestCase()
+{
+    std::cout << "FFRTBlockQueueTest TearDownTestCase" << std::endl;
+}
+
+void FFRTBlockQueueTest::SetUp()
+{
+    queue_ = std::make_unique<FFRTBlockQueue<int>>(TEST_QUEUE_TIMEOUT_MS);
+}
+
+void FFRTBlockQueueTest::TearDown()
+{
+    queue_.reset();
+}
+
+/**
+ * @tc.name: FFRTBlockQueue001
+ * @tc.desc: Remove front element from queue, remaining order preserved
+ * @tc.type: FUNC
+ */
+HWTEST_F(FFRTBlockQueueTest, FFRTBlockQueue001, TestSize.Level0)
+{
+    queue_->Push(1);
+    queue_->Push(2);
+    queue_->Push(3);
+    ASSERT_TRUE(queue_->Remove(1));
+    int front;
+    ASSERT_TRUE(queue_->GetFront(front));
+    ASSERT_EQ(front, 2);
+}
+
+/**
+ * @tc.name: FFRTBlockQueue002
+ * @tc.desc: Remove middle element from queue, remaining order preserved
+ * @tc.type: FUNC
+ */
+HWTEST_F(FFRTBlockQueueTest, FFRTBlockQueue002, TestSize.Level0)
+{
+    queue_->Push(1);
+    queue_->Push(2);
+    queue_->Push(3);
+    ASSERT_TRUE(queue_->Remove(2));
+    int front;
+    ASSERT_TRUE(queue_->GetFront(front));
+    ASSERT_EQ(front, 1);
+    queue_->Pop();
+    ASSERT_TRUE(queue_->GetFront(front));
+    ASSERT_EQ(front, 3);
+}
+
+/**
+ * @tc.name: FFRTBlockQueue003
+ * @tc.desc: Remove non-existing element returns false, queue unchanged
+ * @tc.type: FUNC
+ */
+HWTEST_F(FFRTBlockQueueTest, FFRTBlockQueue003, TestSize.Level0)
+{
+    queue_->Push(1);
+    queue_->Push(2);
+    ASSERT_FALSE(queue_->Remove(99));
+    int front;
+    ASSERT_TRUE(queue_->GetFront(front));
+    ASSERT_EQ(front, 1);
+}
+
+/**
+ * @tc.name: FFRTBlockQueue004
+ * @tc.desc: Remove from empty queue returns false
+ * @tc.type: FUNC
+ */
+HWTEST_F(FFRTBlockQueueTest, FFRTBlockQueue004, TestSize.Level0)
+{
+    ASSERT_FALSE(queue_->Remove(1));
+}
+
+/**
+ * @tc.name: FFRTBlockQueue005
+ * @tc.desc: Remove only element leaves queue empty
+ * @tc.type: FUNC
+ */
+HWTEST_F(FFRTBlockQueueTest, FFRTBlockQueue005, TestSize.Level0)
+{
+    queue_->Push(42);
+    ASSERT_TRUE(queue_->Remove(42));
+    int front;
+    ASSERT_FALSE(queue_->GetFront(front));
+}
+
+/**
+ * @tc.name: FFRTBlockQueue006
+ * @tc.desc: Remove with duplicates only removes first match
+ * @tc.type: FUNC
+ */
+HWTEST_F(FFRTBlockQueueTest, FFRTBlockQueue006, TestSize.Level0)
+{
+    queue_->Push(1);
+    queue_->Push(1);
+    queue_->Push(2);
+    ASSERT_TRUE(queue_->Remove(1));
+    int front;
+    ASSERT_TRUE(queue_->GetFront(front));
+    ASSERT_EQ(front, 1);
+    queue_->Pop();
+    ASSERT_TRUE(queue_->GetFront(front));
+    ASSERT_EQ(front, 2);
+}
+
+/**
+ * @tc.name: FFRTBlockQueue007
+ * @tc.desc: Pop on empty queue does not crash
+ * @tc.type: FUNC
+ */
+HWTEST_F(FFRTBlockQueueTest, FFRTBlockQueue007, TestSize.Level0)
+{
+    queue_->Pop();
+}
+
+/**
+ * @tc.name: FFRTBlockQueue008
+ * @tc.desc: Pop after Remove emptied queue does not crash
+ * @tc.type: FUNC
+ */
+HWTEST_F(FFRTBlockQueueTest, FFRTBlockQueue008, TestSize.Level0)
+{
+    queue_->Push(1);
+    queue_->Remove(1);
+    queue_->Pop();
 }
 }
 }

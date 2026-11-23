@@ -94,6 +94,7 @@ private:
     static std::atomic<uint32_t> sequenceId_;
     uint32_t invalidGravityPercent = 0;
     std::atomic<bool> isWaitSetUiContent_ { true };
+    std::atomic<bool> destroyed_{false};
     mutable std::shared_mutex listenerMutex_;
     std::shared_ptr<PanelStatusListener> panelStatusListener_ = nullptr;
     bool destroyedRegistered_ = false;

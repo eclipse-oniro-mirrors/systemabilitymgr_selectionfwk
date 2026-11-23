@@ -87,6 +87,7 @@ private:
     static std::shared_ptr<JsSelectionEngineSetting> GetJsSelectionEngineSetting();
     void RegisterListener(napi_value callback, std::string type, std::shared_ptr<JSCallbackObject> callbackObj);
     void UnRegisterListener(napi_value callback, std::string type);
+    bool RemoveCallbackFromMap(napi_value callback, const std::string &type);
     static SFErrorCode RegisterListenerToService(std::shared_ptr<JsSelectionEngineSetting> &selectionEnging);
     static std::shared_ptr<AppExecFwk::EventHandler> GetEventHandler();
     using EntrySetter = std::function<void(SelectionEntry &)>;

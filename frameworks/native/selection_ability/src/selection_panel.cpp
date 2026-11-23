@@ -122,6 +122,10 @@ int32_t SelectionPanel::SetPanelProperties()
 int32_t SelectionPanel::DestroyPanel()
 {
     SELECTION_HILOGI("SelectionPanel DestroyPanel start");
+    if (destroyed_.exchange(true)) {
+        SELECTION_HILOGI("panel is already destroyed, return success");
+        return ErrorCode::NO_ERROR;
+    }
     auto window = GetWindow();
     if (window == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");

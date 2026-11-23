@@ -2255,5 +2255,51 @@ HWTEST_F(PanelLifecycleTest, DestroyPanelNoListenerNoCrash001, TestSize.Level0)
     panel_.release();
 }
 
+// ============================================================================
+// DestroyPanel Atomic Exchange Tests
+// ============================================================================
+
+HWTEST_F(PanelLifecycleTest, DestroyPanelExchangeReturnsNoError001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    EXPECT_EQ(panel_->DestroyPanel(), ErrorCode::NO_ERROR);
+    EXPECT_EQ(panel_->DestroyPanel(), ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelLifecycleTest, DestroyPanelExchangeTripleCall001, TestSize.Level0)
+{
+    CreateMenuPanel();
+    EXPECT_EQ(panel_->DestroyPanel(), ErrorCode::NO_ERROR);
+    EXPECT_EQ(panel_->DestroyPanel(), ErrorCode::NO_ERROR);
+    EXPECT_EQ(panel_->DestroyPanel(), ErrorCode::NO_ERROR);
+    panel_.release();
+}
+
+HWTEST_F(PanelConcurrencyTest, ConcurrentDestroyPanel001, TestSize.Level0)
+{
+    SelectionPanel panel;
+    PanelInfo info;
+    info.panelType = PanelType::MENU_PANEL;
+    info.width = TEST_SMALL_PANEL_SIZE;
+    info.height = TEST_SMALL_PANEL_SIZE;
+    panel.CreatePanel(nullptr, info);
+
+    const int threadCount = 5;
+    std::vector<std::thread> threads;
+    std::atomic<int> successCount(0);
+    for (int i = 0; i < threadCount; i++) {
+        threads.emplace_back([&panel, &successCount]() {
+            if (panel.DestroyPanel() == ErrorCode::NO_ERROR) {
+                successCount++;
+            }
+        });
+    }
+    for (auto &t : threads) {
+        t.join();
+    }
+    EXPECT_EQ(successCount.load(), threadCount);
+}
+
 } // namespace SelectionFwk
 } // namespace OHOS

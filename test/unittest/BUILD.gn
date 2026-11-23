@@ -100,6 +100,7 @@ ohos_unittest("selection_service_unit_test") {
     "udmf:udmf_client",
     "graphic_2d:librender_service_base",
     "graphic_2d:librender_service_client",
+    "ffrt:libffrt",
   ]
 
   part_name = "selectionfwk"
