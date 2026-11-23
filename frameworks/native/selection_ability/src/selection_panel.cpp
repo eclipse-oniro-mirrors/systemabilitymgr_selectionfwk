@@ -130,6 +130,7 @@ int32_t SelectionPanel::DestroyPanel()
     auto window = GetWindow();
     if (window == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
+        destroyed_.store(false);
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     if (IsDestroyed(window)) {
@@ -144,6 +145,7 @@ int32_t SelectionPanel::DestroyPanel()
     auto result = window->Destroy();
     if (result != WMError::WM_OK) {
         SELECTION_HILOGE("destroy failed. ret: %{public}d", result);
+        destroyed_.store(false);
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     SELECTION_HILOGI("destroy ret: %{public}d", result);
