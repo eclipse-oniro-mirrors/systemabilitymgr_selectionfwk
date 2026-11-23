@@ -80,6 +80,7 @@ int32_t SelectionPanel::CreatePanel(
     {
         std::unique_lock<std::shared_mutex> lock(windowMutex_);
         window_ = window;
+        destroyed_.store(false);
     }
     SELECTION_HILOGI("Window::Create Success");
     return 0;
