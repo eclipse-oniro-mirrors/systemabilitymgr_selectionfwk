@@ -327,10 +327,15 @@ napi_status JsSelectionEngineSetting::WaitAndDestroyPanel(std::shared_ptr<Select
     }
     if (!isFront) {
         SELECTION_HILOGE("destroyPanel wait timeout, destroyInfo is not front, abort destroy");
+        if (!jsQueue.Remove(destroyInfo)) {
+            SELECTION_HILOGE("destroyInfo has already been consumed by other operations");
+        }
         return napi_generic_failure;
     }
+    if (!jsQueue.Remove(destroyInfo)) {
+        SELECTION_HILOGE("destroyInfo has already been consumed by other operations");
+    }
     errCode = SelectionAbility::GetInstance()->DestroyPanel(panel);
-    jsQueue.Pop();
     if (errCode != ErrorCode::NO_ERROR) {
         SELECTION_HILOGE("DestroyPanel failed, errCode: %{public}d!", JsUtils::Convert(errCode));
         return napi_generic_failure;
@@ -405,12 +410,40 @@ void JsSelectionEngineSetting::RegisterListener(napi_value callback, std::string
 void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::string type)
 {
     SELECTION_HILOGI("unregister listener: %{public}s.", type.c_str());
+    bool allEmpty = RemoveCallbackFromMap(callback, type);
+    if (!allEmpty) {
+        return;
+    }
+    auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();
+    sptr<ISelectionListener> stubToUnregister;
+    {
+        std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
+        if (proxy == nullptr || listenerStub_ == nullptr) {
+            SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
+            return;
+        }
+        stubToUnregister = listenerStub_;
+        listenerStub_ = nullptr;
+    }
+    proxy->UnregisterListener(stubToUnregister);
+    bool needReRegister = false;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        needReRegister = !jsCbMap_.empty();
+    }
+    if (needReRegister && selectionDelegate_ != nullptr) {
+        SELECTION_HILOGI("callbacks re-registered during unregister, re-register listener");
+        RegisterListenerToService(selectionDelegate_);
+    }
+}
+
+bool JsSelectionEngineSetting::RemoveCallbackFromMap(napi_value callback, const std::string &type)
+{
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
         SELECTION_HILOGE("methodName %{public}s is not unregistered!", type.c_str());
-        return;
+        return false;
     }
-
     if (callback == nullptr) {
         jsCbMap_.erase(type);
         SELECTION_HILOGE("callback is nullptr!");
@@ -426,21 +459,7 @@ void JsSelectionEngineSetting::UnRegisterListener(napi_value callback, std::stri
             jsCbMap_.erase(type);
         }
     }
-
-    if (jsCbMap_.empty()) {
-        auto proxy = SelectionSystemAbilityUtils::GetSelectionSystemAbility();
-        sptr<ISelectionListener> stubToUnregister;
-        {
-            std::lock_guard<std::recursive_mutex> lock2(listenerMutex_);
-            if (proxy == nullptr || listenerStub_ == nullptr) {
-                SELECTION_HILOGE("selection system ability or listenerStub_ is nullptr!");
-                return;
-            }
-            stubToUnregister = listenerStub_;
-            listenerStub_ = nullptr;
-        }
-        proxy->UnregisterListener(stubToUnregister);
-    }
+    return jsCbMap_.empty();
 }
 
 std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::GetJsSelectionEngineSetting()
@@ -460,13 +479,15 @@ std::shared_ptr<JsSelectionEngineSetting> JsSelectionEngineSetting::GetJsSelecti
         std::lock_guard<std::mutex> lock(eventHandlerMutex_);
         handler_ = AppExecFwk::EventHandler::Current();
     }
+    bool needRegister = false;
     {
         std::lock_guard<std::recursive_mutex> lock(listenerMutex_);
-        if (listenerStub_ == nullptr && selectionDelegate_ != nullptr) {
+        needRegister = (listenerStub_ == nullptr && selectionDelegate_ != nullptr);
+        if (needRegister) {
             SELECTION_HILOGI("listenerStub_ is null, attempting to re-register listener.");
         }
     }
-    if (listenerStub_ == nullptr && selectionDelegate_ != nullptr) {
+    if (needRegister) {
         RegisterListenerToService(selectionDelegate_);
     }
     return selectionDelegate_;

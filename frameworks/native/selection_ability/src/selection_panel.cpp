@@ -80,6 +80,7 @@ int32_t SelectionPanel::CreatePanel(
     {
         std::unique_lock<std::shared_mutex> lock(windowMutex_);
         window_ = window;
+        destroyed_.store(false);
     }
     SELECTION_HILOGI("Window::Create Success");
     return 0;
@@ -122,9 +123,14 @@ int32_t SelectionPanel::SetPanelProperties()
 int32_t SelectionPanel::DestroyPanel()
 {
     SELECTION_HILOGI("SelectionPanel DestroyPanel start");
+    if (destroyed_.exchange(true)) {
+        SELECTION_HILOGI("panel is already destroyed, return success");
+        return ErrorCode::NO_ERROR;
+    }
     auto window = GetWindow();
     if (window == nullptr) {
         SELECTION_HILOGE("window_ is nullptr!");
+        destroyed_.store(false);
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     if (IsDestroyed(window)) {
@@ -139,6 +145,7 @@ int32_t SelectionPanel::DestroyPanel()
     auto result = window->Destroy();
     if (result != WMError::WM_OK) {
         SELECTION_HILOGE("destroy failed. ret: %{public}d", result);
+        destroyed_.store(false);
         return ErrorCode::ERROR_SELECTION_SERVICE;
     }
     SELECTION_HILOGI("destroy ret: %{public}d", result);

@@ -130,7 +130,10 @@ napi_value JsPanel::SetUiContent(napi_env env, napi_callback_info info)
     auto exec = [ctxt](AsyncCall::Context *ctx) { ctxt->SetState(napi_ok); };
     auto output = [ctxt](napi_env env, napi_value *result) -> napi_status {
         if (!jsQueue_.Wait(ctxt->info)) {
-            SELECTION_HILOGW("setUiContent wait queue timeout, proceed with caution");
+            SELECTION_HILOGE("setUiContent wait queue timeout, abort to avoid queue misalignment");
+            jsQueue_.Remove(ctxt->info);
+            ctxt->SetErrorCode(SFErrorCode::EXCEPTION_SELECTION_SERVICE);
+            return napi_generic_failure;
         }
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
@@ -164,7 +167,10 @@ napi_value JsPanel::Show(napi_env env, napi_callback_info info)
     };
     auto exec = [ctxt](AsyncCall::Context *ctx) {
         if (!jsQueue_.Wait(ctxt->info)) {
-            SELECTION_HILOGW("show wait queue timeout, proceed with caution");
+            SELECTION_HILOGE("show wait queue timeout, abort to avoid queue misalignment");
+            jsQueue_.Remove(ctxt->info);
+            ctxt->SetErrorCode(SFErrorCode::EXCEPTION_SELECTION_SERVICE);
+            return;
         }
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
@@ -199,7 +205,10 @@ napi_value JsPanel::Hide(napi_env env, napi_callback_info info)
     };
     auto exec = [ctxt](AsyncCall::Context *ctx) {
         if (!jsQueue_.Wait(ctxt->info)) {
-            SELECTION_HILOGW("hide wait queue timeout, proceed with caution");
+            SELECTION_HILOGE("hide wait queue timeout, abort to avoid queue misalignment");
+            jsQueue_.Remove(ctxt->info);
+            ctxt->SetErrorCode(SFErrorCode::EXCEPTION_SELECTION_SERVICE);
+            return;
         }
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
@@ -233,7 +242,10 @@ napi_value JsPanel::StartMoving(napi_env env, napi_callback_info info)
 
     auto exec = [ctxt](AsyncCall::Context *ctx) {
         if (!jsQueue_.Wait(ctxt->info)) {
-            SELECTION_HILOGW("startMoving wait queue timeout, proceed with caution");
+            SELECTION_HILOGE("startMoving wait queue timeout, abort to avoid queue misalignment");
+            jsQueue_.Remove(ctxt->info);
+            ctxt->SetErrorCode(SFErrorCode::EXCEPTION_SELECTION_SERVICE);
+            return;
         }
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
@@ -275,8 +287,14 @@ napi_value JsPanel::MoveTo(napi_env env, napi_callback_info info)
 
     auto exec = [ctxt](AsyncCall::Context *ctx) {
         int64_t start = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-        jsQueue_.Wait(ctxt->info);
+        bool isFront = jsQueue_.Wait(ctxt->info);
         PrintEditorQueueInfoIfTimeout(start, ctxt->info);
+        if (!isFront) {
+            SELECTION_HILOGE("moveTo wait queue timeout, abort to avoid queue misalignment");
+            jsQueue_.Remove(ctxt->info);
+            ctxt->SetErrorCode(SFErrorCode::EXCEPTION_SELECTION_SERVICE);
+            return;
+        }
         if (ctxt->selectionPanel == nullptr) {
             SELECTION_HILOGE("selectionPanel is nullptr!");
             jsQueue_.Pop();

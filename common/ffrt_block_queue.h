@@ -16,6 +16,7 @@
 #ifndef OHOS_INPUTMETHOD_FFRT_BLOCK_QUEUE_H
 #define OHOS_INPUTMETHOD_FFRT_BLOCK_QUEUE_H
 #include <queue>
+#include <utility>
 
 #include "cpp/mutex.h"
 #include "ffrt.h"
@@ -33,6 +34,9 @@ public:
     void Pop()
     {
         std::unique_lock<ffrt::mutex> lock(queuesMutex_);
+        if (queues_.empty()) {
+            return;
+        }
         queues_.pop();
         cv_.notify_all();
     }
@@ -48,6 +52,27 @@ public:
         std::unique_lock<ffrt::mutex> lock(queuesMutex_);
         return  cv_.wait_for(lock, std::chrono::milliseconds(timeout_),
             [&data, this]() { return !queues_.empty() && data == queues_.front(); });
+    }
+
+    bool Remove(const T &data)
+    {
+        std::unique_lock<ffrt::mutex> lock(queuesMutex_);
+        std::queue<T> remaining;
+        bool removed = false;
+        while (!queues_.empty()) {
+            if (!removed && queues_.front() == data) {
+                queues_.pop();
+                removed = true;
+                continue;
+            }
+            remaining.push(std::move(queues_.front()));
+            queues_.pop();
+        }
+        queues_.swap(remaining);
+        if (removed) {
+            cv_.notify_all();
+        }
+        return removed;
     }
 
     bool GetFront(T &data)
